@@ -1,0 +1,46 @@
+<!-- pages/profile/profile.wxml -->
+<view class="container">
+  <view class="user-card" wx:if="{{user}}">
+    <view class="avatar">{{user.nickname[0] || '🌸'}}</view>
+    <view class="user-info">
+      <text class="nickname">{{user.nickname}}</text>
+      <text class="phone">{{user.phone}}</text>
+    </view>
+  </view>
+
+  <view class="login-card" wx:else>
+    <text class="login-icon">🌸</text>
+    <text class="login-text">登录后享受更多服务</text>
+    <button class="login-btn" bindtap="handleLogin">手机号登录</button>
+  </view>
+
+  <!-- 地址管理 -->
+  <view class="section" wx:if="{{user}}">
+    <view class="section-title">📍 收货地址</view>
+    <view wx:for="{{user.address}}" wx:key="index" class="address-item">
+      <view class="addr-name">{{item.name}} {{item.phone}}</view>
+      <view class="addr-detail">{{item.province}}{{item.city}}{{item.district}}{{item.detail}}</view>
+      <text class="addr-default" wx:if="{{item.isDefault}}">默认</text>
+    </view>
+    <button class="add-addr-btn" bindtap="addAddress">+ 新增地址</button>
+  </view>
+
+  <!-- 种花统计 -->
+  <view class="section" wx:if="{{user}}">
+    <view class="section-title">🌻 种花统计</view>
+    <view class="stats-row">
+      <view class="stat-item">
+        <text class="stat-num">{{user.gardenStats.totalPlanted || 0}}</text>
+        <text class="stat-label">已种植</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-num">{{user.gardenStats.totalCompleted || 0}}</text>
+        <text class="stat-label">已成熟</text>
+      </view>
+      <view class="stat-item">
+        <text class="stat-num">{{user.gardenStats.totalGifted || 0}}</text>
+        <text class="stat-label">已赠送</text>
+      </view>
+    </view>
+  </view>
+</view>
