@@ -1,0 +1,18 @@
+services:
+  flower-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: flower-api
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - NODE_ENV=production
+      - PORT=3010
+      - MONGO_URI=mongodb://admin:REDACTED-MONGO-PWD@100.67.126.90:27017/supply_chain?authSource=admin
+      - JWT_SECRET=REDACTED-JWT-SECRET
+      - MINIO_ENDPOINT=100.96.54.109
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET=supply-chain

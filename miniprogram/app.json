@@ -1,0 +1,32 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/map/map",
+    "pages/garden/garden",
+    "pages/profile/profile"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#4CAF50",
+    "navigationBarTitleText": "花伴",
+    "navigationBarTextStyle": "white"
+  },
+  "tabBar": {
+    "color": "#999",
+    "selectedColor": "#4CAF50",
+    "backgroundColor": "#fff",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "首页", "iconPath": "", "selectedIconPath": "" },
+      { "pagePath": "pages/map/map", "text": "地图", "iconPath": "", "selectedIconPath": "" },
+      { "pagePath": "pages/garden/garden", "text": "花园", "iconPath": "", "selectedIconPath": "" },
+      { "pagePath": "pages/profile/profile", "text": "我的", "iconPath": "", "selectedIconPath": "" }
+    ]
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "需要获取您的位置以推荐附近的花店"
+    }
+  },
+  "requiredPrivateInfos": ["getLocation"],
+  "sitemapLocation": "sitemap.json"
+}

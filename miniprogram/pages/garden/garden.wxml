@@ -1,0 +1,38 @@
+<!-- pages/garden/garden.wxml -->
+<view class="container">
+  <view class="section">
+    <text class="section-title">🌿 我的花花园</text>
+    <view wx:if="{{plots.length === 0}}" class="empty">
+      <text class="empty-text">还没有种花哦~</text>
+      <text class="empty-sub">选择下面的花种开始吧！</text>
+    </view>
+    <view wx:for="{{plots}}" wx:key="_id" class="plot-card {{item.status === 'mature' ? 'mature' : ''}}">
+      <view class="plot-header">
+        <text class="plot-emoji">{{item.currentStageEmoji || '🌱'}}</text>
+        <view class="plot-info">
+          <text class="plot-name">{{item.plantName}}</text>
+          <text class="plot-status">{{item.status === 'mature' ? '🌸 已成熟！' : '第 ' + item.currentDay + '/' + item.growDays + ' 天'}}</text>
+        </view>
+      </view>
+      <view class="progress-bar">
+        <view class="progress-fill" style="width: {{item.progress}}%"></view>
+      </view>
+      <view class="plot-actions">
+        <button wx:if="{{item.status === 'growing'}}" class="water-btn" size="mini" bindtap="waterPlot" data-id="{{item._id}}">💧 浇水</button>
+        <button wx:if="{{item.status === 'mature'}}" class="claim-btn" size="mini" bindtap="claimGift" data-id="{{item._id}}">🎁 免费领取</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <text class="section-title">🌱 选择种植</text>
+    <text class="section-desc">种满天数即可免费获赠！</text>
+    <view class="plant-grid">
+      <view wx:for="{{plants}}" wx:key="_id" class="plant-card" bindtap="plantSeed" data-id="{{item._id}}">
+        <text class="plant-emoji">{{item.emoji}}</text>
+        <text class="plant-name">{{item.name}}</text>
+        <text class="plant-days">{{item.growDays}}天</text>
+      </view>
+    </view>
+  </view>
+</view>

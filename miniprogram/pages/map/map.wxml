@@ -1,0 +1,36 @@
+<!-- pages/map/map.wxml -->
+<view class="container">
+  <map
+    id="flowerMap"
+    longitude="{{longitude}}"
+    latitude="{{latitude}}"
+    scale="{{scale}}"
+    markers="{{markers}}"
+    show-location
+    bindmarkertap="onMarkerTap"
+    bindregionchange="onRegionChange"
+    style="width: 100%; height: 100vh;"
+  >
+    <cover-view class="search-bar">
+      <cover-view class="search-input" bindtap="onSearchTap">🔍 搜索花店/商品</cover-view>
+    </cover-view>
+    <cover-view class="locate-btn" bindtap="moveToLocation">📍</cover-view>
+  </map>
+
+  <!-- 底部商品列表 -->
+  <view class="bottom-panel" wx:if="{{selectedProducts.length > 0}}">
+    <view class="panel-header">
+      <text class="panel-title">{{selectedSupplier.name}}</text>
+      <text class="panel-close" bindtap="closePanel">✕</text>
+    </view>
+    <scroll-view scroll-y class="product-list">
+      <view class="product-item" wx:for="{{selectedProducts}}" wx:key="_id" bindtap="goProductDetail" data-id="{{item._id}}">
+        <image class="product-img" src="{{item.image || '../../assets/default-flower.png'}}" mode="aspectFill"/>
+        <view class="product-info">
+          <text class="product-name">{{item.name}}</text>
+          <text class="product-price">¥{{item.price}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+</view>
