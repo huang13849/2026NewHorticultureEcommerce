@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # ===== 后端 API =====
+  flower-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: flower-api
+    restart: unless-stopped
+    ports:
+      - "3010:3010"
+    environment:
+      - NODE_ENV=production
+      - PORT=3010
+      - MONGO_URI=mongodb://admin:Hy@1987921@100.67.126.90:27017/supply_chain?authSource=admin
+      - JWT_SECRET=flower-shop-jwt-secret-2024-prod
+      - MINIO_ENDPOINT=100.96.54.109
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_BUCKET=supply-chain
+    networks:
+      - flower-net
+
+  # ===== 前端 Web (React Native Web) =====
+  flower-web:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: flower-web
+    restart: unless-stopped
+    ports:
+      - "3011:80"
+    depends_on:
+      - flower-api
+    networks:
+      - flower-net
+
+networks:
+  flower-net:
+    driver: bridge
