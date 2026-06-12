@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const db = require('../lib/db');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'flower-shop-secret-2024';
 
@@ -9,7 +9,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'flower-shop-secret-2024';
 router.post('/login', async (req, res) => {
   try {
     const { phone, code, deviceInfo } = req.body;
-    
+
     if (!phone) {
       return res.status(400).json({ error: '手机号必填' });
     }
@@ -19,21 +19,32 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: '验证码错误' });
     }
 
-    let user = await User.findOne({ phone });
+    let users = await db.find('users', { filter: { phone } });
+    let user = users[0];
+
     if (!user) {
-      user = await User.create({
+      const now = new Date();
+      user = await db.create('users', {
         phone,
         nickname: `花友${phone.slice(-4)}`,
+        avatar: '',
+        location: { type: 'Point', coordinates: [0, 0] },
+        locationAddress: '',
+        address: [],
         deviceInfo: deviceInfo || {},
+        preferences: { categories: [], priceRange: {}, favoriteSuppliers: [] },
+        gardenStats: { totalPlanted: 0, totalCompleted: 0, totalGifted: 0 },
+        lastLoginAt: now,
+        createdAt: now,
       });
     }
 
     // 更新设备信息和最后登录
+    const updateData = { lastLoginAt: new Date().toISOString() };
     if (deviceInfo) {
-      user.deviceInfo = { ...user.deviceInfo, ...deviceInfo };
+      updateData.deviceInfo = deviceInfo;
     }
-    user.lastLoginAt = new Date();
-    await user.save();
+    await db.update('users', user._id, updateData);
 
     const token = jwt.sign(
       { userId: user._id, phone: user.phone },
@@ -61,7 +72,6 @@ router.post('/login', async (req, res) => {
 router.post('/send-code', async (req, res) => {
   const { phone } = req.body;
   if (!phone) return res.status(400).json({ error: '手机号必填' });
-  // TODO: 对接短信服务
   console.log(`📱 验证码已发送到 ${phone}: 123456`);
   res.json({ message: '验证码已发送', expiresIn: 300 });
 });
@@ -73,7 +83,7 @@ router.get('/me', async (req, res) => {
     if (!auth) return res.status(401).json({ error: '未登录' });
 
     const decoded = jwt.verify(auth.replace('Bearer ', ''), JWT_SECRET);
-    const user = await User.findById(decoded.userId);
+    const user = await db.findById('users', decoded.userId);
     if (!user) return res.status(404).json({ error: '用户不存在' });
 
     res.json({
@@ -99,14 +109,18 @@ router.put('/location', async (req, res) => {
     const decoded = jwt.verify(auth.replace('Bearer ', ''), JWT_SECRET);
     const { latitude, longitude, address } = req.body;
 
-    const user = await User.findById(decoded.userId);
+    const user = await db.findById('users', decoded.userId);
     if (!user) return res.status(404).json({ error: '用户不存在' });
 
-    user.location = { type: 'Point', coordinates: [longitude, latitude] };
-    user.locationAddress = address || '';
-    await user.save();
+    await db.update('users', decoded.userId, {
+      location: { type: 'Point', coordinates: [longitude, latitude] },
+      locationAddress: address || '',
+    });
 
-    res.json({ message: '位置已更新', location: user.location });
+    res.json({
+      message: '位置已更新',
+      location: { type: 'Point', coordinates: [longitude, latitude] },
+    });
   } catch (err) {
     res.status(500).json({ error: '更新位置失败' });
   }
@@ -121,29 +135,31 @@ router.put('/address', async (req, res) => {
     const decoded = jwt.verify(auth.replace('Bearer ', ''), JWT_SECRET);
     const { name, phone, province, city, district, detail, isDefault } = req.body;
 
-    const user = await User.findById(decoded.userId);
+    const user = await db.findById('users', decoded.userId);
     if (!user) return res.status(404).json({ error: '用户不存在' });
 
+    const addresses = [...(user.address || [])];
     const newAddr = { name, phone, province, city, district, detail, isDefault: isDefault || false };
-    
+
     if (isDefault) {
-      user.address.forEach(a => a.isDefault = false);
-    }
-    
-    const existIdx = user.address.findIndex(a => 
-      a.detail === detail && a.province === province && a.city === city
-    );
-    
-    if (existIdx >= 0) {
-      user.address[existIdx] = newAddr;
-    } else {
-      if (user.address.length === 0) newAddr.isDefault = true;
-      user.address.push(newAddr);
+      addresses.forEach(a => a.isDefault = false);
     }
 
-    await user.save();
-    res.json({ message: '地址已更新', address: user.address });
+    const existIdx = addresses.findIndex(a =>
+      a.detail === detail && a.province === province && a.city === city
+    );
+
+    if (existIdx >= 0) {
+      addresses[existIdx] = newAddr;
+    } else {
+      if (addresses.length === 0) newAddr.isDefault = true;
+      addresses.push(newAddr);
+    }
+
+    await db.update('users', decoded.userId, { address: addresses });
+    res.json({ message: '地址已更新', address: addresses });
   } catch (err) {
+    console.error('Address error:', err);
     res.status(500).json({ error: '更新地址失败' });
   }
 });
