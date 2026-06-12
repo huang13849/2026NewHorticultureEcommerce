@@ -1,0 +1,14 @@
+# Web 开发服务器 — expo start --web
+FROM node:20-alpine
+WORKDIR /app
+# 先复制依赖文件并安装
+COPY package*.json ./
+RUN npm install --legacy-peer-deps
+# 复制项目代码
+COPY . .
+# 安装 Web 必需依赖
+RUN npx expo install react-native-web react-dom @expo/metro-runtime react-native-reanimated --fix 2>/dev/null || true
+# 暴露 Web 端口
+EXPOSE 19006
+# 启动 Web 开发服务器
+CMD ["npx", "expo", "start", "--web", "--port", "19006", "--no-dev", "--minify"]

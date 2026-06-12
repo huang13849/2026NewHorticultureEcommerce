@@ -1,36 +1,44 @@
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
+const db = require('../lib/db');
 
-// ===== 从 supply_chain 数据库读取商品 =====
-const Product = mongoose.models.Product || mongoose.model('Product', new mongoose.Schema({}, { strict: false, collection: 'products' }));
-const Supplier = mongoose.models.Supplier || mongoose.model('Supplier', new mongoose.Schema({}, { strict: false, collection: 'suppliers' }));
+// ===== Haversine 距离计算 =====
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(R * c * 10) / 10;
+}
 
 // ===== 获取商品列表（支持地理围栏筛选） =====
 router.get('/', async (req, res) => {
   try {
-    const { 
-      page = 1, 
-      limit = 20, 
-      category, 
-      keyword, 
-      lng, 
-      lat, 
-      radius = 50, // km
-      sort = 'recommend' 
+    const {
+      page = 1,
+      limit = 20,
+      category,
+      keyword,
+      lng,
+      lat,
+      radius = 50,
+      sort = 'recommend',
     } = req.query;
 
-    const query = { status: { $ne: 'deleted' } };
+    const filter = { status: { $ne: 'deleted' } };
 
     if (keyword) {
-      query.$or = [
+      filter.$or = [
         { name: { $regex: keyword, $options: 'i' } },
         { description: { $regex: keyword, $options: 'i' } },
       ];
     }
 
     if (category) {
-      query.category = category;
+      filter.category = category;
     }
 
     let sortOption = {};
@@ -42,11 +50,12 @@ router.get('/', async (req, res) => {
       default: sortOption = { salesCount: -1, createdAt: -1 }; break;
     }
 
-    const products = await Product.find(query)
-      .sort(sortOption)
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit))
-      .lean();
+    const products = await db.find('products', {
+      filter,
+      sort: sortOption,
+      page: parseInt(page),
+      limit: parseInt(limit),
+    });
 
     // 如果有经纬度，计算距离
     if (lng && lat) {
@@ -72,7 +81,7 @@ router.get('/', async (req, res) => {
       }
     }
 
-    const total = await Product.countDocuments(query);
+    const total = await db.count('products', filter);
     res.json({ products, total, page: parseInt(page) });
   } catch (err) {
     console.error('Products error:', err);
@@ -83,20 +92,22 @@ router.get('/', async (req, res) => {
 // ===== 获取商品详情 =====
 router.get('/:id', async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id).lean();
+    const product = await db.findById('products', req.params.id);
     if (!product) return res.status(404).json({ error: '商品不存在' });
 
     // 获取供应商信息
     if (product.supplierId) {
       try {
-        const supplier = await Supplier.findById(product.supplierId).lean();
+        const supplier = await db.findById('suppliers', product.supplierId);
         product.supplier = supplier ? {
           id: supplier._id,
           name: supplier.name,
           address: supplier.address,
           location: supplier.location,
         } : null;
-      } catch(e) { product.supplier = null; }
+      } catch (e) {
+        product.supplier = null;
+      }
     }
 
     res.json(product);
@@ -108,7 +119,7 @@ router.get('/:id', async (req, res) => {
 // ===== 获取商品分类 =====
 router.get('/meta/categories', async (req, res) => {
   try {
-    const categories = await Product.distinct('category');
+    const categories = await db.distinct('products', 'category', { category: { $exists: true } });
     res.json({ categories: categories.filter(Boolean) });
   } catch (err) {
     res.status(500).json({ error: '获取分类失败' });
@@ -119,26 +130,23 @@ router.get('/meta/categories', async (req, res) => {
 router.get('/map/markers', async (req, res) => {
   try {
     const { swLng, swLat, neLng, neLat } = req.query;
-    
-    const query = { 
+
+    const filter = {
       status: { $ne: 'deleted' },
-      'location.coordinates': { $exists: true }
     };
 
+    // 如果有边界坐标，使用 $geoWithin 聚合
     if (swLng && neLng) {
-      query['location.coordinates'] = {
-        $geoWithin: {
-          $box: [
-            [parseFloat(swLng), parseFloat(swLat)],
-            [parseFloat(neLng), parseFloat(neLat)]
-          ]
-        }
-      };
+      filter.$and = [
+        { 'location.coordinates.0': { $gte: parseFloat(swLng), $lte: parseFloat(neLng) } },
+        { 'location.coordinates.1': { $gte: parseFloat(swLat), $lte: parseFloat(neLat) } },
+      ];
     }
 
-    const markers = await Product.find(query)
-      .select('name price images location category supplierId')
-      .lean();
+    const markers = await db.find('products', {
+      filter,
+      fields: 'name,price,images,location,category,supplierId',
+    });
 
     // 按供应商聚合
     const grouped = {};
@@ -166,17 +174,5 @@ router.get('/map/markers', async (req, res) => {
     res.status(500).json({ error: '获取地图标记失败' });
   }
 });
-
-// ===== Haversine 距离计算 =====
-function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return Math.round(R * c * 10) / 10;
-}
 
 module.exports = router;
