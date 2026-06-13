@@ -6,6 +6,8 @@ import { usePathname } from 'next/navigation';
 const tabs = [
   { href: '/', label: '首页', emoji: '🏛' },
   { href: '/map', label: '地图', emoji: '🗺' },
+  { href: '/auction', label: '拍卖', emoji: '🏛' },
+  { href: '/shop', label: '商店', emoji: '🛒' },
   { href: '/garden', label: '花园', emoji: '🌱' },
   { href: '/profile', label: '我的', emoji: '👤' },
 ];

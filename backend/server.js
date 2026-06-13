@@ -17,6 +17,8 @@ app.use('/api/products', require('./routes/products'));
 app.use('/api/recommend', require('./routes/recommend'));
 app.use('/api/garden', require('./routes/garden'));
 app.use('/api/map', require('./routes/map'));
+app.use('/api/payment', require('./routes/payment'));
+app.use('/api/auction', require('./routes/auction'));
 
 // ===== 健康检查 =====
 app.get('/api/health', async (req, res) => {
