@@ -243,6 +243,51 @@ export const api = {
       { method: 'POST' }
     ),
 
+
+  // ----- 购物 & 支付 -----
+  getShopProducts: () =>
+    request<{ products: any[] }>('/payment/products'),
+
+  createOrder: (items: {productId: string; quantity: number}[], payMethod: 'wechat' | 'alipay') =>
+    request<any>('/payment/order', {
+      method: 'POST',
+      body: JSON.stringify({ items, payMethod }),
+    }),
+
+  simulatePay: (orderId: string) =>
+    request<{ message: string; order: any }>(`/payment/pay/${orderId}`, {
+      method: 'POST',
+    }),
+
+  getOrder: (orderId: string) =>
+    request<{ order: any }>(`/payment/order/${orderId}`),
+
+  getOrders: () =>
+    request<{ orders: any[]; total: number }>('/payment/orders'),
+
+
+  // ----- 拍卖 -----
+  getAuctionItems: () =>
+    request<{ items: any[]; total: number }>('/auction/items'),
+
+  startAuction: (productId: string) =>
+    request<any>(`/auction/start/${productId}`, { method: 'POST' }),
+
+  placeBid: (productId: string, bidderName: string, bidderPhone: string) =>
+    request<any>(`/auction/bid/${productId}`, {
+      method: 'POST',
+      body: JSON.stringify({ bidderName, bidderPhone }),
+    }),
+
+  getAuctionStatus: (productId: string) =>
+    request<any>(`/auction/status/${productId}`),
+
+  auctionCheckout: (productId: string, data: any) =>
+    request<any>(`/auction/checkout/${productId}`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
   claimGift: (plotId: string) =>
     request<{ message: string; claim: any }>(
       `/garden/claim/${plotId}`,
