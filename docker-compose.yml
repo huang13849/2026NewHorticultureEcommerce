@@ -11,7 +11,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3010
-      - JWT_SECRET=***
+      - JWT_SECRET=flower-shop-jwt-secret-2024-prod
       - API_GATEWAY_URL=http://100.96.54.109:3007
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -29,5 +29,17 @@ services:
       - NODE_ENV=production
     depends_on:
       - flower-api
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # ===== 供应商地图 =====
+  supplier-map:
+    build:
+      context: ./supplier-map
+      dockerfile: Dockerfile
+    container_name: supplier-map
+    restart: unless-stopped
+    ports:
+      - "29007:80"
     extra_hosts:
       - "host.docker.internal:host-gateway"
