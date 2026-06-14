@@ -186,6 +186,42 @@ export default function HomePage() {
         {/* 🌱 绿色认证 — 碳汇溯源 */}
         <section className="px-6 pb-16">
           <div className="max-w-6xl mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold text-stone-900">推荐商品</h2>
+              <a href="/shop" className="text-xs text-emerald-700 font-medium hover:text-emerald-900 transition-colors">查看更多 →</a>
+            </div>
+            {loading ? (
+              <div className="flex items-center justify-center py-16"><div className="text-3xl animate-pulse">⏳</div></div>
+            ) : others.length === 0 ? (
+              <div className="text-center py-16 text-stone-400">暂无推荐商品</div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {others.map(p => {
+                  const img = getImg(p);
+                  const price = p.sellPrice || p.price || p.settlementPrice || 0;
+                  return (
+                    <a key={p._id} href={`/shop`} className="group rounded-2xl border border-stone-200 bg-white overflow-hidden hover:border-emerald-300 hover:shadow-md transition-all">
+                      <div className="aspect-square bg-stone-100 flex items-center justify-center overflow-hidden">
+                        {img ? <img src={img} alt={p.title || p.flowerName || ''} className="w-full h-full object-cover group-hover:scale-105 transition-transform" /> : <span className="text-4xl opacity-20">🌿</span>}
+                      </div>
+                      <div className="p-3">
+                        <h4 className="text-xs font-medium text-stone-900 truncate">{p.title || p.flowerName || '未命名'}</h4>
+                        <div className="flex items-center justify-between mt-1.5">
+                          <span className="text-sm font-bold text-emerald-700">¥{Number(price).toFixed(2)}</span>
+                          {p.category && <span className="text-[10px] text-stone-400 bg-stone-50 px-1.5 py-0.5 rounded">{p.category}</span>}
+                        </div>
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Footer */}
+        <section className="px-6 pb-16">
+          <div className="max-w-6xl mx-auto">
             <div className="rounded-2xl bg-gradient-to-br from-emerald-700 via-emerald-800 to-stone-900 p-8 md:p-12 text-white">
               <div className="text-center mb-10">
                 <p className="text-xs text-emerald-200 font-semibold tracking-widest uppercase mb-2">Green Certification · Carbon Credit</p>
@@ -310,42 +346,6 @@ export default function HomePage() {
         </section>
 
         {/* Products */}
-        <section className="px-6 pb-16">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold text-stone-900">推荐商品</h2>
-              <a href="/shop" className="text-xs text-emerald-700 font-medium hover:text-emerald-900 transition-colors">查看更多 →</a>
-            </div>
-            {loading ? (
-              <div className="flex items-center justify-center py-16"><div className="text-3xl animate-pulse">⏳</div></div>
-            ) : others.length === 0 ? (
-              <div className="text-center py-16 text-stone-400">暂无推荐商品</div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {others.map(p => {
-                  const img = getImg(p);
-                  const price = p.sellPrice || p.price || p.settlementPrice || 0;
-                  return (
-                    <a key={p._id} href={`/shop`} className="group rounded-2xl border border-stone-200 bg-white overflow-hidden hover:border-emerald-300 hover:shadow-md transition-all">
-                      <div className="aspect-square bg-stone-100 flex items-center justify-center overflow-hidden">
-                        {img ? <img src={img} alt={p.title || p.flowerName || ''} className="w-full h-full object-cover group-hover:scale-105 transition-transform" /> : <span className="text-4xl opacity-20">🌿</span>}
-                      </div>
-                      <div className="p-3">
-                        <h4 className="text-xs font-medium text-stone-900 truncate">{p.title || p.flowerName || '未命名'}</h4>
-                        <div className="flex items-center justify-between mt-1.5">
-                          <span className="text-sm font-bold text-emerald-700">¥{Number(price).toFixed(2)}</span>
-                          {p.category && <span className="text-[10px] text-stone-400 bg-stone-50 px-1.5 py-0.5 rounded">{p.category}</span>}
-                        </div>
-                      </div>
-                    </a>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* Footer */}
         <footer className="py-10 px-6 border-t border-stone-200/60">
           <div className="max-w-6xl mx-auto text-center">
             <div className="font-semibold tracking-tight text-sm text-stone-900 mb-1">智慧供应链</div>
