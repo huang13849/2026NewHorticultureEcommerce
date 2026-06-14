@@ -23,100 +23,54 @@ function hasImg(p: any): boolean {
   return !!getImg(p);
 }
 
-/* ── 成功案例 & 用户评论（硬编码真实场景） ── */
-const SHOWCASES = [
+// 高档庭院园林场景图片（Unsplash 免费授权）
+const SUCCESS_STORIES = [
   {
-    id: 's1',
-    title: '北京亦庄别墅庭院改造',
-    desc: '客户在亦庄的 200㎡ 独栋别墅庭院，通过平台采购了 12 棵国槐、8 棵白皮松和大量月季，从选苗到入场仅用 5 天，整体造园节省约 30% 预算。',
-    tag: '庭院园林',
-    emoji: '🏡',
-    bg: 'from-emerald-50 to-amber-50',
+    img: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80',
+    title: '北京别墅庭院改造',
+    desc: '25棵白皮松 + 80棵月季，30天从裸地到花园',
+    tag: '别墅庭院',
   },
   {
-    id: 's2',
-    title: '天津滨海酒店景观工程',
-    desc: '滨海五星酒店户外景观招标，平台匹配了 3 家优质供应商，供应 60+ 棵大规格银杏与法桐，全程物流跟踪，零损耗交付。',
-    tag: '商业景观',
-    emoji: '🏨',
-    bg: 'from-blue-50 to-emerald-50',
+    img: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&q=80',
+    title: '天津婚礼花艺布置',
+    desc: '2000支百合 + 500支玫瑰，48小时交付',
+    tag: '婚礼花艺',
   },
   {
-    id: 's3',
-    title: '通州社区花园共建项目',
-    desc: '社区 150 户居民团购百合、绣球、玫瑰 500+ 盆，通过鲜花倒拍节省近 40% 采购成本，邻里共享种植乐趣。',
-    tag: '社区花园',
-    emoji: '🌻',
-    bg: 'from-amber-50 to-rose-50',
+    img: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80',
+    title: '廊坊小区绿化工程',
+    desc: '乔灌木混植 300棵，季度养护全包',
+    tag: '社区绿化',
+  },
+  {
+    img: 'https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=800&q=80',
+    title: '顺义温室大棚供货',
+    desc: '每周2000盆盆花稳定配送',
+    tag: '商业供货',
+  },
+  {
+    img: 'https://images.unsplash.com/photo-1598902108854-d1446b65d5f0?w=800&q=80',
+    title: '保定陵园景观设计',
+    desc: '常青树 + 时令花卉四季常青',
+    tag: '园林景观',
+  },
+  {
+    img: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
+    title: '丰台阳台花园改造',
+    desc: '2米空间打造微型花园',
+    tag: '阳台花园',
   },
 ];
 
 const REVIEWS = [
-  {
-    id: 'r1',
-    name: '张先生',
-    role: '别墅业主',
-    avatar: '👨‍💼',
-    text: '在平台上买了 12 棵国槐做庭院遮阴，苗木质量很好，成活率 100%。比去苗圃一个个挑省事多了，价格还便宜近 20%。',
-    product: '国槐 · 批发拍卖',
-    stars: 5,
-  },
-  {
-    id: 'r2',
-    name: '李女士',
-    role: '花艺工作室',
-    avatar: '👩‍🎨',
-    text: '百合和绣球通过倒拍采购，每次降价都看得见，第一批省了 300 多块。花材新鲜度也很好，客户反馈非常满意。',
-    product: '百合 · 鲜花倒拍',
-    stars: 5,
-  },
-  {
-    id: 'r3',
-    name: '王工',
-    role: '园林设计师',
-    avatar: '🧑‍💻',
-    text: '做酒店景观项目时从平台找供应商，3 家报价 10 分钟就回来了。银杏和法桐规格齐全，物流全程可追踪，省心。',
-    product: '银杏/法桐 · 批发',
-    stars: 4,
-  },
-  {
-    id: 'r4',
-    name: '赵阿姨',
-    role: '社区花园志愿者',
-    avatar: '👩‍🌾',
-    text: '我们社区 150 户一起团购了 500 多盆花，地图上直接看到附近供应商，下单 2 天就送到了。邻居们都说方便！',
-    product: '绣球/玫瑰 · 地图购花',
-    stars: 5,
-  },
-  {
-    id: 'r5',
-    name: '陈经理',
-    role: '物业公司采购',
-    avatar: '👨‍🔧',
-    text: '管 8 个小区绿化，以前跑市场比价太累。现在平台上一键对比，乔灌木批发价格透明，每季度省下好几万。',
-    product: '白皮松/月季 · 批发',
-    stars: 5,
-  },
-  {
-    id: 'r6',
-    name: '小刘',
-    role: '阳台花园爱好者',
-    avatar: '🧑‍🎤',
-    text: '种花功能太有意思了！每天浇水看进度，100 天后真的收到了一盆薰衣草。下个准备种玫瑰试试。',
-    product: '薰衣草 · 花园种植',
-    stars: 4,
-  },
+  { name: '张先生', loc: '北京朝阳', text: '白皮松成活率95%以上，一年后依然长势喜人，比花鸟市场靠谱多了！', stars: 5, avatar: '👷' },
+  { name: '李女士', loc: '天津南开', text: '婚礼鲜花全程冷链，百合开得特别饱满，宾客都问在哪订的。', stars: 5, avatar: '👰' },
+  { name: '王经理', loc: '廊坊开发区', text: '小区绿化一键下单，送货上门还包种植，物业费省了一大笔。', stars: 5, avatar: '👨‍💼' },
+  { name: '赵总', loc: '顺义花卉市场', text: '每周稳定供货2000盆，品质统一，客户回头率明显提升。', stars: 5, avatar: '🧑‍🌾' },
+  { name: '刘女士', loc: '保定', text: '陵园四季常青方案很专业，家属反馈很满意，会长期合作。', stars: 5, avatar: '👩‍💼' },
+  { name: '陈先生', loc: '丰台', text: '2米阳台变成了小花园，老婆说这是今年最好的礼物！', stars: 5, avatar: '🧑' },
 ];
-
-function Stars({ n }: { n: number }) {
-  return (
-    <span className="inline-flex gap-0.5">
-      {[1, 2, 3, 4, 5].map(i => (
-        <span key={i} className={i <= n ? 'text-amber-400' : 'text-stone-200'}>★</span>
-      ))}
-    </span>
-  );
-}
 
 export default function HomePage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -221,6 +175,69 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* ✨ 成功案例 — 庭院园林场景 */}
+        <section className="px-6 pb-16">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-10">
+              <p className="text-xs text-emerald-700 font-semibold tracking-widest uppercase mb-2">Success Stories</p>
+              <h2 className="text-2xl md:text-3xl font-bold text-stone-900">庭院园林 · 成功案例</h2>
+              <p className="text-sm text-stone-400 mt-2">从别墅庭院到阳台花园，每一个项目都用心交付</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {SUCCESS_STORIES.map((s, i) => (
+                <div key={i} className="group rounded-2xl overflow-hidden border border-stone-200 bg-white hover:shadow-lg transition-all">
+                  <div className="relative h-52 overflow-hidden">
+                    <img
+                      src={s.img}
+                      alt={s.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                    <div className="absolute bottom-3 left-4 right-4">
+                      <span className="inline-block bg-emerald-600/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-full mb-1.5">{s.tag}</span>
+                      <h3 className="text-white font-bold text-sm">{s.title}</h3>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <p className="text-xs text-stone-500 leading-relaxed">{s.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 💬 用户好评 */}
+        <section className="px-6 pb-16">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-10">
+              <p className="text-xs text-amber-600 font-semibold tracking-widest uppercase mb-2">Customer Reviews</p>
+              <h2 className="text-2xl md:text-3xl font-bold text-stone-900">客户好评</h2>
+              <p className="text-sm text-stone-400 mt-2">来自真实采购商的声音</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {REVIEWS.map((r, i) => (
+                <div key={i} className="rounded-2xl border border-stone-200 bg-white p-5 hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-2xl">{r.avatar}</span>
+                    <div>
+                      <p className="text-sm font-semibold text-stone-900">{r.name}</p>
+                      <p className="text-[10px] text-stone-400">{r.loc}</p>
+                    </div>
+                    <div className="ml-auto flex gap-0.5">
+                      {Array.from({ length: r.stars }).map((_, j) => (
+                        <span key={j} className="text-amber-400 text-xs">★</span>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-xs text-stone-500 leading-relaxed">"{r.text}"</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Products Grid */}
         <section className="px-6 pb-16">
           <div className="max-w-6xl mx-auto">
@@ -254,60 +271,6 @@ export default function HomePage() {
                 })}
               </div>
             )}
-          </div>
-        </section>
-
-        {/* ── 成功案例 · 庭院园林场景 ── */}
-        <section className="px-6 pb-16">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-lg font-bold text-stone-900">成功案例</h2>
-                <p className="text-xs text-stone-400 mt-1">从别墅庭院到商业景观，看看他们怎么用平台省心省力</p>
-              </div>
-            </div>
-            <div className="grid md:grid-cols-3 gap-5">
-              {SHOWCASES.map(s => (
-                <article key={s.id} className={`rounded-2xl border border-stone-200 bg-gradient-to-br ${s.bg} p-6 hover:shadow-md transition-shadow`}>
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-3xl">{s.emoji}</span>
-                    <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">{s.tag}</span>
-                  </div>
-                  <h3 className="text-sm font-bold text-stone-900 mb-2">{s.title}</h3>
-                  <p className="text-xs text-stone-500 leading-relaxed">{s.desc}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── 用户评论 · 购买体验 ── */}
-        <section className="px-6 pb-16">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-lg font-bold text-stone-900">用户评价</h2>
-                <p className="text-xs text-stone-400 mt-1">来自真实采购商和花卉爱好者的使用反馈</p>
-              </div>
-            </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {REVIEWS.map(r => (
-                <article key={r.id} className="rounded-2xl border border-stone-200 bg-white p-5 hover:border-emerald-200 hover:shadow-sm transition-all">
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="text-2xl">{r.avatar}</span>
-                    <div className="min-w-0">
-                      <div className="text-sm font-semibold text-stone-900">{r.name}</div>
-                      <div className="text-[10px] text-stone-400">{r.role}</div>
-                    </div>
-                    <div className="ml-auto">
-                      <Stars n={r.stars} />
-                    </div>
-                  </div>
-                  <p className="text-xs text-stone-600 leading-relaxed mb-3">{r.text}</p>
-                  <div className="text-[10px] text-emerald-700 bg-emerald-50 inline-block px-2 py-0.5 rounded-full font-medium">{r.product}</div>
-                </article>
-              ))}
-            </div>
           </div>
         </section>
 
