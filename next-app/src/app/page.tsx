@@ -18,49 +18,15 @@ function getImg(p: any): string {
   if (raw.startsWith('http')) return raw;
   return `http://100.96.54.109:9000/supply-chain/${raw}`;
 }
+function hasImg(p: any): boolean { return !!getImg(p); }
 
-function hasImg(p: any): boolean {
-  return !!getImg(p);
-}
-
-// 高档庭院园林场景图片（Unsplash 免费授权）
 const SUCCESS_STORIES = [
-  {
-    img: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80',
-    title: '北京别墅庭院改造',
-    desc: '25棵白皮松 + 80棵月季，30天从裸地到花园',
-    tag: '别墅庭院',
-  },
-  {
-    img: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&q=80',
-    title: '天津婚礼花艺布置',
-    desc: '2000支百合 + 500支玫瑰，48小时交付',
-    tag: '婚礼花艺',
-  },
-  {
-    img: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80',
-    title: '廊坊小区绿化工程',
-    desc: '乔灌木混植 300棵，季度养护全包',
-    tag: '社区绿化',
-  },
-  {
-    img: 'https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=800&q=80',
-    title: '顺义温室大棚供货',
-    desc: '每周2000盆盆花稳定配送',
-    tag: '商业供货',
-  },
-  {
-    img: 'https://images.unsplash.com/photo-1598902108854-d1446b65d5f0?w=800&q=80',
-    title: '保定陵园景观设计',
-    desc: '常青树 + 时令花卉四季常青',
-    tag: '园林景观',
-  },
-  {
-    img: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
-    title: '丰台阳台花园改造',
-    desc: '2米空间打造微型花园',
-    tag: '阳台花园',
-  },
+  { img: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80', title: '北京别墅庭院改造', desc: '25棵白皮松 + 80棵月季，30天从裸地到花园', tag: '别墅庭院' },
+  { img: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&q=80', title: '天津婚礼花艺布置', desc: '2000支百合 + 500支玫瑰，48小时交付', tag: '婚礼花艺' },
+  { img: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80', title: '廊坊小区绿化工程', desc: '乔灌木混植 300棵，季度养护全包', tag: '社区绿化' },
+  { img: 'https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=800&q=80', title: '顺义温室大棚供货', desc: '每周2000盆盆花稳定配送', tag: '商业供货' },
+  { img: 'https://images.unsplash.com/photo-1598902108854-d1446b65d5f0?w=800&q=80', title: '保定陵园景观设计', desc: '常青树 + 时令花卉四季常青', tag: '园林景观' },
+  { img: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80', title: '丰台阳台花园改造', desc: '2米空间打造微型花园', tag: '阳台花园' },
 ];
 
 const REVIEWS = [
@@ -70,6 +36,50 @@ const REVIEWS = [
   { name: '赵总', loc: '顺义花卉市场', text: '每周稳定供货2000盆，品质统一，客户回头率明显提升。', stars: 5, avatar: '🧑‍🌾' },
   { name: '刘女士', loc: '保定', text: '陵园四季常青方案很专业，家属反馈很满意，会长期合作。', stars: 5, avatar: '👩‍💼' },
   { name: '陈先生', loc: '丰台', text: '2米阳台变成了小花园，老婆说这是今年最好的礼物！', stars: 5, avatar: '🧑' },
+];
+
+// 🌱 绿色认证数据
+const GREEN_CERT_STATS = [
+  { label: '已认证树木', value: '12,847', unit: '棵', icon: '🌳' },
+  { label: '碳汇累计', value: '3,256', unit: '吨 CO₂', icon: '🏭' },
+  { label: '碳币流通', value: '162,800', unit: 'CC', icon: '🪙' },
+  { label: '参与用户', value: '4,521', unit: '人', icon: '👥' },
+];
+
+const GREEN_CERT_FEATURES = [
+  {
+    icon: '🔍',
+    title: '苗木溯源',
+    desc: '每棵认证苗木拥有唯一溯源 ID，从种苗到成树全生命周期记录。品种、产地、种植者、养护记录一目了然。',
+    details: ['区块链存证', 'GPS 种植定位', '全生命周期档案', 'QR 码一扫即查'],
+  },
+  {
+    icon: '👤',
+    title: '人树绑定',
+    desc: '认证树木与种植者/养护人实名绑定，责任到人。定期上传与植物合照，确保树木存活与养护质量。',
+    details: ['实名认证绑定', '季度拍照打卡', 'AI 存活识别', '养护评分体系'],
+  },
+  {
+    icon: '📏',
+    title: '碳计量',
+    desc: '基于树种、胸径、树龄等参数，按 IPCC 标准计算碳汇量。每季度更新碳储量数据，透明可审计。',
+    details: ['IPCC 碳汇公式', '季度碳储量更新', '树种系数库', '碳汇证书发放'],
+  },
+  {
+    icon: '🪙',
+    title: '碳币交易',
+    desc: '碳汇量自动转换为碳币（CC），可用于平台购物抵扣、碳积分兑换，也可在碳币市场自由交易。',
+    details: ['自动碳币铸造', '购物抵扣支付', '碳币市场交易', '提现与转让'],
+  },
+];
+
+const GREEN_CERT_STEPS = [
+  { step: 1, title: '提交认证', desc: '上传苗木信息 + 实名认证 + GPS 定位', icon: '📝' },
+  { step: 2, title: '审核通过', desc: '平台审核苗木信息，发放绿色认证标签', icon: '✅' },
+  { step: 3, title: '人树绑定', desc: '种植者与树木绑定，开始碳计量', icon: '🤝' },
+  { step: 4, title: '季度打卡', desc: '每季度上传与植物合照 + 生长数据', icon: '📸' },
+  { step: 5, title: '碳币发放', desc: '根据碳汇量自动发放碳币到账户', icon: '🪙' },
+  { step: 6, title: '交易抵扣', desc: '碳币可用于购物抵扣或市场交易', icon: '💰' },
 ];
 
 export default function HomePage() {
@@ -83,7 +93,6 @@ export default function HomePage() {
         const data = await api.getHomeRecommendations();
         all = data.sections?.flatMap((s: { products?: Product[] }) => s.products || []) || [];
       } catch { /* empty */ }
-
       if (all.filter(hasImg).length < 6) {
         try {
           const res = await fetch(`${API}/products?limit=80`);
@@ -94,7 +103,6 @@ export default function HomePage() {
           all = [...all, ...extras];
         } catch { /* empty */ }
       }
-
       all.sort((a, b) => (hasImg(a) ? 0 : 1) - (hasImg(b) ? 0 : 1));
       setProducts(all);
       setLoading(false);
@@ -108,7 +116,7 @@ export default function HomePage() {
   return (
     <>
       <main className="min-h-screen bg-white text-stone-900 pb-16">
-        {/* Top Nav */}
+        {/* Nav */}
         <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-stone-200/60">
           <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -157,7 +165,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Quick Entry Cards */}
+        {/* Quick Entry */}
         <section className="px-6 pb-16">
           <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
@@ -175,7 +183,75 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ✨ 成功案例 — 庭院园林场景 */}
+        {/* 🌱 绿色认证 — 碳汇溯源 */}
+        <section className="px-6 pb-16">
+          <div className="max-w-6xl mx-auto">
+            <div className="rounded-2xl bg-gradient-to-br from-emerald-700 via-emerald-800 to-stone-900 p-8 md:p-12 text-white">
+              <div className="text-center mb-10">
+                <p className="text-xs text-emerald-200 font-semibold tracking-widest uppercase mb-2">Green Certification · Carbon Credit</p>
+                <h2 className="text-2xl md:text-4xl font-bold mb-3">苗木绿色认证 & 碳币体系</h2>
+                <p className="text-emerald-100/80 text-sm max-w-2xl mx-auto">每棵认证苗木都可溯源、可计量、可交易。从种植到碳汇，构建可信的绿色价值链。</p>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+                {GREEN_CERT_STATS.map((s, i) => (
+                  <div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center border border-white/10">
+                    <span className="text-2xl mb-2 block">{s.icon}</span>
+                    <div className="text-xl md:text-2xl font-bold">{s.value}</div>
+                    <div className="text-[10px] text-emerald-200">{s.unit} · {s.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Features */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-10">
+                {GREEN_CERT_FEATURES.map((f, i) => (
+                  <div key={i} className="bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/10">
+                    <div className="flex items-start gap-4">
+                      <span className="text-3xl">{f.icon}</span>
+                      <div className="flex-1">
+                        <h3 className="font-bold text-sm mb-2">{f.title}</h3>
+                        <p className="text-emerald-100/70 text-xs leading-relaxed mb-3">{f.desc}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {f.details.map((d, j) => (
+                            <span key={j} className="bg-emerald-600/30 text-emerald-100 text-[10px] px-2 py-0.5 rounded-full border border-emerald-400/20">{d}</span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Flow Steps */}
+              <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+                <h3 className="font-bold text-sm mb-5 text-center">认证流程</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                  {GREEN_CERT_STEPS.map((s, i) => (
+                    <div key={i} className="text-center">
+                      <div className="w-10 h-10 rounded-full bg-emerald-400/20 border border-emerald-300/30 flex items-center justify-center mx-auto mb-2">
+                        <span className="text-lg">{s.icon}</span>
+                      </div>
+                      <div className="text-[10px] text-emerald-300 font-bold mb-0.5">Step {s.step}</div>
+                      <div className="text-xs font-semibold mb-0.5">{s.title}</div>
+                      <div className="text-[10px] text-emerald-100/60 leading-tight">{s.desc}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* CTA */}
+              <div className="text-center mt-8">
+                <a href="/garden" className="inline-block bg-white text-emerald-800 px-8 py-3 rounded-xl text-sm font-bold hover:bg-emerald-50 transition-colors">
+                  申请绿色认证 →
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 成功案例 */}
         <section className="px-6 pb-16">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-10">
@@ -187,12 +263,7 @@ export default function HomePage() {
               {SUCCESS_STORIES.map((s, i) => (
                 <div key={i} className="group rounded-2xl overflow-hidden border border-stone-200 bg-white hover:shadow-lg transition-all">
                   <div className="relative h-52 overflow-hidden">
-                    <img
-                      src={s.img}
-                      alt={s.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
-                    />
+                    <img src={s.img} alt={s.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                     <div className="absolute bottom-3 left-4 right-4">
                       <span className="inline-block bg-emerald-600/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-full mb-1.5">{s.tag}</span>
@@ -208,7 +279,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 💬 用户好评 */}
+        {/* 用户好评 */}
         <section className="px-6 pb-16">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-10">
@@ -231,14 +302,14 @@ export default function HomePage() {
                       ))}
                     </div>
                   </div>
-                  <p className="text-xs text-stone-500 leading-relaxed">"{r.text}"</p>
+                  <p className="text-xs text-stone-500 leading-relaxed">&ldquo;{r.text}&rdquo;</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Products Grid */}
+        {/* Products */}
         <section className="px-6 pb-16">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-6">
