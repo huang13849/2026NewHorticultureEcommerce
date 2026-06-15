@@ -8,13 +8,27 @@ type LoginMode = 'code' | 'password';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const [mode, setMode] = useState<LoginMode>('code');
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('123456');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // If already logged in, redirect
+  if (user && !loading) {
+    // Use setTimeout to avoid setState during render
+    setTimeout(() => router.push('/'), 0);
+    return (
+      <main className="min-h-screen bg-white text-stone-900 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-2xl mb-2">✅</p>
+          <p className="text-sm text-stone-500">已登录，正在跳转...</p>
+        </div>
+      </main>
+    );
+  }
 
   const handleLogin = async () => {
     if (!phone || phone.length < 11) {
@@ -32,9 +46,13 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
     try {
-      await login(phone, mode === 'password' ? undefined : code, mode === 'password' ? password : undefined);
+      const result = await login(phone, mode === 'password' ? undefined : code, mode === 'password' ? password : undefined);
+      console.log('[Login] Success:', result.nickname, result.role);
+      // Ensure state is updated before navigation
+      await new Promise(r => setTimeout(r, 100));
       router.push('/');
     } catch (e: any) {
+      console.error('[Login] Failed:', e.message);
       setError(e.message || '登录失败');
     } finally {
       setLoading(false);

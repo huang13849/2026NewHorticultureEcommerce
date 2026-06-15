@@ -25,8 +25,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const token = getToken();
     if (token) {
       api.getMe()
-        .then(setUser)
-        .catch(() => {
+        .then(u => {
+          setUser(u);
+        })
+        .catch(err => {
+          console.warn('[Auth] getMe failed, clearing token:', err.message);
           setToken(null);
           localStorage.removeItem('flower_token');
         })
@@ -38,7 +41,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (phone: string, code?: string, password?: string) => {
     const result = await api.login(phone, code, password);
+    // Ensure token is persisted to localStorage before navigation
     setToken(result.token);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('flower_token', result.token);
+    }
     setUser(result.user);
     return result.user;
   }, []);
@@ -46,6 +53,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(() => {
     setToken(null);
     setUser(null);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('flower_token');
+    }
   }, []);
 
   return (

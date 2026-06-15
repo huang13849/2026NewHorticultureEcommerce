@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { api, Product } from '@/lib/api';
+import { useAuth } from '@/lib/auth-context';
 import TabBar from './TabBar';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://100.76.15.64:3010/api';
@@ -83,6 +84,7 @@ const GREEN_CERT_STEPS = [
 ];
 
 export default function HomePage() {
+  const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -129,7 +131,13 @@ export default function HomePage() {
               <a href="/map" className="hover:text-emerald-700 transition-colors">地图</a>
               <a href="/garden" className="hover:text-emerald-700 transition-colors">花园</a>
             </div>
-            <a href="/login" className="text-xs font-medium text-emerald-700 hover:text-emerald-900 border border-emerald-200 rounded-full px-4 py-1.5 transition-colors">登录</a>
+            {user ? (
+              <a href="/profile" className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 border border-emerald-200 rounded-full px-3 py-1.5 hover:bg-emerald-50 transition-colors">
+                <span>{user.avatar || '🌸'}</span> {user.nickname}
+              </a>
+            ) : (
+              <a href="/login" className="text-xs font-medium text-emerald-700 hover:text-emerald-900 border border-emerald-200 rounded-full px-4 py-1.5 transition-colors">登录</a>
+            )}
           </div>
         </nav>
 
