@@ -24,5 +24,8 @@
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "optionalDependencies": {
+    "@next/swc-linux-arm64-gnu": "^16.2.9"
   }
 }
