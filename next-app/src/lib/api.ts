@@ -63,6 +63,9 @@ export interface User {
   address?: Address[];
   location?: { type: string; coordinates: [number, number] };
   gardenStats?: { totalPlanted: number; totalCompleted: number; totalGifted: number };
+  role?: string;
+  isAdmin?: boolean;
+  isSuperAdmin?: boolean;
 }
 
 export interface Address {
@@ -167,10 +170,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 export const api = {
   // ----- 认证 -----
-  login: (phone: string, code = '123456') =>
+  login: (phone: string, code?: string, password?: string) =>
     request<{ token: string; user: User }>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ phone, code }),
+      body: JSON.stringify({ phone, code, password }),
     }),
 
   getMe: () =>

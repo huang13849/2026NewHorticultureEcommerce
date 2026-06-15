@@ -6,7 +6,7 @@ import { api, User, setToken, getToken } from './api';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (phone: string, code?: string) => Promise<User>;
+  login: (phone: string, code?: string, password?: string) => Promise<User>;
   logout: () => void;
 }
 
@@ -36,8 +36,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const login = useCallback(async (phone: string, code = '123456') => {
-    const result = await api.login(phone, code);
+  const login = useCallback(async (phone: string, code?: string, password?: string) => {
+    const result = await api.login(phone, code, password);
     setToken(result.token);
     setUser(result.user);
     return result.user;

@@ -18,6 +18,7 @@ app.use('/api/recommend', require('./routes/recommend'));
 app.use('/api/garden', require('./routes/garden'));
 app.use('/api/map', require('./routes/map'));
 app.use('/api/payment', require('./routes/payment'));
+app.use('/api/admin', require('./routes/admin'));
 app.use('/api/wechat-pay', require('./routes/wechat-pay'));
 app.use('/api/auction', require('./routes/auction'));
 
