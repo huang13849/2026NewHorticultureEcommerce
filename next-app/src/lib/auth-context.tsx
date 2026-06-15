@@ -23,20 +23,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const token = getToken();
-    if (token) {
-      api.getMe()
-        .then(u => {
-          setUser(u);
-        })
-        .catch(err => {
-          console.warn('[Auth] getMe failed, clearing token:', err.message);
-          setToken(null);
-          localStorage.removeItem('flower_token');
-        })
-        .finally(() => setLoading(false));
-    } else {
+    if (!token) {
       setLoading(false);
+      return;
     }
+
+    // Optimistic restore from JWT payload so nav does not flash back to 登录.
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1] || ''));
+      if (payload?.phone) {
+        setUser({
+          id: payload.userId || '',
+          phone: payload.phone,
+          nickname: payload.role === 'super_admin' ? '超级管理员' : `花友${String(payload.phone).slice(-4)}`,
+          avatar: payload.role === 'super_admin' ? '👑' : '',
+          role: payload.role || 'user',
+          isAdmin: payload.role === 'admin' || payload.role === 'super_admin',
+          isSuperAdmin: payload.role === 'super_admin',
+          address: [],
+        } as User);
+      }
+    } catch { /* ignore optimistic decode errors */ }
+
+    api.getMe()
+      .then(u => {
+        setUser(u);
+      })
+      .catch(err => {
+        console.warn('[Auth] getMe failed, clearing token:', err.message);
+        setToken(null);
+        setUser(null);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const login = useCallback(async (phone: string, code?: string, password?: string) => {
