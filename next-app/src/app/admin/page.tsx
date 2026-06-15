@@ -33,7 +33,7 @@ interface AlipayConfig {
 }
 
 export default function AdminPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('overview');
   const [wechat, setWechat] = useState<WechatConfig>({
@@ -50,12 +50,14 @@ export default function AdminPage() {
   const [testing, setTesting] = useState(false);
 
   useEffect(() => {
+    // 等待 AuthProvider 从 localStorage 恢复用户信息后再判断权限
+    if (loading) return;
     if (!(user as any)?.isSuperAdmin) {
-      router.push('/');
+      router.push('/login');
       return;
     }
     loadConfig();
-  }, [user]);
+  }, [user, loading]);
 
   const loadConfig = async () => {
     try {
@@ -154,7 +156,28 @@ export default function AdminPage() {
     setTesting(false);
   };
 
-  if (!(user as any)?.isSuperAdmin) return null;
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-white text-stone-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-3xl animate-pulse mb-2">👑</div>
+          <p className="text-sm text-stone-500">正在恢复登录状态...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (!(user as any)?.isSuperAdmin) {
+    return (
+      <main className="min-h-screen bg-white text-stone-900 flex items-center justify-center">
+        <div className="text-center px-6">
+          <div className="text-4xl mb-3">🔒</div>
+          <p className="text-sm text-stone-500 mb-4">需要超级管理员登录</p>
+          <a href="/login" className="bg-emerald-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold">去登录</a>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-white text-stone-900 pb-20">
