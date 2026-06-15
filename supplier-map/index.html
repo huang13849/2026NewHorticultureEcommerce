@@ -11,7 +11,7 @@
     .title{font-size:18px;font-weight:800;color:#255b3b;margin-bottom:6px}.sub{font-size:12px;color:#667;margin-bottom:10px;line-height:1.45}
     .stat{display:flex;gap:8px;flex-wrap:wrap}.pill{font-size:12px;background:#e8f5e9;color:#2e7d32;border-radius:999px;padding:4px 10px}.err{color:#b00020;font-size:12px;margin-top:8px}.loading{color:#666;font-size:12px;margin-top:8px}
     .list{max-height:300px;overflow:auto;margin-top:10px;border-top:1px solid #eee;padding-top:8px}.item{font-size:12px;padding:7px 0;border-bottom:1px dashed #eee;cursor:pointer;line-height:1.4}.item:hover{color:#2e7d32;background:#fafafa}
-    .leaflet-popup-content{font-size:13px;line-height:1.55}.shop{font-weight:800;color:#255b3b;font-size:15px}.addr{color:#555}.biz{color:#777;max-width:260px}.toolbar{display:flex;gap:8px;margin-top:10px}.btn{border:1px solid #c8e6c9;background:#fff;color:#2e7d32;border-radius:9px;padding:6px 10px;font-size:12px;cursor:pointer}.btn:hover{background:#e8f5e9}
+    .leaflet-popup-content{font-size:13px;line-height:1.55}.shop{font-weight:800;color:#255b3b;font-size:15px}.addr{color:#555}.biz{color:#777;max-width:260px}.toolbar{display:flex;gap:8px;margin-top:10px}.btn{border:1px solid #c8e6c9;background:#fff;color:#2e7d32;border-radius:9px;padding:6px 10px;font-size:12px;cursor:pointer}.btn:hover{background:#e8f5e9}.videoBtn{display:inline-block;margin-top:8px;background:#111827;color:#fff;border-radius:999px;padding:7px 12px;text-decoration:none;font-size:12px;font-weight:700}.videoBtn:hover{background:#064e3b;color:#fff}.miniVideo{display:inline-block;margin-top:4px;color:#047857;font-weight:700;font-size:11px}
   </style>
 </head>
 <body>
@@ -45,6 +45,8 @@ function nameOf(s){ return s.shop_name || s.name || '未命名商户'; }
 function addrOf(s){ return (s.company_info&&s.company_info.address) || s.address || ((s.business_items||[]).find(x=>x.address)||{}).address || ''; }
 function bizOf(s){ return (s.company_info&&s.company_info.main_business) || (s.business_items||[]).map(x=>x.main_business).filter(Boolean).slice(0,2).join('；') || ''; }
 function esc(s){ return String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function idOf(s){ return s._id || s.id || s.supplierId || ''; }
+function videoUrl(s){ return 'http://100.76.15.64:3000/supplier-videos?supplierId='+encodeURIComponent(idOf(s))+'&name='+encodeURIComponent(nameOf(s)); }
 function fitAll(){ if(bounds && bounds.isValid()) map.fitBounds(bounds.pad(0.18)); }
 async function reloadData(){
   try{
@@ -58,10 +60,10 @@ async function reloadData(){
     statusEl.textContent = suppliers.length ? '点击标记查看商户信息' : '暂无带经纬度的供应商';
     suppliers.forEach((s,i)=>{
       const lat=Number(s.latitude), lng=Number(s.longitude), name=nameOf(s), addr=addrOf(s), biz=bizOf(s);
-      const marker = L.marker([lat,lng], { title:name }).bindPopup(`<div class="shop">${esc(name)}</div><div class="addr">${esc(addr)||'无地址'}</div><div class="biz">${esc(biz)}</div><div style="color:#999;margin-top:4px">${lng.toFixed(6)}, ${lat.toFixed(6)}</div>`);
+      const marker = L.marker([lat,lng], { title:name }).bindPopup(`<div class="shop">${esc(name)}</div><div class="addr">${esc(addr)||'无地址'}</div><div class="biz">${esc(biz)}</div><div style="color:#999;margin-top:4px">${lng.toFixed(6)}, ${lat.toFixed(6)}</div><a class="videoBtn" target="_top" href="${videoUrl(s)}">🎬 视频逛店 · 上下刷</a>`);
       marker.addTo(markersLayer); bounds.extend([lat,lng]);
       const item = document.createElement('div'); item.className='item';
-      item.innerHTML = `${i+1}. ${esc(name)}<br/><span style="color:#999">${esc(addr)||'无地址'} · ${lng.toFixed(4)}, ${lat.toFixed(4)}</span>`;
+      item.innerHTML = `${i+1}. ${esc(name)}<br/><span style="color:#999">${esc(addr)||'无地址'} · ${lng.toFixed(4)}, ${lat.toFixed(4)}</span><br/><a class="miniVideo" target="_top" href="${videoUrl(s)}" onclick="event.stopPropagation()">🎬 视频逛店</a>`;
       item.onclick = () => { map.setView([lat,lng], 12); marker.openPopup(); };
       listEl.appendChild(item);
     });
