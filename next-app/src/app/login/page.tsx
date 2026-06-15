@@ -48,9 +48,9 @@ export default function LoginPage() {
     try {
       const result = await login(phone, mode === 'password' ? undefined : code, mode === 'password' ? password : undefined);
       console.log('[Login] Success:', result.nickname, result.role);
-      // Ensure state is updated before navigation
-      await new Promise(r => setTimeout(r, 100));
-      router.push('/');
+      // Ensure token persistence, then hard redirect so RootLayout rehydrates from storage/cookie.
+      await new Promise(r => setTimeout(r, 150));
+      window.location.href = '/';
     } catch (e: any) {
       console.error('[Login] Failed:', e.message);
       setError(e.message || '登录失败');
