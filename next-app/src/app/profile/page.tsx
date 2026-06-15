@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/api';
-import LoginPrompt from '../components/LoginPrompt';
 import TabBar from '../TabBar';
+import LoginPrompt from '../components/LoginPrompt';
 
 interface Address {
   name: string;
@@ -29,7 +29,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#0a0e1a] text-white flex items-center justify-center">
+      <main className="min-h-screen bg-white text-stone-900 flex items-center justify-center">
         <div className="animate-spin text-3xl">🌸</div>
       </main>
     );
@@ -37,7 +37,7 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <main className="min-h-screen bg-[#0a0e1a] text-white">
+      <main className="min-h-screen bg-white text-stone-900">
         <LoginPrompt message="登录后查看个人中心" />
         <TabBar />
       </main>
@@ -45,6 +45,8 @@ export default function ProfilePage() {
   }
 
   const addresses: Address[] = (user as any).address || [];
+  const isAdmin = (user as any).isAdmin || (user as any).isSuperAdmin;
+  const isSuperAdmin = (user as any).isSuperAdmin;
 
   const openAddAddress = () => {
     setEditingIdx(null);
@@ -68,7 +70,6 @@ export default function ProfilePage() {
       await api.updateAddress(form);
       setMsg('地址已保存');
       setShowAddressForm(false);
-      // Refresh user data
       window.location.reload();
     } catch (err: any) {
       setMsg(err.message || '保存失败');
@@ -78,138 +79,136 @@ export default function ProfilePage() {
 
   return (
     <>
-      <main className="min-h-screen bg-[#0a0e1a] text-white pb-24">
-        <nav className="sticky top-0 z-50 bg-[#0a0e1a]/90 backdrop-blur-md border-b border-white/5">
-          <div className="max-w-6xl mx-auto px-6 h-12 flex items-center justify-between">
-            <span className="text-gold font-bold tracking-[3px] text-xs">个人中心</span>
-            <button onClick={logout} className="text-xs text-[#6b7280] hover:text-red-400 transition-colors">
-              退出
+      <main className="min-h-screen bg-white text-stone-900 pb-24">
+        {/* Header */}
+        <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-xl border-b border-stone-200/60 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <span className="font-bold text-sm">个人中心</span>
+            <button onClick={logout} className="text-xs text-stone-400 hover:text-red-500 transition-colors">
+              退出登录
             </button>
           </div>
-        </nav>
+        </div>
 
-        <div className="max-w-4xl mx-auto px-6 pt-6 space-y-6">
+        <div className="max-w-2xl mx-auto px-4 pt-6 space-y-5">
           {/* 用户卡片 */}
-          <div className="card p-6 flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#c9a84c] to-[#dbb960] flex items-center justify-center text-2xl">
+          <div className="rounded-2xl border border-stone-200 p-5 flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-2xl shadow-md">
               {(user as any).avatar || '🌸'}
             </div>
-            <div>
-              <h2 className="text-lg font-bold">{(user as any).nickname || '花友'}</h2>
-              <p className="text-[#9ca3af] text-sm">{(user as any).phone}</p>
+            <div className="flex-1">
+              <h2 className="text-base font-bold text-stone-900">{(user as any).nickname || '花友'}</h2>
+              <p className="text-xs text-stone-400">{(user as any).phone}</p>
             </div>
+            {isSuperAdmin && (
+              <a href="/admin" className="bg-emerald-700 text-white text-[10px] font-bold px-3 py-1.5 rounded-full hover:bg-emerald-800 transition-colors">
+                👑 管理后台
+              </a>
+            )}
           </div>
 
-          {/* 收货地址 */}
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="label">收货地址</h2>
-              <button onClick={openAddAddress} className="text-[#c9a84c] text-xs hover:text-[#dbb960]">
-                + 新增地址
-              </button>
-            </div>
-
-            {addresses.length === 0 ? (
-              <div className="card p-8 text-center text-[#6b7280] text-sm">
-                暂无收货地址，请添加
+          {/* 管理员入口 */}
+          {isAdmin && !isSuperAdmin && (
+            <a href="/admin" className="block rounded-2xl border border-emerald-200 bg-emerald-50 p-4 hover:bg-emerald-100 transition-colors">
+              <div className="flex items-center gap-3">
+                <span className="text-xl">⚙️</span>
+                <div>
+                  <p className="text-sm font-semibold text-emerald-800">管理后台</p>
+                  <p className="text-[10px] text-emerald-600">支付配置、系统管理</p>
+                </div>
+                <span className="ml-auto text-emerald-400">→</span>
               </div>
-            ) : (
-              <div className="space-y-3">
+            </a>
+          )}
+
+          {/* 功能菜单 */}
+          <div className="rounded-2xl border border-stone-200 divide-y divide-stone-100">
+            {[
+              { icon: '📦', label: '我的订单', href: '/payment' },
+              { icon: '🌱', label: '我的花园', href: '/garden' },
+              { icon: '📍', label: '收货地址', action: 'address' },
+              { icon: '💬', label: '联系客服', href: 'tel:18511987921' },
+            ].map(item => (
+              item.action === 'address' ? (
+                <button key={item.label} onClick={openAddAddress} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 transition-colors text-left">
+                  <span className="text-lg">{item.icon}</span>
+                  <span className="text-sm text-stone-700 flex-1">{item.label}</span>
+                  <span className="text-stone-300 text-sm">→</span>
+                </button>
+              ) : (
+                <a key={item.label} href={item.href} className="flex items-center gap-3 px-4 py-3.5 hover:bg-stone-50 transition-colors">
+                  <span className="text-lg">{item.icon}</span>
+                  <span className="text-sm text-stone-700 flex-1">{item.label}</span>
+                  <span className="text-stone-300 text-sm">→</span>
+                </a>
+              )
+            ))}
+          </div>
+
+          {/* 收货地址列表 */}
+          {addresses.length > 0 && (
+            <section>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-bold text-stone-900">收货地址</h2>
+                <button onClick={openAddAddress} className="text-xs text-emerald-700 font-medium">+ 新增</button>
+              </div>
+              <div className="space-y-2">
                 {addresses.map((addr, i) => (
-                  <div key={i} className="card p-4 flex items-start justify-between">
+                  <div key={i} className="rounded-xl border border-stone-200 p-3 flex items-start justify-between">
                     <div>
-                      <p className="text-sm font-semibold">{addr.name} <span className="text-[#9ca3af] font-normal">{addr.phone}</span></p>
-                      <p className="text-xs text-[#9ca3af] mt-1">
-                        {addr.province}{addr.city}{addr.district}{addr.detail}
-                      </p>
+                      <p className="text-sm font-medium">{addr.name} <span className="text-stone-400 font-normal">{addr.phone}</span></p>
+                      <p className="text-xs text-stone-400 mt-0.5">{addr.province}{addr.city}{addr.district}{addr.detail}</p>
                       {addr.isDefault && (
-                        <span className="inline-block bg-[#2dd4a0]/10 text-[#2dd4a0] text-[10px] px-2 py-0.5 rounded mt-1">默认</span>
+                        <span className="inline-block bg-emerald-50 text-emerald-700 text-[10px] px-1.5 py-0.5 rounded mt-1 font-medium">默认</span>
                       )}
                     </div>
-                    <button onClick={() => openEditAddress(i)} className="text-xs text-[#6b7280] hover:text-[#c9a84c]">
-                      编辑
-                    </button>
+                    <button onClick={() => openEditAddress(i)} className="text-xs text-stone-400 hover:text-emerald-700">编辑</button>
                   </div>
                 ))}
               </div>
-            )}
+            </section>
+          )}
 
-            {/* 地址表单 */}
-            {showAddressForm && (
-              <div className="card p-4 mt-3 space-y-3">
-                <h3 className="text-sm font-semibold">{editingIdx !== null ? '编辑地址' : '新增地址'}</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <input
-                    placeholder="姓名"
-                    value={form.name}
-                    onChange={e => setForm({ ...form, name: e.target.value })}
-                    className="bg-[#111827] border border-white/10 rounded px-3 py-2 text-sm text-white placeholder-[#4b5563]"
-                  />
-                  <input
-                    placeholder="手机号"
-                    value={form.phone}
-                    onChange={e => setForm({ ...form, phone: e.target.value })}
-                    className="bg-[#111827] border border-white/10 rounded px-3 py-2 text-sm text-white placeholder-[#4b5563]"
-                  />
-                  <input
-                    placeholder="省"
-                    value={form.province}
-                    onChange={e => setForm({ ...form, province: e.target.value })}
-                    className="bg-[#111827] border border-white/10 rounded px-3 py-2 text-sm text-white placeholder-[#4b5563]"
-                  />
-                  <input
-                    placeholder="市"
-                    value={form.city}
-                    onChange={e => setForm({ ...form, city: e.target.value })}
-                    className="bg-[#111827] border border-white/10 rounded px-3 py-2 text-sm text-white placeholder-[#4b5563]"
-                  />
-                  <input
-                    placeholder="区/县"
-                    value={form.district}
-                    onChange={e => setForm({ ...form, district: e.target.value })}
-                    className="bg-[#111827] border border-white/10 rounded px-3 py-2 text-sm text-white placeholder-[#4b5563]"
-                  />
-                  <label className="flex items-center gap-2 text-sm text-[#9ca3af]">
-                    <input
-                      type="checkbox"
-                      checked={form.isDefault}
-                      onChange={e => setForm({ ...form, isDefault: e.target.checked })}
-                      className="accent-[#c9a84c]"
-                    />
-                    设为默认
-                  </label>
-                </div>
-                <input
-                  placeholder="详细地址（街道、门牌号等）"
-                  value={form.detail}
-                  onChange={e => setForm({ ...form, detail: e.target.value })}
-                  className="w-full bg-[#111827] border border-white/10 rounded px-3 py-2 text-sm text-white placeholder-[#4b5563]"
-                />
-                <div className="flex gap-3">
-                  <button onClick={saveAddress} disabled={saving} className="btn-primary text-[11px] py-2 px-6">
-                    {saving ? '保存中...' : '保存'}
-                  </button>
-                  <button onClick={() => setShowAddressForm(false)} className="btn-ghost text-[11px] py-2 px-6">
-                    取消
-                  </button>
-                </div>
+          {/* 地址表单 */}
+          {showAddressForm && (
+            <div className="rounded-xl border border-stone-200 p-4 space-y-3">
+              <h3 className="text-sm font-bold">{editingIdx !== null ? '编辑地址' : '新增地址'}</h3>
+              <div className="grid grid-cols-2 gap-2">
+                <input placeholder="姓名" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-400" />
+                <input placeholder="手机号" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-400" />
+                <input placeholder="省" value={form.province} onChange={e => setForm({ ...form, province: e.target.value })} className="border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-400" />
+                <input placeholder="市" value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} className="border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-400" />
+                <input placeholder="区/县" value={form.district} onChange={e => setForm({ ...form, district: e.target.value })} className="border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-400" />
+                <label className="flex items-center gap-2 text-sm text-stone-500">
+                  <input type="checkbox" checked={form.isDefault} onChange={e => setForm({ ...form, isDefault: e.target.checked })} className="accent-emerald-600" />
+                  设为默认
+                </label>
               </div>
-            )}
-          </section>
+              <input placeholder="详细地址" value={form.detail} onChange={e => setForm({ ...form, detail: e.target.value })} className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-400" />
+              <div className="flex gap-2">
+                <button onClick={saveAddress} disabled={saving} className="bg-emerald-700 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-emerald-800 transition-colors disabled:opacity-50">
+                  {saving ? '保存中...' : '保存'}
+                </button>
+                <button onClick={() => setShowAddressForm(false)} className="bg-stone-100 text-stone-500 px-5 py-2 rounded-lg text-sm hover:bg-stone-200 transition-colors">
+                  取消
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* 种花成就 */}
           <section>
-            <h2 className="label mb-3">种花成就</h2>
+            <h2 className="text-sm font-bold text-stone-900 mb-3">种花成就</h2>
             <div className="grid grid-cols-3 gap-3">
               {[
                 { label: '已种植', value: (user as any).gardenStats?.totalPlanted || 0, emoji: '🌱' },
                 { label: '已成熟', value: (user as any).gardenStats?.totalCompleted || 0, emoji: '🌸' },
                 { label: '已获赠', value: (user as any).gardenStats?.totalGifted || 0, emoji: '🎁' },
               ].map(s => (
-                <div key={s.label} className="card p-4 text-center">
-                  <span className="text-2xl">{s.emoji}</span>
-                  <p className="text-xl font-bold text-[#c9a84c] mt-1">{s.value}</p>
-                  <p className="text-[10px] text-[#6b7280]">{s.label}</p>
+                <div key={s.label} className="rounded-xl border border-stone-200 p-3 text-center">
+                  <span className="text-xl">{s.emoji}</span>
+                  <p className="text-lg font-bold text-emerald-700 mt-1">{s.value}</p>
+                  <p className="text-[10px] text-stone-400">{s.label}</p>
                 </div>
               ))}
             </div>
@@ -217,9 +216,9 @@ export default function ProfilePage() {
         </div>
 
         {msg && (
-          <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 bg-[#111827] border border-[#c9a84c]/30 rounded-lg px-4 py-2 text-sm text-[#c9a84c]">
+          <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-50 bg-stone-900 text-white rounded-lg px-4 py-2 text-sm">
             {msg}
-            <button onClick={() => setMsg('')} className="ml-2 text-[#6b7280]">✕</button>
+            <button onClick={() => setMsg('')} className="ml-2 text-stone-400">✕</button>
           </div>
         )}
       </main>
