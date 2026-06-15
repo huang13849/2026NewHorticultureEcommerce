@@ -4,11 +4,15 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 
+type LoginMode = 'code' | 'password';
+
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
+  const [mode, setMode] = useState<LoginMode>('code');
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('123456');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -17,10 +21,18 @@ export default function LoginPage() {
       setError('请输入正确的手机号');
       return;
     }
+    if (mode === 'password' && !password) {
+      setError('请输入密码');
+      return;
+    }
+    if (mode === 'code' && !code) {
+      setError('请输入验证码');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
-      await login(phone, code);
+      await login(phone, mode === 'password' ? undefined : code, mode === 'password' ? password : undefined);
       router.push('/');
     } catch (e: any) {
       setError(e.message || '登录失败');
@@ -30,49 +42,78 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="max-w-lg mx-auto min-h-screen flex flex-col items-center justify-center px-8 bg-white">
+    <main className="min-h-screen bg-white text-stone-900 flex flex-col items-center justify-center px-8">
       <p className="text-6xl mb-4">🌸</p>
-      <h1 className="text-3xl font-bold text-green-600">花伴</h1>
-      <p className="text-sm text-yellow-800 mt-2 mb-8">让每一朵花找到它的主人</p>
+      <h1 className="text-3xl font-bold text-emerald-700">花伴</h1>
+      <p className="text-sm text-stone-400 mt-2 mb-8">让每一朵花找到它的主人</p>
 
       {error && (
-        <div className="w-full bg-red-50 text-red-600 text-sm p-3 rounded-xl mb-4">
+        <div className="w-full bg-red-50 text-red-600 text-sm p-3 rounded-xl mb-4 border border-red-200">
           {error}
         </div>
       )}
 
+      {/* Mode Toggle */}
+      <div className="w-full flex rounded-xl border border-stone-200 mb-6 overflow-hidden">
+        <button
+          onClick={() => setMode('code')}
+          className={`flex-1 py-2.5 text-sm font-medium transition-colors ${mode === 'code' ? 'bg-emerald-700 text-white' : 'bg-white text-stone-500'}`}
+        >
+          验证码登录
+        </button>
+        <button
+          onClick={() => setMode('password')}
+          className={`flex-1 py-2.5 text-sm font-medium transition-colors ${mode === 'password' ? 'bg-emerald-700 text-white' : 'bg-white text-stone-500'}`}
+        >
+          密码登录
+        </button>
+      </div>
+
+      {/* Phone */}
       <input
         type="tel"
         placeholder="手机号"
         maxLength={11}
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
-        className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+        className="w-full border border-stone-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200 transition-colors"
       />
 
-      <div className="w-full flex gap-2 mt-3">
+      {mode === 'code' ? (
+        <div className="w-full flex gap-2 mt-3">
+          <input
+            type="text"
+            placeholder="验证码"
+            maxLength={6}
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            className="flex-1 border border-stone-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200 transition-colors"
+          />
+          <button className="bg-emerald-700 text-white px-4 rounded-xl text-sm font-medium hover:bg-emerald-800 transition-colors whitespace-nowrap">
+            获取验证码
+          </button>
+        </div>
+      ) : (
         <input
-          type="text"
-          placeholder="验证码"
-          maxLength={6}
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          className="flex-1 border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+          type="password"
+          placeholder="密码"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full border border-stone-200 rounded-xl px-4 py-3 text-base mt-3 focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200 transition-colors"
         />
-        <button className="bg-green-600 text-white px-4 rounded-xl text-sm font-medium hover:bg-green-700 transition-colors whitespace-nowrap">
-          获取验证码
-        </button>
-      </div>
+      )}
 
       <button
         onClick={handleLogin}
         disabled={loading}
-        className="w-full bg-green-600 text-white py-3 rounded-xl text-lg font-bold mt-6 hover:bg-green-700 transition-colors disabled:opacity-50"
+        className="w-full bg-emerald-700 text-white py-3 rounded-xl text-lg font-bold mt-6 hover:bg-emerald-800 transition-colors disabled:opacity-50"
       >
         {loading ? '登录中...' : '登录'}
       </button>
 
-      <p className="text-xs text-gray-400 mt-4">验证码输入 123456 即可登录</p>
+      <p className="text-xs text-stone-400 mt-4">
+        {mode === 'code' ? '验证码输入 123456 即可登录' : '管理员使用手机号+密码登录'}
+      </p>
     </main>
   );
 }
