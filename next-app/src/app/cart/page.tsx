@@ -65,7 +65,7 @@ export default function CartPage() {
   const goToPayment = () => {
     if (checkedItems.length === 0) return;
     // 保存选中项到 session 用于支付页
-    sessionStorage.setItem('flower_checkout', JSON.stringify(checkedItems));
+    localStorage.setItem('flower_cart', JSON.stringify(checkedItems));
     router.push('/payment');
   };
 
