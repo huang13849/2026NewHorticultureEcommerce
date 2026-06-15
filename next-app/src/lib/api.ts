@@ -134,15 +134,33 @@ let authToken: string | null = null;
 export function setToken(token: string | null) {
   authToken = token;
   if (typeof window !== 'undefined') {
-    if (token) localStorage.setItem('flower_token', token);
-    else localStorage.removeItem('flower_token');
+    if (token) {
+      localStorage.setItem('flower_token', token);
+      sessionStorage.setItem('flower_token', token);
+      // Cookie fallback for hard reload / cross-page navigation. Not HttpOnly because client reads it.
+      document.cookie = `flower_token=${encodeURIComponent(token)}; path=/; max-age=${30 * 24 * 60 * 60}; SameSite=Lax`;
+    } else {
+      localStorage.removeItem('flower_token');
+      sessionStorage.removeItem('flower_token');
+      document.cookie = 'flower_token=; path=/; max-age=0; SameSite=Lax';
+    }
   }
+}
+
+function getCookieToken(): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(/(?:^|; )flower_token=([^;]*)/);
+  return match ? decodeURIComponent(match[1]) : null;
 }
 
 export function getToken(): string | null {
   if (authToken) return authToken;
   if (typeof window !== 'undefined') {
-    authToken = localStorage.getItem('flower_token');
+    authToken = localStorage.getItem('flower_token')
+      || sessionStorage.getItem('flower_token')
+      || getCookieToken();
+    // Rehydrate missing stores so subsequent navigation is stable
+    if (authToken) setToken(authToken);
   }
   return authToken;
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/api';
 import TabBar from '../TabBar';
@@ -17,6 +18,7 @@ interface Address {
 }
 
 export default function ProfilePage() {
+  const router = useRouter();
   const { user, loading, logout } = useAuth();
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
@@ -101,15 +103,15 @@ export default function ProfilePage() {
               <p className="text-xs text-stone-400">{(user as any).phone}</p>
             </div>
             {isSuperAdmin && (
-              <a href="/admin" className="bg-emerald-700 text-white text-[10px] font-bold px-3 py-1.5 rounded-full hover:bg-emerald-800 transition-colors">
+              <button onClick={() => router.push('/admin')} className="bg-emerald-700 text-white text-[10px] font-bold px-3 py-1.5 rounded-full hover:bg-emerald-800 transition-colors">
                 👑 管理后台
-              </a>
+              </button>
             )}
           </div>
 
           {/* 管理员入口 */}
           {isAdmin && !isSuperAdmin && (
-            <a href="/admin" className="block rounded-2xl border border-emerald-200 bg-emerald-50 p-4 hover:bg-emerald-100 transition-colors">
+            <button onClick={() => router.push('/admin')} className="w-full text-left block rounded-2xl border border-emerald-200 bg-emerald-50 p-4 hover:bg-emerald-100 transition-colors">
               <div className="flex items-center gap-3">
                 <span className="text-xl">⚙️</span>
                 <div>
@@ -118,7 +120,7 @@ export default function ProfilePage() {
                 </div>
                 <span className="ml-auto text-emerald-400">→</span>
               </div>
-            </a>
+            </button>
           )}
 
           {/* 功能菜单 */}
