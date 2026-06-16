@@ -118,7 +118,7 @@ export default function ReverseAuctionPage() {
             <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-stone-900 mb-4">百合 / 鲜花倒拍</h1>
             <p className="text-stone-500 leading-relaxed max-w-2xl text-sm md:text-base">
               鲜花越快成交越新鲜。当前盘面每 <b className="text-stone-800">10 秒</b> 刷新一次倒计时，
-              每 <b className="text-emerald-700">1 分钟自动降价 ¥0.01</b>。价格放大器把"分"的变化放大展示，采购商能直观看到降价时钟在动。
+              每 <b className="text-emerald-700">1 分钟自动降价 ¥0.01</b>。降价优惠把"分"的变化放大展示，采购商能直观看到降价时钟在动。
             </p>
             <div className="mt-6 flex flex-wrap gap-4">
               <div className="bg-white rounded-xl border border-stone-200 px-5 py-4 text-center shadow-sm">
@@ -127,7 +127,7 @@ export default function ReverseAuctionPage() {
               </div>
               <div className="bg-white rounded-xl border border-stone-200 px-5 py-4 text-center shadow-sm">
                 <div className="text-2xl font-bold text-amber-600">×100</div>
-                <div className="text-[10px] text-stone-400 mt-1">价格放大器</div>
+                <div className="text-[10px] text-stone-400 mt-1">降价优惠</div>
               </div>
               <div className="bg-white rounded-xl border border-stone-200 px-5 py-4 text-center shadow-sm">
                 <div className="text-2xl font-bold text-stone-800">30m</div>
@@ -185,12 +185,12 @@ export default function ReverseAuctionPage() {
                     </div>
                     <div className="flex items-center justify-between mb-3 bg-amber-50 rounded-xl p-3 border border-amber-100">
                       <div>
-                        <p className="text-[10px] text-stone-500 font-medium">价格放大器</p>
+                        <p className="text-[10px] text-stone-500 font-medium">降价优惠</p>
                         <p className="text-[10px] text-stone-400">把分价变化放大成可见跳动</p>
                       </div>
                       <div className="text-right">
                         <div className="text-xl font-bold text-amber-600">-{price.amplifiedDrop}</div>
-                        <div className="text-[10px] text-stone-400">放大点</div>
+                        <div className="text-[10px] text-stone-400">已降金额</div>
                       </div>
                     </div>
                     <button

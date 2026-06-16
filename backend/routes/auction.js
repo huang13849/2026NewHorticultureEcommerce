@@ -72,13 +72,35 @@ router.get('/items', async (req, res) => {
       // 是否今天上午9点开始
       const isToday9am = now >= today9am && now < new Date(today9am.getTime() + 3600000);
 
-      // 图片URL处理
+      // 图片URL处理：商品管理已把图片拆到多个专属字段，auction 不能只读旧 images[]
+      const imageFields = [
+        'images',
+        'panorama_images',
+        'package_images',
+        'detail_images',
+        'root_soil_images',
+        'size_ref_images',
+        'scene_images',
+        'selling_point_images',
+        'care_images',
+        'comparison_images',
+        'shipping_images',
+        'after_sale_images',
+      ];
       let imageUrl = '';
-      if (product.images && product.images.length > 0) {
-        imageUrl = product.images[0];
-        if (imageUrl && !imageUrl.startsWith('http')) {
-          imageUrl = `http://100.96.54.109:9000/supply-chain/${imageUrl}`;
+      for (const field of imageFields) {
+        const value = product[field];
+        if (Array.isArray(value) && value.length > 0 && value[0]) {
+          imageUrl = value[0];
+          break;
         }
+        if (typeof value === 'string' && value) {
+          imageUrl = value;
+          break;
+        }
+      }
+      if (imageUrl && !imageUrl.startsWith('http')) {
+        imageUrl = `http://100.96.54.109:9000/supply-chain/${String(imageUrl).replace(/^\/+/, '')}`;
       }
 
       return {
