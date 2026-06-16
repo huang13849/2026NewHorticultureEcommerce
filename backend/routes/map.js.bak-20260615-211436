@@ -121,81 +121,6 @@ router.get('/supplier/:id/products', async (req, res) => {
   }
 });
 
-function escapeRegex(s) {
-  return String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function uniqById(items) {
-  const seen = new Set();
-  return (items || []).filter(item => {
-    const key = String(item?._id || item?.id || JSON.stringify(item));
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
-
-function supplierNames(supplier, queryName) {
-  const businessNames = Array.isArray(supplier?.business_items)
-    ? supplier.business_items.map(item => item?.main_business)
-    : [];
-  return [
-    supplier?.shop_name,
-    supplier?.name,
-    supplier?.company_info?.name,
-    supplier?.company_info?.main_business,
-    supplier?.sellerName,
-    queryName,
-    ...businessNames,
-  ].map(v => String(v || '').trim()).filter(Boolean);
-}
-
-async function findSupplierProducts(supplierId, supplier, queryName) {
-  const base = { status: { $ne: 'deleted' } };
-  const products = [];
-
-  const filters = [
-    { supplierId, ...base },
-    { supplier_id: supplierId, ...base },
-    { supplier: supplierId, ...base },
-    { supplierId: String(supplierId), ...base },
-  ];
-
-  const productIds = Array.isArray(supplier?.product_ids) ? supplier.product_ids.filter(Boolean) : [];
-  if (productIds.length) {
-    filters.push({ _id: { $in: productIds.map(String) }, ...base });
-  }
-
-  // 商品表里当前主要用 sellerName 关联“商户名”，不是 supplierId。
-  // 精确匹配优先，避免点 A 商家时混入 B 商家的商品。
-  const names = supplierNames(supplier, queryName);
-  for (const name of names) {
-    filters.push({ sellerName: name, ...base });
-  }
-
-  for (const filter of filters) {
-    try {
-      const found = await db.find('products', { filter, limit: 50 });
-      if (found && found.length) products.push(...found);
-    } catch { /* empty */ }
-  }
-
-  // 只有精确匹配无结果时，才做名称包含匹配；仍然限定 sellerName，绝不回退全量商品。
-  if (!products.length) {
-    for (const name of names) {
-      try {
-        const found = await db.find('products', {
-          filter: { sellerName: { $regex: escapeRegex(name), $options: 'i' }, ...base },
-          limit: 50,
-        });
-        if (found && found.length) products.push(...found);
-      } catch { /* empty */ }
-    }
-  }
-
-  return uniqById(products).slice(0, 50);
-}
-
 // ===== 短视频逛店 Feed =====
 router.get('/supplier-video-feed/:id', async (req, res) => {
   try {
@@ -203,20 +128,40 @@ router.get('/supplier-video-feed/:id', async (req, res) => {
     const supplierName = req.query.name || '';
 
     let supplier = null;
-    // 真实集合名是 supplier；保留 suppliers 兼容旧数据。
-    try { supplier = await db.findById('supplier', supplierId); } catch { /* empty */ }
+    try { supplier = await db.findById('suppliers', supplierId); } catch { /* empty */ }
     if (!supplier) {
-      try { supplier = await db.findById('suppliers', supplierId); } catch { /* empty */ }
+      try { supplier = await db.findById('supplier', supplierId); } catch { /* empty */ }
     }
 
-    const name = supplier?.shop_name || supplier?.name || supplierName;
-    const products = await findSupplierProducts(supplierId, supplier, supplierName);
+    let products = [];
+    const filters = [
+      { supplierId, status: { $ne: 'deleted' } },
+      { supplier_id: supplierId, status: { $ne: 'deleted' } },
+    ];
+
+    for (const filter of filters) {
+      try {
+        products = await db.find('products', { filter, limit: 30 });
+        if (products && products.length) break;
+      } catch { /* empty */ }
+    }
+
+    // 如果用 id 找不到商品，尝试用供应商名模糊兜底；再兜底推荐商品
+    const name = supplier?.name || supplier?.shop_name || supplierName;
+    if ((!products || products.length === 0) && name) {
+      try {
+        products = await db.find('products', { filter: { sellerName: { $like: `%${name}%` }, status: { $ne: 'deleted' } }, limit: 30 });
+      } catch { /* empty */ }
+    }
+    if (!products || products.length === 0) {
+      products = await db.find('products', { filter: { status: { $ne: 'deleted' } }, limit: 20 });
+    }
 
     const videos = (products || []).map((p, idx) => ({
       id: p._id || `${supplierId}-${idx}`,
       productId: p._id,
       supplierId,
-      supplierName: name || p.sellerName || '花卉商家',
+      supplierName: name || '花卉商家',
       title: productTitle(p),
       description: p.description || p.specSize || p.category || '产地直供 · 实拍商品 · 支持批发采购',
       price: Number(p.sellPrice || p.price || p.settlementPrice || 0),
@@ -233,7 +178,7 @@ router.get('/supplier-video-feed/:id', async (req, res) => {
         id: supplierId,
         name: name || '花卉商家',
         address: supplier?.address || supplier?.company_info?.address || '',
-        phone: supplier?.phone || supplier?.contact_phone || supplier?.contact?.phone || '',
+        phone: supplier?.phone || supplier?.contact_phone || '',
         description: supplier?.description || supplier?.company_info?.main_business || '',
       },
       videos,

@@ -10,3 +10,6 @@ node_modules/
 dist/
 uploads/
 
+
+# Cloudflare Pages static export
+next-app/out/
