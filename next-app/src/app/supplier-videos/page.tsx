@@ -2,6 +2,8 @@
 
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useI18n } from '@/lib/i18n/context';
+import LangSwitch from '@/app/components/LangSwitch';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://100.76.15.64:3010/api';
 
@@ -29,6 +31,7 @@ interface VideoItem {
 }
 
 function VideoCard({ item, active }: { item: VideoItem; active: boolean }) {
+  const { t } = useI18n();
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
@@ -90,7 +93,7 @@ function VideoCard({ item, active }: { item: VideoItem; active: boolean }) {
           <div className="w-9 h-9 rounded-full bg-emerald-500/90 flex items-center justify-center text-lg">🌸</div>
           <div>
             <p className="text-sm font-bold">@{item.supplierName}</p>
-            <p className="text-[10px] text-white/60">产地实拍 · 商家短视频</p>
+            <p className="text-[10px] text-white/60">{t('supplierVideos.subtitle')}</p>
           </div>
         </div>
         <h2 className="text-lg font-bold leading-tight mb-1 line-clamp-2">{item.title}</h2>
@@ -106,6 +109,7 @@ function VideoCard({ item, active }: { item: VideoItem; active: boolean }) {
 }
 
 function SupplierVideosContent() {
+  const { t } = useI18n();
   const router = useRouter();
   const params = useSearchParams();
   const supplierId = params.get('supplierId') || '';
@@ -168,7 +172,7 @@ function SupplierVideosContent() {
           ✕
         </button>
         <div className="text-center">
-          <p className="text-sm font-bold">{supplier?.name || supplierName || '商家短视频'}</p>
+          <p className="text-sm font-bold">{supplier?.name || supplierName || t('map.shopVideo')}</p>
           <p className="text-[10px] text-white/60">{videos.length} 条实拍 · 上下滑动查看</p>
         </div>
         <button
@@ -203,8 +207,9 @@ function SupplierVideosContent() {
 }
 
 export default function SupplierVideosPage() {
+  const { t } = useI18n();
   return (
-    <Suspense fallback={<main className="h-screen bg-black text-white flex items-center justify-center">加载中...</main>}>
+    <Suspense fallback={<main className="h-screen bg-black text-white flex items-center justify-center">{t('common.loading')}</main>}>
       <SupplierVideosContent />
     </Suspense>
   );

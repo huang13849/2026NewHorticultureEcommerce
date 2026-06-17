@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import TabBar from '../TabBar';
+import { useI18n } from '@/lib/i18n/context';
+import LangSwitch from '@/app/components/LangSwitch';
 
 interface CartItem {
   productId: string;
@@ -15,6 +17,7 @@ interface CartItem {
 }
 
 export default function CartPage() {
+  const { t } = useI18n();
   const router = useRouter();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,7 +87,7 @@ export default function CartPage() {
         <nav className="sticky top-0 z-50 bg-[#0a0e1a]/90 backdrop-blur-md border-b border-white/5">
           <div className="max-w-2xl mx-auto px-4 h-12 flex items-center gap-3">
             <Link href="/shop" className="text-[#9ca3af] hover:text-white text-sm">← 商店</Link>
-            <span className="text-gold font-bold tracking-[2px] text-xs">购物车</span>
+            <span className="text-gold font-bold tracking-[2px] text-xs">{t('cart.title')}</span>
             <span className="text-[#6b7280] text-sm ml-auto">{cart.length} 件商品</span>
           </div>
         </nav>
@@ -93,7 +96,7 @@ export default function CartPage() {
           <div className="max-w-2xl mx-auto px-4 pt-20 text-center">
             <p className="text-5xl mb-4">🛒</p>
             <p className="text-[#6b7280] mb-6">购物车空空如也</p>
-            <Link href="/shop" className="btn-primary text-[11px] py-2 px-8">去逛逛</Link>
+            <Link href="/shop" className="btn-primary text-[11px] py-2 px-8">{t('cart.goShop')}</Link>
           </div>
         ) : (
           <>
