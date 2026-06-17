@@ -1,0 +1,536 @@
+{
+  "common": {
+    "loading": "加载中...",
+    "save": "保存",
+    "saving": "保存中...",
+    "saveFailed": "保存失败",
+    "cancel": "取消",
+    "delete": "删除",
+    "confirm": "确认",
+    "login": "登录",
+    "logout": "退出登录",
+    "back": "返回",
+    "submit": "提交",
+    "search": "搜索",
+    "all": "全部",
+    "select": "选择",
+    "edit": "编辑",
+    "close": "关闭",
+    "retry": "重试",
+    "networkError": "网络错误",
+    "noData": "暂无数据",
+    "success": "操作成功",
+    "error": "操作失败",
+    "freeShipping": "免运费",
+    "total": "合计",
+    "price": "价格",
+    "quantity": "数量",
+    "status": "状态",
+    "action": "操作",
+    "name": "名称",
+    "phone": "手机号",
+    "address": "地址",
+    "category": "分类",
+    "image": "图片",
+    "copy": "复制",
+    "download": "下载",
+    "confirmDelete": "确定删除？",
+    "copied": "已复制",
+    "cny": "元"
+  },
+  "nav": {
+    "home": "首页",
+    "map": "地图",
+    "auction": "苗木拍卖",
+    "reverseAuction": "鲜花倒拍",
+    "shop": "商店",
+    "garden": "花园",
+    "profile": "我的",
+    "flowerShop": "智慧供应链"
+  },
+  "home": {
+    "title": "花卉供应链",
+    "subtitle": "新体验",
+    "desc": "连接产地与市场，智能撮合交易。批发拍卖、鲜花倒拍、地图购花、花园种植——一站式花卉供应链平台。",
+    "enterAuction": "进入拍卖",
+    "flowerReverse": "鲜花倒拍",
+    "quickEntry": {
+      "auction": {
+        "title": "苗木拍卖",
+        "desc": "批发乔灌木竞价拍卖"
+      },
+      "reverse": {
+        "title": "鲜花倒拍",
+        "desc": "百合鲜花越等越便宜"
+      },
+      "map": {
+        "title": "地图购花",
+        "desc": "附近花卉一键购买"
+      },
+      "shop": {
+        "title": "花卉商城",
+        "desc": "精选好物限时优惠"
+      }
+    },
+    "recommendTitle": "推荐商品",
+    "viewMore": "查看更多 →",
+    "noProducts": "暂无推荐商品",
+    "unnamed": "未命名",
+    "greenCert": {
+      "subtitle": "Green Certification · Carbon Credit",
+      "title": "苗木绿色认证 & 碳币体系",
+      "desc": "每棵认证苗木都可溯源、可计量、可交易。从种植到碳汇，构建可信的绿色价值链。",
+      "stats": {
+        "trees": {
+          "label": "已认证树木",
+          "unit": "棵"
+        },
+        "carbon": {
+          "label": "碳汇累计",
+          "unit": "吨 CO₂"
+        },
+        "coins": {
+          "label": "碳币流通",
+          "unit": "CC"
+        },
+        "users": {
+          "label": "参与用户",
+          "unit": "人"
+        }
+      },
+      "features": {
+        "trace": {
+          "title": "苗木溯源",
+          "desc": "每棵认证苗木拥有唯一溯源 ID，从种苗到成树全生命周期记录。品种、产地、种植者、养护记录一目了然。",
+          "details": [
+            "区块链存证",
+            "GPS 种植定位",
+            "全生命周期档案",
+            "QR 码一扫即查"
+          ]
+        },
+        "bind": {
+          "title": "人树绑定",
+          "desc": "认证树木与种植者/养护人实名绑定，责任到人。定期上传与植物合照，确保树木存活与养护质量。",
+          "details": [
+            "实名认证绑定",
+            "季度拍照打卡",
+            "AI 存活识别",
+            "养护评分体系"
+          ]
+        },
+        "measure": {
+          "title": "碳计量",
+          "desc": "基于树种、胸径、树龄等参数，按 IPCC 标准计算碳汇量。每季度更新碳储量数据，透明可审计。",
+          "details": [
+            "IPCC 碳汇公式",
+            "季度碳储量更新",
+            "树种系数库",
+            "碳汇证书发放"
+          ]
+        },
+        "trade": {
+          "title": "碳币交易",
+          "desc": "碳汇量自动转换为碳币（CC），可用于平台购物抵扣、碳积分兑换，也可在碳币市场自由交易。",
+          "details": [
+            "自动碳币铸造",
+            "购物抵扣支付",
+            "碳币市场交易",
+            "提现与转让"
+          ]
+        }
+      },
+      "steps": {
+        "submit": {
+          "title": "提交认证",
+          "desc": "上传苗木信息 + 实名认证 + GPS 定位"
+        },
+        "review": {
+          "title": "审核通过",
+          "desc": "平台审核苗木信息，发放绿色认证标签"
+        },
+        "bind": {
+          "title": "人树绑定",
+          "desc": "种植者与树木绑定，开始碳计量"
+        },
+        "checkin": {
+          "title": "季度打卡",
+          "desc": "每季度上传与植物合照 + 生长数据"
+        },
+        "issue": {
+          "title": "碳币发放",
+          "desc": "根据碳汇量自动发放碳币到账户"
+        },
+        "use": {
+          "title": "交易抵扣",
+          "desc": "碳币可用于购物抵扣或市场交易"
+        }
+      },
+      "apply": "申请绿色认证 →",
+      "flowTitle": "认证流程"
+    },
+    "successStories": {
+      "subtitle": "Success Stories",
+      "title": "庭院园林 · 成功案例",
+      "desc": "从别墅庭院到阳台花园，每一个项目都用心交付",
+      "items": [
+        {
+          "title": "北京别墅庭院改造",
+          "desc": "25棵白皮松 + 80棵月季，30天从裸地到花园",
+          "tag": "别墅庭院"
+        },
+        {
+          "title": "天津婚礼花艺布置",
+          "desc": "2000支百合 + 500支玫瑰，48小时交付",
+          "tag": "婚礼花艺"
+        },
+        {
+          "title": "廊坊小区绿化工程",
+          "desc": "乔灌木混植 300棵，季度养护全包",
+          "tag": "社区绿化"
+        },
+        {
+          "title": "顺义温室大棚供货",
+          "desc": "每周2000盆盆花稳定配送",
+          "tag": "商业供货"
+        },
+        {
+          "title": "保定陵园景观设计",
+          "desc": "常青树 + 时令花卉四季常青",
+          "tag": "园林景观"
+        },
+        {
+          "title": "丰台阳台花园改造",
+          "desc": "2米空间打造微型花园",
+          "tag": "阳台花园"
+        }
+      ]
+    },
+    "reviews": {
+      "subtitle": "Customer Reviews",
+      "title": "客户好评",
+      "desc": "来自真实采购商的声音",
+      "items": [
+        {
+          "name": "张先生",
+          "loc": "北京朝阳",
+          "text": "白皮松成活率95%以上，一年后依然长势喜人，比花鸟市场靠谱多了！"
+        },
+        {
+          "name": "李女士",
+          "loc": "天津南开",
+          "text": "婚礼鲜花全程冷链，百合开得特别饱满，宾客都问在哪订的。"
+        },
+        {
+          "name": "王经理",
+          "loc": "廊坊开发区",
+          "text": "小区绿化一键下单，送货上门还包种植，物业费省了一大笔。"
+        },
+        {
+          "name": "赵总",
+          "loc": "顺义花卉市场",
+          "text": "每周稳定供货2000盆，品质统一，客户回头率明显提升。"
+        },
+        {
+          "name": "刘女士",
+          "loc": "保定",
+          "text": "陵园四季常青方案很专业，家属反馈很满意，会长期合作。"
+        },
+        {
+          "name": "陈先生",
+          "loc": "丰台",
+          "text": "2米阳台变成了小花园，老婆说这是今年最好的礼物！"
+        }
+      ]
+    },
+    "footer": {
+      "name": "智慧供应链",
+      "copyright": "京津冀花卉智能供应链平台 © 2026"
+    },
+    "intelligentSupply": "Intelligent Supply Chain",
+    "greenCertSubtitle": "Green Certification · Carbon Credit",
+    "step": "Step {n}"
+  },
+  "auction": {
+    "title": "苗木拍卖",
+    "subtitle": "乔灌木批发拍卖",
+    "currentLot": "当前拍品",
+    "bidHistory": "竞拍记录",
+    "placeBid": "出价",
+    "bidding": "出价中...",
+    "bidSuccess": "竞价成功！",
+    "bidFailed": "竞价失败",
+    "startingPrice": "起拍价",
+    "currentPrice": "当前价",
+    "nextBid": "下一口价",
+    "countdown": "倒计时",
+    "ended": "已结束",
+    "starting": "即将开始",
+    "noAuction": "暂无拍卖",
+    "round": "轮",
+    "lot": "拍品",
+    "lotNumber": "拍品编号",
+    "bidders": "竞拍人",
+    "timeLeft": "剩余",
+    "rules": "拍卖规则",
+    "rulesDesc": "只展示乔灌木类拍品；倒计时10分钟，每次竞价加价5元",
+    "treeAuction": "🌳 苗木拍卖",
+    "realtimeBid": "全国认证苗木分布 · 实时竞拍状态",
+    "bidRecord": "竞拍记录",
+    "bidder": "竞拍人",
+    "amount": "出价",
+    "time": "时间",
+    "noBids": "暂无竞拍记录",
+    "bidNow": "立即出价",
+    "minIncrement": "每次加价{amount}元",
+    "countdownEnd": "{sec}秒后结束"
+  },
+  "reverseAuction": {
+    "title": "鲜花倒拍",
+    "subtitle": "百合鲜花越等越便宜",
+    "live": "倒拍 LIVE",
+    "currentPrice": "当前价",
+    "nextDrop": "下次降",
+    "nextDropIn": "{min}分钟自动降价",
+    "timeLeft": "剩余",
+    "round": "一轮倒拍",
+    "buyNow": "立即抢购",
+    "bought": "已抢购",
+    "priceHistory": "价格历史",
+    "auctionRules": "倒拍规则",
+    "rulesDesc": "价格每隔几分钟自动下降，越等越便宜！但别人可能随时买走，果断出手！",
+    "lilyAuction": "🌷 鲜花倒拍",
+    "countdown": "倒计时",
+    "freeClaim": "免费领取",
+    "dropDiscount": "降价优惠",
+    "minAgo": "{min}分钟前",
+    "followers": "人关注",
+    "lowRisk": "低风险",
+    "lily": "百合",
+    "cutFlower": "切花"
+  },
+  "shop": {
+    "title": "花卉商城",
+    "subtitle": "精选好物限时优惠",
+    "addToCart": "加入购物车",
+    "added": "已加入",
+    "cart": "购物车",
+    "items": "件商品",
+    "noProducts": "暂无商品",
+    "category": "分类",
+    "priceRange": "价格区间",
+    "sort": "排序",
+    "default": "默认",
+    "priceAsc": "价格升序",
+    "priceDesc": "价格降序",
+    "newest": "最新",
+    "flowerShop": "🛒 花卉商城",
+    "searchPlaceholder": "搜索花卉...",
+    "cartCount": "{count}件商品"
+  },
+  "cart": {
+    "title": "购物车",
+    "empty": "购物车是空的",
+    "goShopping": "去逛逛",
+    "selectAll": "全选",
+    "deleteSelected": "删除选中",
+    "subtotal": "小计",
+    "totalItems": "件)",
+    "checkout": "去支付",
+    "products": "商品 (",
+    "flowerCart": "🛒 购物车",
+    "goShop": "去逛逛",
+    "clear": "清空"
+  },
+  "payment": {
+    "title": "确认支付",
+    "orderInfo": "订单信息",
+    "shippingAddress": "收货地址",
+    "paymentMethod": "支付方式",
+    "wechatPay": "微信支付",
+    "alipay": "支付宝",
+    "mockPay": "模拟支付",
+    "payNow": "去支付",
+    "paying": "支付中...",
+    "paySuccess": "支付成功！",
+    "payFailed": "支付失败",
+    "orderTotal": "订单合计",
+    "createOrderFailed": "创建订单失败",
+    "orderAmount": "订单金额",
+    "confirmPay": "确认支付",
+    "orderCreated": "订单已创建",
+    "mockPayDesc": "模拟支付（测试环境）"
+  },
+  "login": {
+    "title": "登录",
+    "phoneLogin": "密码登录",
+    "phoneNumber": "手机号",
+    "password": "密码",
+    "loginButton": "登录",
+    "loggingIn": "登录中...",
+    "loginSuccess": "登录成功",
+    "loginFailed": "登录失败",
+    "noAccount": "还没有账号？",
+    "register": "注册",
+    "codeLogin": "验证码登录",
+    "verifyCode": "验证码",
+    "getCode": "获取验证码",
+    "phonePlaceholder": "手机号",
+    "passwordPlaceholder": "密码",
+    "codeHint": "验证码输入 123456 即可登录",
+    "adminHint": "管理员使用手机号+密码登录",
+    "alreadyLoggedIn": "已登录，正在跳转...",
+    "invalidPhone": "请输入正确的手机号",
+    "enterPassword": "请输入密码",
+    "enterCode": "请输入验证码",
+    "appTitle": "花伴",
+    "appSlogan": "让每一朵花找到它的主人"
+  },
+  "profile": {
+    "title": "个人中心",
+    "myOrders": "我的订单",
+    "myGarden": "我的花园",
+    "settings": "设置",
+    "flowerProfile": "👤 我的",
+    "certifiedBuyer": "认证采购商",
+    "superAdmin": "超级管理员",
+    "flowerFriend": "花友",
+    "health": "健康",
+    "achievements": "种花成就",
+    "flowerCompanion": "花伴",
+    "adminCenter": "管理后台",
+    "logout": "退出登录",
+    "score": "综合评分",
+    "experience": "从业",
+    "years": "年",
+    "address": "收货地址",
+    "contactService": "联系客服",
+    "addNew": "+ 新增",
+    "default": "默认",
+    "edit": "编辑",
+    "editAddress": "编辑地址",
+    "newAddress": "新增地址",
+    "name": "姓名",
+    "province": "省",
+    "city": "市",
+    "district": "区/县",
+    "detailAddress": "详细地址",
+    "setDefault": "设为默认",
+    "addressSaved": "地址已保存",
+    "fillRequired": "请填写姓名、手机号和详细地址",
+    "loginPrompt": "登录后查看个人中心",
+    "paymentConfig": "支付配置、系统管理",
+    "planted": "已种植",
+    "matured": "已成熟",
+    "gifted": "已获赠"
+  },
+  "map": {
+    "title": "地图购花",
+    "subtitle": "附近花卉一键购买",
+    "relocate": "重新定位",
+    "locateFailed": "定位失败",
+    "supplierMap": "🗺 供应商地图",
+    "nearbyShops": "附近花店",
+    "originProof": "产地溯源证明",
+    "shopVideo": "商家短视频",
+    "shopShortVideo": "产地实拍 · 商家短视频",
+    "flowerMap": "🗺 地图购花",
+    "locationFailed": "定位失败"
+  },
+  "garden": {
+    "title": "我的花园",
+    "subtitle": "可种植的花卉",
+    "plant": "种花",
+    "planting": "种植中...",
+    "plantSuccess": "种花成功！",
+    "plantFailed": "种花失败",
+    "water": "浇水",
+    "fertilize": "施肥",
+    "harvest": "收获",
+    "myGarden": "🌱 我的花园",
+    "plantable": "可种植的花卉",
+    "achievements": "种花成就",
+    "treeDNA": "🧬 树木基因",
+    "treePassport": "🌳 树木护照",
+    "height": "树高",
+    "dbh": "胸径",
+    "age": "树龄",
+    "health": "健康评分",
+    "origin": "产地",
+    "variety": "品种",
+    "carbonValue": "碳汇值",
+    "noPlants": "暂无可种植花卉",
+    "planted": "已种植",
+    "growing": "生长中",
+    "mature": "已成熟",
+    "withered": "已枯萎",
+    "cm": "厘米",
+    "noPlots": "花园空空如也，去种花吧！"
+  },
+  "admin": {
+    "title": "管理后台",
+    "config": "配置",
+    "testConnection": "测试连接",
+    "testing": "测试中...",
+    "testSuccess": "连接成功",
+    "testFailed": "连接失败",
+    "saveConfig": "保存配置",
+    "enableWechat": "启用微信支付",
+    "enableAlipay": "启用支付宝",
+    "enabled": "已启用",
+    "configured": "已配置",
+    "notConfigured": "未配置",
+    "notEnabled": "未启用",
+    "configFirst": "配置完成后再启用",
+    "keepEmpty": "留空保留原值",
+    "alreadySet": "已设置）",
+    "wechat": {
+      "merchantId": "商户号",
+      "appId": "AppID",
+      "apiKeyV3": "API v3 密钥",
+      "certSerial": "证书序列号",
+      "privateKey": "商户私钥",
+      "callbackUrl": "支付回调地址"
+    },
+    "alipay": {
+      "appId": "应用ID",
+      "privateKey": "应用私钥",
+      "publicKey": "支付宝公钥",
+      "callbackUrl": "支付回调地址"
+    },
+    "wechatConfig": "微信支付配置",
+    "alipayConfig": "支付宝配置",
+    "systemStatus": "系统状态",
+    "paymentConfig": "支付配置"
+  },
+  "supplierVideos": {
+    "title": "视频逛店",
+    "subtitle": "产地实拍 · 商家短视频",
+    "supplier": "供应商"
+  },
+  "error": {
+    "title": "出错了",
+    "retry": "重试",
+    "pageError": "页面加载遇到问题",
+    "unknown": "未知错误",
+    "reload": "重新加载"
+  },
+  "product": {
+    "addToCart": "加入",
+    "price": "¥{price}",
+    "unit": "{count}棵"
+  },
+  "order": {
+    "status": {
+      "pending": "待支付",
+      "paid": "已支付",
+      "shipped": "已发货",
+      "completed": "已完成",
+      "cancelled": "已取消"
+    }
+  },
+  "langSwitch": {
+    "zh": "中文",
+    "en": "English"
+  }
+}

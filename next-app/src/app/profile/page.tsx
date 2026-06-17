@@ -6,6 +6,8 @@ import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/api';
 import TabBar from '../TabBar';
 import LoginPrompt from '../components/LoginPrompt';
+import { useI18n } from '@/lib/i18n/context';
+import LangSwitch from '@/app/components/LangSwitch';
 
 interface Address {
   name: string;
@@ -20,6 +22,7 @@ interface Address {
 export default function ProfilePage() {
   const router = useRouter();
   const { user, loading, logout } = useAuth();
+  const { t } = useI18n();
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
@@ -74,7 +77,7 @@ export default function ProfilePage() {
       setShowAddressForm(false);
       window.location.reload();
     } catch (err: any) {
-      setMsg(err.message || '保存失败');
+      setMsg(err.message || t('common.saveFailed'));
     }
     setSaving(false);
   };
@@ -85,7 +88,7 @@ export default function ProfilePage() {
         {/* Header */}
         <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-xl border-b border-stone-200/60 px-6 py-4">
           <div className="flex items-center justify-between">
-            <span className="font-bold text-sm">个人中心</span>
+            <span className="font-bold text-sm">{t('profile.title')}</span>
             <button onClick={logout} className="text-xs text-stone-400 hover:text-red-500 transition-colors">
               退出登录
             </button>
@@ -99,7 +102,7 @@ export default function ProfilePage() {
               {(user as any).avatar || '🌸'}
             </div>
             <div className="flex-1">
-              <h2 className="text-base font-bold text-stone-900">{(user as any).nickname || '花友'}</h2>
+              <h2 className="text-base font-bold text-stone-900">{(user as any).nickname || t('profile.flowerFriend')}</h2>
               <p className="text-xs text-stone-400">{(user as any).phone}</p>
             </div>
             {isSuperAdmin && (
@@ -115,7 +118,7 @@ export default function ProfilePage() {
               <div className="flex items-center gap-3">
                 <span className="text-xl">⚙️</span>
                 <div>
-                  <p className="text-sm font-semibold text-emerald-800">管理后台</p>
+                  <p className="text-sm font-semibold text-emerald-800">{t('admin.title')}</p>
                   <p className="text-[10px] text-emerald-600">支付配置、系统管理</p>
                 </div>
                 <span className="ml-auto text-emerald-400">→</span>
@@ -126,8 +129,8 @@ export default function ProfilePage() {
           {/* 功能菜单 */}
           <div className="rounded-2xl border border-stone-200 divide-y divide-stone-100">
             {[
-              { icon: '📦', label: '我的订单', href: '/payment' },
-              { icon: '🌱', label: '我的花园', href: '/garden' },
+              { icon: '📦', label: t('profile.myOrders'), href: '/payment' },
+              { icon: '🌱', label: t('garden.title'), href: '/garden' },
               { icon: '📍', label: '收货地址', action: 'address' },
               { icon: '💬', label: '联系客服', href: 'tel:18511987921' },
             ].map(item => (
@@ -151,7 +154,7 @@ export default function ProfilePage() {
           {addresses.length > 0 && (
             <section>
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-bold text-stone-900">收货地址</h2>
+                <h2 className="text-sm font-bold text-stone-900">{t('payment.shippingAddress')}</h2>
                 <button onClick={openAddAddress} className="text-xs text-emerald-700 font-medium">+ 新增</button>
               </div>
               <div className="space-y-2">
@@ -161,10 +164,10 @@ export default function ProfilePage() {
                       <p className="text-sm font-medium">{addr.name} <span className="text-stone-400 font-normal">{addr.phone}</span></p>
                       <p className="text-xs text-stone-400 mt-0.5">{addr.province}{addr.city}{addr.district}{addr.detail}</p>
                       {addr.isDefault && (
-                        <span className="inline-block bg-emerald-50 text-emerald-700 text-[10px] px-1.5 py-0.5 rounded mt-1 font-medium">默认</span>
+                        <span className="inline-block bg-emerald-50 text-emerald-700 text-[10px] px-1.5 py-0.5 rounded mt-1 font-medium">{t('shop.default')}</span>
                       )}
                     </div>
-                    <button onClick={() => openEditAddress(i)} className="text-xs text-stone-400 hover:text-emerald-700">编辑</button>
+                    <button onClick={() => openEditAddress(i)} className="text-xs text-stone-400 hover:text-emerald-700">{t('common.edit')}</button>
                   </div>
                 ))}
               </div>
@@ -177,7 +180,7 @@ export default function ProfilePage() {
               <h3 className="text-sm font-bold">{editingIdx !== null ? '编辑地址' : '新增地址'}</h3>
               <div className="grid grid-cols-2 gap-2">
                 <input placeholder="姓名" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-400" />
-                <input placeholder="手机号" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-400" />
+                <input placeholder={t('login.phonePlaceholder')} value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-400" />
                 <input placeholder="省" value={form.province} onChange={e => setForm({ ...form, province: e.target.value })} className="border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-400" />
                 <input placeholder="市" value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} className="border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-400" />
                 <input placeholder="区/县" value={form.district} onChange={e => setForm({ ...form, district: e.target.value })} className="border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-400" />
@@ -189,7 +192,7 @@ export default function ProfilePage() {
               <input placeholder="详细地址" value={form.detail} onChange={e => setForm({ ...form, detail: e.target.value })} className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-400" />
               <div className="flex gap-2">
                 <button onClick={saveAddress} disabled={saving} className="bg-emerald-700 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-emerald-800 transition-colors disabled:opacity-50">
-                  {saving ? '保存中...' : '保存'}
+                  {saving ? t('common.saving') : t('common.save')}
                 </button>
                 <button onClick={() => setShowAddressForm(false)} className="bg-stone-100 text-stone-500 px-5 py-2 rounded-lg text-sm hover:bg-stone-200 transition-colors">
                   取消
@@ -200,11 +203,11 @@ export default function ProfilePage() {
 
           {/* 种花成就 */}
           <section>
-            <h2 className="text-sm font-bold text-stone-900 mb-3">种花成就</h2>
+            <h2 className="text-sm font-bold text-stone-900 mb-3">{t('garden.achievements')}</h2>
             <div className="grid grid-cols-3 gap-3">
               {[
-                { label: '已种植', value: (user as any).gardenStats?.totalPlanted || 0, emoji: '🌱' },
-                { label: '已成熟', value: (user as any).gardenStats?.totalCompleted || 0, emoji: '🌸' },
+                { label: t('garden.planted'), value: (user as any).gardenStats?.totalPlanted || 0, emoji: '🌱' },
+                { label: t('garden.mature'), value: (user as any).gardenStats?.totalCompleted || 0, emoji: '🌸' },
                 { label: '已获赠', value: (user as any).gardenStats?.totalGifted || 0, emoji: '🎁' },
               ].map(s => (
                 <div key={s.label} className="rounded-xl border border-stone-200 p-3 text-center">

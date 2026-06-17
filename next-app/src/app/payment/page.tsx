@@ -3,6 +3,8 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import TabBar from '../TabBar';
+import { useI18n } from '@/lib/i18n/context';
+import LangSwitch from '@/app/components/LangSwitch';
 
 interface PayProduct {
   id: string;
@@ -24,6 +26,7 @@ function isWechatBrowser(): boolean {
 }
 
 function PaymentContent() {
+  const { t } = useI18n();
   const searchParams = useSearchParams();
   const fromCart = searchParams.get('from') === 'cart';
   const fromAuction = searchParams.get('from') === 'auction';
@@ -207,7 +210,7 @@ function PaymentContent() {
     <main className="min-h-screen bg-white text-stone-900 pb-20">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-xl border-b border-stone-200/60 px-6 py-4">
-        <h1 className="text-lg font-bold text-center">确认支付</h1>
+        <h1 className="text-lg font-bold text-center">{t('payment.confirmPay')}</h1>
       </div>
 
       {/* Pay Config Notice */}
@@ -254,13 +257,13 @@ function PaymentContent() {
             );
           })}
           {products.length === 0 && (
-            <div className="p-8 text-center text-stone-400 text-sm">暂无商品</div>
+            <div className="p-8 text-center text-stone-400 text-sm">{t('shop.noProducts')}</div>
           )}
         </section>
 
         {/* 支付方式 */}
         <section className="rounded-xl border border-stone-200 p-4">
-          <p className="text-xs text-stone-500 mb-3">支付方式</p>
+          <p className="text-xs text-stone-500 mb-3">{t('payment.paymentMethod')}</p>
           <div className="flex gap-3">
             <button
               onClick={() => setPayMethod('wechat')}
@@ -288,10 +291,10 @@ function PaymentContent() {
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-stone-500">运费</span>
-            <span className="text-emerald-600">免运费</span>
+            <span className="text-emerald-600">{t('common.freeShipping')}</span>
           </div>
           <div className="border-t border-stone-100 pt-2 flex justify-between">
-            <span className="text-sm font-medium">合计</span>
+            <span className="text-sm font-medium">{t('common.total')}</span>
             <span className="text-xl font-bold text-emerald-700">¥{totalAmount.toFixed(2)}</span>
           </div>
         </section>
@@ -324,7 +327,7 @@ function PaymentContent() {
         {payStatus === 'failed' && (
           <section className="rounded-xl border border-red-200 bg-red-50 p-4 text-center">
             <div className="text-2xl mb-2">❌</div>
-            <p className="text-sm font-medium text-red-800">支付失败</p>
+            <p className="text-sm font-medium text-red-800">{t('payment.payFailed')}</p>
             <button onClick={() => setPayStatus('idle')} className="mt-2 text-xs text-emerald-700 font-medium">
               重试
             </button>
@@ -352,7 +355,7 @@ function PaymentContent() {
             disabled={selectedCount === 0}
             className={`px-8 py-3 rounded-xl text-sm font-bold transition-colors ${selectedCount > 0 ? 'bg-emerald-700 text-white hover:bg-emerald-800' : 'bg-stone-200 text-stone-400 cursor-not-allowed'}`}
           >
-            {payMethod === 'wechat' ? '微信支付' : '支付宝支付'}
+            {payMethod === 'wechat' ? t('payment.wechatPay') : '支付宝支付'}
           </button>
         </div>
       )}
@@ -363,8 +366,9 @@ function PaymentContent() {
 }
 
 export default function PaymentPage() {
+  const { t } = useI18n();
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-stone-400">加载中...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-stone-400">{t('common.loading')}</div>}>
       <PaymentContent />
     </Suspense>
   );

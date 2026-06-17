@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import TabBar from '../TabBar';
+import { useI18n } from '@/lib/i18n/context';
+import LangSwitch from '@/app/components/LangSwitch';
 
 interface Product {
   _id: string;
@@ -76,6 +78,7 @@ function fmtCountdown(seconds: number) {
 }
 
 export default function ReverseAuctionPage() {
+  const { t } = useI18n();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(Date.now());
@@ -106,7 +109,7 @@ export default function ReverseAuctionPage() {
           <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
               <span className="text-lg">🌷</span>
-              <span className="text-stone-900 font-semibold tracking-tight text-sm">鲜花倒拍</span>
+              <span className="text-stone-900 font-semibold tracking-tight text-sm">{t('reverseAuction.title')}</span>
             </Link>
             <Link href="/auction" className="text-xs text-emerald-700 font-medium hover:text-emerald-900 transition-colors">苗木正拍 →</Link>
           </div>
@@ -127,11 +130,11 @@ export default function ReverseAuctionPage() {
               </div>
               <div className="bg-white rounded-xl border border-stone-200 px-5 py-4 text-center shadow-sm">
                 <div className="text-2xl font-bold text-amber-600">×100</div>
-                <div className="text-[10px] text-stone-400 mt-1">降价优惠</div>
+                <div className="text-[10px] text-stone-400 mt-1">{t('reverseAuction.dropDiscount')}</div>
               </div>
               <div className="bg-white rounded-xl border border-stone-200 px-5 py-4 text-center shadow-sm">
                 <div className="text-2xl font-bold text-stone-800">30m</div>
-                <div className="text-[10px] text-stone-400 mt-1">一轮倒拍</div>
+                <div className="text-[10px] text-stone-400 mt-1">{t('reverseAuction.round')}</div>
               </div>
             </div>
           </div>
@@ -150,7 +153,7 @@ export default function ReverseAuctionPage() {
                 <article key={p._id} className="rounded-2xl border border-stone-200 bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                   <div className="h-44 bg-stone-100 relative flex items-center justify-center overflow-hidden">
                     {img ? <img src={img} alt={titleOf(p)} className="w-full h-full object-cover" /> : <span className="text-6xl opacity-20">🌷</span>}
-                    <div className="absolute top-3 left-3 bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full animate-pulse">倒拍 LIVE</div>
+                    <div className="absolute top-3 left-3 bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full animate-pulse">{t('reverseAuction.live')}</div>
                     {p.category && <div className="absolute top-3 right-3 bg-white/90 text-stone-600 text-[10px] px-2 py-1 rounded-full border border-stone-200">{p.category}</div>}
                   </div>
                   <div className="p-5">
@@ -185,7 +188,7 @@ export default function ReverseAuctionPage() {
                     </div>
                     <div className="flex items-center justify-between mb-3 bg-amber-50 rounded-xl p-3 border border-amber-100">
                       <div>
-                        <p className="text-[10px] text-stone-500 font-medium">降价优惠</p>
+                        <p className="text-[10px] text-stone-500 font-medium">{t('reverseAuction.dropDiscount')}</p>
                         <p className="text-[10px] text-stone-400">把分价变化放大成可见跳动</p>
                       </div>
                       <div className="text-right">

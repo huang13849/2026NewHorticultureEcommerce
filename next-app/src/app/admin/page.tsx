@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import TabBar from '../TabBar';
+import { useI18n } from '@/lib/i18n/context';
+import LangSwitch from '@/app/components/LangSwitch';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://100.76.15.64:3010/api';
 
@@ -34,6 +36,7 @@ interface AlipayConfig {
 
 export default function AdminPage() {
   const { user, loading } = useAuth();
+  const { t } = useI18n();
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('overview');
   const [wechat, setWechat] = useState<WechatConfig>({
@@ -216,20 +219,20 @@ export default function AdminPage() {
           <div className="space-y-4">
             {/* System Info */}
             <div className="rounded-xl border border-stone-200 p-5">
-              <h2 className="font-bold text-sm mb-4">系统状态</h2>
+              <h2 className="font-bold text-sm mb-4">{t('admin.systemStatus')}</h2>
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-stone-50 rounded-lg p-3 text-center">
                   <div className="text-2xl mb-1">💚</div>
-                  <div className="text-xs font-semibold">微信支付</div>
+                  <div className="text-xs font-semibold">{t('payment.wechatPay')}</div>
                   <div className={`text-[10px] mt-1 ${wechat.enabled ? 'text-emerald-600' : 'text-stone-400'}`}>
-                    {wechat.mchId ? (wechat.enabled ? '已启用' : '已配置/未启用') : '未配置'}
+                    {wechat.mchId ? (wechat.enabled ? t('admin.enabled') : '已配置/未启用') : t('admin.notConfigured')}
                   </div>
                 </div>
                 <div className="bg-stone-50 rounded-lg p-3 text-center">
                   <div className="text-2xl mb-1">💙</div>
-                  <div className="text-xs font-semibold">支付宝</div>
+                  <div className="text-xs font-semibold">{t('payment.alipay')}</div>
                   <div className={`text-[10px] mt-1 ${alipay.enabled ? 'text-blue-600' : 'text-stone-400'}`}>
-                    {alipay.appId ? (alipay.enabled ? '已启用' : '已配置/未启用') : '未配置'}
+                    {alipay.appId ? (alipay.enabled ? t('admin.enabled') : '已配置/未启用') : t('admin.notConfigured')}
                   </div>
                 </div>
               </div>
@@ -246,7 +249,7 @@ export default function AdminPage() {
                   { label: '微信商户私钥', done: wechat.privateKeySet },
                   { label: '支付宝 AppID', done: !!alipay.appId },
                   { label: '支付宝应用私钥', done: alipay.merchantPrivateKeySet },
-                  { label: '支付宝公钥', done: alipay.alipayPublicKeySet },
+                  { label: t('admin.alipay.publicKey'), done: alipay.alipayPublicKeySet },
                 ].map(item => (
                   <div key={item.label} className="flex items-center gap-2.5">
                     <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${item.done ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-100 text-stone-400'}`}>
@@ -263,7 +266,7 @@ export default function AdminPage() {
               <div className="flex items-center gap-3">
                 <span className="text-3xl">👑</span>
                 <div>
-                  <p className="font-bold text-sm text-emerald-900">超级管理员</p>
+                  <p className="font-bold text-sm text-emerald-900">{t('profile.superAdmin')}</p>
                   <p className="text-xs text-emerald-700">{(user as any)?.phone}</p>
                 </div>
               </div>
@@ -280,8 +283,8 @@ export default function AdminPage() {
               {/* Enable Toggle */}
               <div className="flex items-center justify-between bg-stone-50 rounded-lg p-3">
                 <div>
-                  <p className="text-sm font-medium">启用微信支付</p>
-                  <p className="text-[10px] text-stone-400">配置完成后再启用</p>
+                  <p className="text-sm font-medium">{t('admin.enableWechat')}</p>
+                  <p className="text-[10px] text-stone-400">{t('admin.configFirst')}</p>
                 </div>
                 <button
                   onClick={() => setWechat({ ...wechat, enabled: !wechat.enabled })}
@@ -323,7 +326,7 @@ export default function AdminPage() {
                   value={wechat.apiV3Key}
                   onChange={e => setWechat({ ...wechat, apiV3Key: e.target.value })}
                   className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
-                  placeholder={wechat.apiV3KeySet ? '留空保留原值' : '32位 API v3 密钥'}
+                  placeholder={wechat.apiV3KeySet ? t('admin.keepEmpty') : '32位 API v3 密钥'}
                 />
               </div>
 
@@ -334,7 +337,7 @@ export default function AdminPage() {
                   value={wechat.serialNo}
                   onChange={e => setWechat({ ...wechat, serialNo: e.target.value })}
                   className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400"
-                  placeholder="证书序列号"
+                  placeholder={t('admin.wechat.certSerial')}
                 />
               </div>
 
@@ -347,13 +350,13 @@ export default function AdminPage() {
                   value={wechat.privateKey}
                   onChange={e => setWechat({ ...wechat, privateKey: e.target.value })}
                   className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-xs font-mono focus:outline-none focus:border-emerald-400 h-24 resize-none"
-                  placeholder={wechat.privateKeySet ? '留空保留原值' : '-----BEGIN PRIVATE KEY-----...'}
+                  placeholder={wechat.privateKeySet ? t('admin.keepEmpty') : '-----BEGIN PRIVATE KEY-----...'}
                 />
               </div>
 
               {/* Notify URL */}
               <div>
-                <label className="text-xs font-medium text-stone-600 mb-1 block">支付回调地址</label>
+                <label className="text-xs font-medium text-stone-600 mb-1 block">{t('admin.alipay.callbackUrl')}</label>
                 <input
                   value={wechat.notifyUrl}
                   onChange={e => setWechat({ ...wechat, notifyUrl: e.target.value })}
@@ -370,14 +373,14 @@ export default function AdminPage() {
                 disabled={testing || !wechat.mchId}
                 className="flex-1 bg-stone-100 text-stone-700 py-3 rounded-xl text-sm font-medium hover:bg-stone-200 transition-colors disabled:opacity-50"
               >
-                {testing ? '测试中...' : '🔍 测试连接'}
+                {testing ? t('admin.testing') : '🔍 测试连接'}
               </button>
               <button
                 onClick={saveWechat}
                 disabled={saving || !wechat.mchId}
                 className="flex-1 bg-emerald-700 text-white py-3 rounded-xl text-sm font-bold hover:bg-emerald-800 transition-colors disabled:opacity-50"
               >
-                {saving ? '保存中...' : '💾 保存配置'}
+                {saving ? t('common.saving') : '💾 保存配置'}
               </button>
             </div>
           </div>
@@ -387,13 +390,13 @@ export default function AdminPage() {
         {tab === 'alipay' && (
           <div className="space-y-4">
             <div className="rounded-xl border border-stone-200 p-5 space-y-4">
-              <h2 className="font-bold text-sm">支付宝配置</h2>
+              <h2 className="font-bold text-sm">{t('admin.alipayConfig')}</h2>
 
               {/* Enable Toggle */}
               <div className="flex items-center justify-between bg-stone-50 rounded-lg p-3">
                 <div>
-                  <p className="text-sm font-medium">启用支付宝</p>
-                  <p className="text-[10px] text-stone-400">配置完成后再启用</p>
+                  <p className="text-sm font-medium">{t('admin.enableAlipay')}</p>
+                  <p className="text-[10px] text-stone-400">{t('admin.configFirst')}</p>
                 </div>
                 <button
                   onClick={() => setAlipay({ ...alipay, enabled: !alipay.enabled })}
@@ -423,7 +426,7 @@ export default function AdminPage() {
                   value={alipay.merchantPrivateKey}
                   onChange={e => setAlipay({ ...alipay, merchantPrivateKey: e.target.value })}
                   className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-xs font-mono focus:outline-none focus:border-blue-400 h-20 resize-none"
-                  placeholder={alipay.merchantPrivateKeySet ? '留空保留原值' : 'MIIEvQ...'}
+                  placeholder={alipay.merchantPrivateKeySet ? t('admin.keepEmpty') : 'MIIEvQ...'}
                 />
               </div>
 
@@ -436,13 +439,13 @@ export default function AdminPage() {
                   value={alipay.alipayPublicKey}
                   onChange={e => setAlipay({ ...alipay, alipayPublicKey: e.target.value })}
                   className="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-xs font-mono focus:outline-none focus:border-blue-400 h-20 resize-none"
-                  placeholder={alipay.alipayPublicKeySet ? '留空保留原值' : 'MIIBIjANBg...'}
+                  placeholder={alipay.alipayPublicKeySet ? t('admin.keepEmpty') : 'MIIBIjANBg...'}
                 />
               </div>
 
               {/* Notify URL */}
               <div>
-                <label className="text-xs font-medium text-stone-600 mb-1 block">支付回调地址</label>
+                <label className="text-xs font-medium text-stone-600 mb-1 block">{t('admin.alipay.callbackUrl')}</label>
                 <input
                   value={alipay.notifyUrl}
                   onChange={e => setAlipay({ ...alipay, notifyUrl: e.target.value })}
@@ -472,14 +475,14 @@ export default function AdminPage() {
                 disabled={testing || !alipay.appId}
                 className="flex-1 bg-stone-100 text-stone-700 py-3 rounded-xl text-sm font-medium hover:bg-stone-200 transition-colors disabled:opacity-50"
               >
-                {testing ? '测试中...' : '🔍 测试连接'}
+                {testing ? t('admin.testing') : '🔍 测试连接'}
               </button>
               <button
                 onClick={saveAlipay}
                 disabled={saving || !alipay.appId}
                 className="flex-1 bg-blue-600 text-white py-3 rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
-                {saving ? '保存中...' : '💾 保存配置'}
+                {saving ? t('common.saving') : '💾 保存配置'}
               </button>
             </div>
           </div>
