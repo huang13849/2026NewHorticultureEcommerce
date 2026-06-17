@@ -1,0 +1,536 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "saving": "Saving...",
+    "saveFailed": "Save failed",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "login": "Login",
+    "logout": "Logout",
+    "back": "Back",
+    "submit": "Submit",
+    "search": "Search",
+    "all": "All",
+    "select": "Select",
+    "edit": "Edit",
+    "close": "Close",
+    "retry": "Retry",
+    "networkError": "Network Error",
+    "noData": "No Data",
+    "success": "Success",
+    "error": "Error",
+    "freeShipping": "Free Shipping",
+    "total": "Total",
+    "price": "Price",
+    "quantity": "Quantity",
+    "status": "Status",
+    "action": "Action",
+    "name": "Name",
+    "phone": "Phone",
+    "address": "Address",
+    "category": "Category",
+    "image": "Image",
+    "copy": "Copy",
+    "download": "Download",
+    "confirmDelete": "Confirm delete?",
+    "copied": "Copied",
+    "cny": "CNY"
+  },
+  "nav": {
+    "home": "Home",
+    "map": "Map",
+    "auction": "Auction",
+    "reverseAuction": "Reverse Auction",
+    "shop": "Shop",
+    "garden": "Garden",
+    "profile": "Profile",
+    "flowerShop": "Smart Supply Chain"
+  },
+  "home": {
+    "title": "Flower Supply Chain",
+    "subtitle": "New Experience",
+    "desc": "Connecting origin to market with intelligent matchmaking. Wholesale auction, flower reverse auction, map shopping, garden planting — your one-stop flower supply chain platform.",
+    "enterAuction": "Enter Auction",
+    "flowerReverse": "Flower Reverse Auction",
+    "quickEntry": {
+      "auction": {
+        "title": "Tree Auction",
+        "desc": "Wholesale tree & shrub bidding"
+      },
+      "reverse": {
+        "title": "Flower Reverse Auction",
+        "desc": "Lily flowers get cheaper over time"
+      },
+      "map": {
+        "title": "Map Shopping",
+        "desc": "Buy flowers nearby with one click"
+      },
+      "shop": {
+        "title": "Flower Shop",
+        "desc": "Curated picks & limited offers"
+      }
+    },
+    "recommendTitle": "Recommended",
+    "viewMore": "View More →",
+    "noProducts": "No recommendations yet",
+    "unnamed": "Unnamed",
+    "greenCert": {
+      "subtitle": "Green Certification · Carbon Credit",
+      "title": "Tree Green Certification & Carbon Credits",
+      "desc": "Every certified tree is traceable, measurable, and tradable. Building a trusted green value chain from planting to carbon sink.",
+      "stats": {
+        "trees": {
+          "label": "Certified Trees",
+          "unit": "trees"
+        },
+        "carbon": {
+          "label": "Carbon Sink",
+          "unit": "tons CO₂"
+        },
+        "coins": {
+          "label": "Carbon Coins",
+          "unit": "CC"
+        },
+        "users": {
+          "label": "Participants",
+          "unit": "users"
+        }
+      },
+      "features": {
+        "trace": {
+          "title": "Tree Traceability",
+          "desc": "Each certified tree has a unique traceability ID. Full lifecycle records from seedling to mature tree.",
+          "details": [
+            "Blockchain Evidence",
+            "GPS Planting Location",
+            "Full Lifecycle Records",
+            "QR Code Instant Lookup"
+          ]
+        },
+        "bind": {
+          "title": "Person-Tree Binding",
+          "desc": "Certified trees are bound to real-name planters/caretakers. Regular photo check-ins ensure tree survival and care quality.",
+          "details": [
+            "Real-name Binding",
+            "Quarterly Photo Check-in",
+            "AI Survival Detection",
+            "Care Rating System"
+          ]
+        },
+        "measure": {
+          "title": "Carbon Measurement",
+          "desc": "Calculate carbon sink based on species, DBH, age using IPCC standards. Quarterly updates, transparent and auditable.",
+          "details": [
+            "IPCC Carbon Formula",
+            "Quarterly Carbon Updates",
+            "Species Coefficient Database",
+            "Carbon Certificates"
+          ]
+        },
+        "trade": {
+          "title": "Carbon Coin Trading",
+          "desc": "Carbon sink automatically converts to Carbon Coins (CC) for shopping discounts, point redemption, or free market trading.",
+          "details": [
+            "Automatic Coin Minting",
+            "Shopping Discounts",
+            "Market Trading",
+            "Withdrawal & Transfer"
+          ]
+        }
+      },
+      "steps": {
+        "submit": {
+          "title": "Submit",
+          "desc": "Upload tree info + ID verification + GPS location"
+        },
+        "review": {
+          "title": "Approved",
+          "desc": "Platform reviews and issues green certification label"
+        },
+        "bind": {
+          "title": "Binding",
+          "desc": "Planter binds to tree, carbon measurement begins"
+        },
+        "checkin": {
+          "title": "Check-in",
+          "desc": "Quarterly photo with plant + growth data upload"
+        },
+        "issue": {
+          "title": "Coin Issued",
+          "desc": "Carbon coins auto-issued based on carbon sink"
+        },
+        "use": {
+          "title": "Trade & Redeem",
+          "desc": "Use coins for shopping discounts or market trading"
+        }
+      },
+      "apply": "Apply for Green Certification →",
+      "flowTitle": "Certification Flow"
+    },
+    "successStories": {
+      "subtitle": "Success Stories",
+      "title": "Garden & Landscape · Success Stories",
+      "desc": "From villa courtyards to balcony gardens, every project delivered with care",
+      "items": [
+        {
+          "title": "Beijing Villa Courtyard",
+          "desc": "25 white pines + 80 roses, 30 days from bare ground to garden",
+          "tag": "Villa Courtyard"
+        },
+        {
+          "title": "Tianjin Wedding Florals",
+          "desc": "2000 lilies + 500 roses, 48-hour delivery",
+          "tag": "Wedding Florals"
+        },
+        {
+          "title": "Langfang Community Greening",
+          "desc": "300 mixed trees & shrubs, quarterly maintenance included",
+          "tag": "Community Greening"
+        },
+        {
+          "title": "Shunyi Greenhouse Supply",
+          "desc": "2000 potted flowers delivered weekly",
+          "tag": "Commercial Supply"
+        },
+        {
+          "title": "Baoding Cemetery Landscape",
+          "desc": "Evergreen trees + seasonal flowers for year-round beauty",
+          "tag": "Landscape Design"
+        },
+        {
+          "title": "Fengtai Balcony Garden",
+          "desc": "2-meter space transformed into a mini garden",
+          "tag": "Balcony Garden"
+        }
+      ]
+    },
+    "reviews": {
+      "subtitle": "Customer Reviews",
+      "title": "Customer Reviews",
+      "desc": "Real voices from real buyers",
+      "items": [
+        {
+          "name": "Mr. Zhang",
+          "loc": "Chaoyang, Beijing",
+          "text": "95%+ survival rate for white pines! Still thriving after a year — way better than flower markets!"
+        },
+        {
+          "name": "Ms. Li",
+          "loc": "Nankai, Tianjin",
+          "text": "Cold chain for wedding flowers — lilies were so full, every guest asked where we ordered."
+        },
+        {
+          "name": "Manager Wang",
+          "loc": "Langfang Dev Zone",
+          "text": "One-click community greening with delivery and planting. Saved a fortune on property fees."
+        },
+        {
+          "name": "Boss Zhao",
+          "loc": "Shunyi Flower Market",
+          "text": "Stable weekly supply of 2000 pots. Consistent quality, customers keep coming back."
+        },
+        {
+          "name": "Ms. Liu",
+          "loc": "Baoding",
+          "text": "Professional year-round green plan for the cemetery. Families are very satisfied."
+        },
+        {
+          "name": "Mr. Chen",
+          "loc": "Fengtai",
+          "text": "Turned my 2m balcony into a garden — wife says it's the best gift this year!"
+        }
+      ]
+    },
+    "footer": {
+      "name": "Smart Supply Chain",
+      "copyright": "Beijing-Tianjin-Hebei Flower Supply Chain Platform © 2026"
+    },
+    "intelligentSupply": "Intelligent Supply Chain",
+    "greenCertSubtitle": "Green Certification · Carbon Credit",
+    "step": "Step {n}"
+  },
+  "auction": {
+    "title": "Tree Auction",
+    "subtitle": "Wholesale Tree & Shrub Auction",
+    "currentLot": "Current Lot",
+    "bidHistory": "Bid History",
+    "placeBid": "Place Bid",
+    "bidding": "Bidding...",
+    "bidSuccess": "Bid placed!",
+    "bidFailed": "Bid failed",
+    "startingPrice": "Starting Price",
+    "currentPrice": "Current Price",
+    "nextBid": "Next Bid",
+    "countdown": "Countdown",
+    "ended": "Ended",
+    "starting": "Starting Soon",
+    "noAuction": "No active auction",
+    "round": "Round",
+    "lot": "Lot",
+    "lotNumber": "Lot #",
+    "bidders": "Bidders",
+    "timeLeft": "Time Left",
+    "rules": "Auction Rules",
+    "rulesDesc": "Tree & shrub lots only; 10-min countdown, ¥5 minimum increment per bid",
+    "treeAuction": "🌳 Tree Auction",
+    "realtimeBid": "Certified tree distribution · Real-time bidding status",
+    "bidRecord": "Bid History",
+    "bidder": "Bidder",
+    "amount": "Amount",
+    "time": "Time",
+    "noBids": "No bids yet",
+    "bidNow": "Bid Now",
+    "minIncrement": "¥{amount} minimum increment",
+    "countdownEnd": "Ends in {sec}s"
+  },
+  "reverseAuction": {
+    "title": "Flower Reverse Auction",
+    "subtitle": "Lily flowers get cheaper over time",
+    "live": "Reverse LIVE",
+    "currentPrice": "Current Price",
+    "nextDrop": "Next Drop",
+    "nextDropIn": "Auto-drop in {min} min",
+    "timeLeft": "Time Left",
+    "round": "One Round",
+    "buyNow": "Buy Now",
+    "bought": "Purchased",
+    "priceHistory": "Price History",
+    "auctionRules": "Reverse Auction Rules",
+    "rulesDesc": "Price drops automatically every few minutes — the longer you wait, the cheaper! But someone else might buy it first, so act fast!",
+    "lilyAuction": "🌷 Flower Reverse Auction",
+    "countdown": "Countdown",
+    "freeClaim": "Free Claim",
+    "dropDiscount": "Price Drop",
+    "minAgo": "{min} min ago",
+    "followers": "followers",
+    "lowRisk": "Low Risk",
+    "lily": "Lily",
+    "cutFlower": "Cut Flower"
+  },
+  "shop": {
+    "title": "Flower Shop",
+    "subtitle": "Curated picks & limited offers",
+    "addToCart": "Add to Cart",
+    "added": "Added",
+    "cart": "Cart",
+    "items": "items",
+    "noProducts": "No products available",
+    "category": "Category",
+    "priceRange": "Price Range",
+    "sort": "Sort",
+    "default": "Default",
+    "priceAsc": "Price: Low to High",
+    "priceDesc": "Price: High to Low",
+    "newest": "Newest",
+    "flowerShop": "🛒 Flower Shop",
+    "searchPlaceholder": "Search flowers...",
+    "cartCount": "{count} items"
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "empty": "Your cart is empty",
+    "goShopping": "Browse Shop",
+    "selectAll": "Select All",
+    "deleteSelected": "Delete Selected",
+    "subtotal": "Subtotal",
+    "totalItems": "items)",
+    "checkout": "Checkout",
+    "products": "Products (",
+    "flowerCart": "🛒 Cart",
+    "goShop": "Browse Shop",
+    "clear": "Clear"
+  },
+  "payment": {
+    "title": "Confirm Payment",
+    "orderInfo": "Order Info",
+    "shippingAddress": "Shipping Address",
+    "paymentMethod": "Payment Method",
+    "wechatPay": "WeChat Pay",
+    "alipay": "Alipay",
+    "mockPay": "Mock Payment",
+    "payNow": "Pay Now",
+    "paying": "Processing...",
+    "paySuccess": "Payment successful!",
+    "payFailed": "Payment failed",
+    "orderTotal": "Order Total",
+    "createOrderFailed": "Failed to create order",
+    "orderAmount": "Order Amount",
+    "confirmPay": "Confirm Payment",
+    "orderCreated": "Order Created",
+    "mockPayDesc": "Mock payment (test environment)"
+  },
+  "login": {
+    "title": "Login",
+    "phoneLogin": "Password Login",
+    "phoneNumber": "Phone",
+    "password": "Password",
+    "loginButton": "Login",
+    "loggingIn": "Logging in...",
+    "loginSuccess": "Login successful",
+    "loginFailed": "Login failed",
+    "noAccount": "Don't have an account?",
+    "register": "Register",
+    "codeLogin": "Code Login",
+    "verifyCode": "Verification Code",
+    "getCode": "Get Code",
+    "phonePlaceholder": "Phone Number",
+    "passwordPlaceholder": "Password",
+    "codeHint": "Enter 123456 to login",
+    "adminHint": "Admins login with phone + password",
+    "alreadyLoggedIn": "Already logged in, redirecting...",
+    "invalidPhone": "Please enter a valid phone number",
+    "enterPassword": "Please enter password",
+    "enterCode": "Please enter verification code",
+    "appTitle": "FlowerPal",
+    "appSlogan": "Finding the perfect home for every flower"
+  },
+  "profile": {
+    "title": "Profile",
+    "myOrders": "My Orders",
+    "myGarden": "My Garden",
+    "settings": "Settings",
+    "flowerProfile": "👤 Profile",
+    "certifiedBuyer": "Certified Buyer",
+    "superAdmin": "Super Admin",
+    "flowerFriend": "Flower Friend",
+    "health": "Health",
+    "achievements": "Garden Achievements",
+    "flowerCompanion": "FlowerPal",
+    "adminCenter": "Admin Center",
+    "logout": "Log Out",
+    "score": "Rating",
+    "experience": "Experience",
+    "years": "years",
+    "address": "Shipping Address",
+    "contactService": "Contact Support",
+    "addNew": "+ Add",
+    "default": "Default",
+    "edit": "Edit",
+    "editAddress": "Edit Address",
+    "newAddress": "New Address",
+    "name": "Name",
+    "province": "Province",
+    "city": "City",
+    "district": "District",
+    "detailAddress": "Detail Address",
+    "setDefault": "Set as Default",
+    "addressSaved": "Address saved",
+    "fillRequired": "Please fill in name, phone and address",
+    "loginPrompt": "Log in to view profile",
+    "paymentConfig": "Payment config, system admin",
+    "planted": "Planted",
+    "matured": "Matured",
+    "gifted": "Gifted"
+  },
+  "map": {
+    "title": "Map Shopping",
+    "subtitle": "Buy flowers nearby with one click",
+    "relocate": "Relocate",
+    "locateFailed": "Location failed",
+    "supplierMap": "🗺 Supplier Map",
+    "nearbyShops": "Nearby Shops",
+    "originProof": "Origin Traceability",
+    "shopVideo": "Shop Videos",
+    "shopShortVideo": "Origin footage · Shop videos",
+    "flowerMap": "🗺 Map Shopping",
+    "locationFailed": "Location failed"
+  },
+  "garden": {
+    "title": "My Garden",
+    "subtitle": "Plantable Flowers",
+    "plant": "Plant",
+    "planting": "Planting...",
+    "plantSuccess": "Planted successfully!",
+    "plantFailed": "Planting failed",
+    "water": "Water",
+    "fertilize": "Fertilize",
+    "harvest": "Harvest",
+    "myGarden": "🌱 My Garden",
+    "plantable": "Plantable Flowers",
+    "achievements": "Garden Achievements",
+    "treeDNA": "🧬 Tree DNA",
+    "treePassport": "🌳 Tree Passport",
+    "height": "Height",
+    "dbh": "DBH",
+    "age": "Age",
+    "health": "Health Score",
+    "origin": "Origin",
+    "variety": "Variety",
+    "carbonValue": "Carbon Value",
+    "noPlants": "No plantable flowers available",
+    "planted": "Planted",
+    "growing": "Growing",
+    "mature": "Mature",
+    "withered": "Withered",
+    "cm": "cm",
+    "noPlots": "Your garden is empty, go plant something!"
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "config": "Configuration",
+    "testConnection": "Test Connection",
+    "testing": "Testing...",
+    "testSuccess": "Connection successful",
+    "testFailed": "Connection failed",
+    "saveConfig": "Save Config",
+    "enableWechat": "Enable WeChat Pay",
+    "enableAlipay": "Enable Alipay",
+    "enabled": "Enabled",
+    "configured": "Configured",
+    "notConfigured": "Not configured",
+    "notEnabled": "Not enabled",
+    "configFirst": "Configure before enabling",
+    "keepEmpty": "Leave empty to keep current value",
+    "alreadySet": "Already set)",
+    "wechat": {
+      "merchantId": "Merchant ID",
+      "appId": "AppID",
+      "apiKeyV3": "API v3 Key",
+      "certSerial": "Certificate Serial",
+      "privateKey": "Merchant Private Key",
+      "callbackUrl": "Payment Callback URL"
+    },
+    "alipay": {
+      "appId": "App ID",
+      "privateKey": "App Private Key",
+      "publicKey": "Alipay Public Key",
+      "callbackUrl": "Payment Callback URL"
+    },
+    "wechatConfig": "WeChat Pay Config",
+    "alipayConfig": "Alipay Config",
+    "systemStatus": "System Status",
+    "paymentConfig": "Payment Config"
+  },
+  "supplierVideos": {
+    "title": "Shop Videos",
+    "subtitle": "Origin footage · Shop videos",
+    "supplier": "Supplier"
+  },
+  "error": {
+    "title": "Something went wrong",
+    "retry": "Retry",
+    "pageError": "An error occurred while loading",
+    "unknown": "Unknown error",
+    "reload": "Reload"
+  },
+  "product": {
+    "addToCart": "Add",
+    "price": "¥{price}",
+    "unit": "{count} trees"
+  },
+  "order": {
+    "status": {
+      "pending": "Pending",
+      "paid": "Paid",
+      "shipped": "Shipped",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    }
+  },
+  "langSwitch": {
+    "zh": "中文",
+    "en": "English"
+  }
+}

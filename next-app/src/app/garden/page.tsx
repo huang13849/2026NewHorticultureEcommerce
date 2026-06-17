@@ -4,9 +4,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { api, GardenPlot, Plant } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import LoginPrompt from '../components/LoginPrompt';
+import { useI18n } from '@/lib/i18n/context';
+import LangSwitch from '@/app/components/LangSwitch';
 
 export default function GardenPage() {
   const { user, loading: authLoading } = useAuth();
+  const { t } = useI18n();
   const [plants, setPlants] = useState<Plant[]>([]);
   const [myGarden, setMyGarden] = useState<GardenPlot[]>([]);
   const [gardenStats, setGardenStats] = useState<any>({});
@@ -74,7 +77,7 @@ export default function GardenPage() {
       <main className="max-w-lg mx-auto flex items-center justify-center min-h-[50vh]">
         <div className="text-center">
           <div className="animate-spin text-3xl mb-2">🌱</div>
-          <p className="text-gray-400 text-sm">加载中...</p>
+          <p className="text-gray-400 text-sm">{t('common.loading')}</p>
         </div>
       </main>
     );
@@ -143,7 +146,7 @@ export default function GardenPage() {
                           : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                       }`}
                     >
-                      💧 {plot.canWater ? '浇水' : '已浇'}
+                      💧 {plot.canWater ? t('garden.water') : '已浇'}
                     </button>
                   )}
                   {plot.isMature && (
