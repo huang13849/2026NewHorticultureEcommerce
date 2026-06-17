@@ -1,6 +1,9 @@
 'use client';
+import { useI18n } from '@/lib/i18n/context';
+import LangSwitch from '@/app/components/LangSwitch';
 
 export default function MapPage() {
+  const { t } = useI18n();
   return (
     <main className="min-h-screen bg-white text-stone-900 pb-16">
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-stone-200/60">

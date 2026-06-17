@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import TabBar from '../TabBar';
+import { useI18n } from '@/lib/i18n/context';
+import LangSwitch from '@/app/components/LangSwitch';
 
 interface AuctionItem {
   productId: string;
@@ -23,6 +25,7 @@ interface AuctionItem {
 }
 
 export default function AuctionPage() {
+  const { t } = useI18n();
   const [items, setItems] = useState<AuctionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -68,7 +71,7 @@ export default function AuctionPage() {
       const data = await res.json();
       if (res.ok) { setMessage('拍卖已开始！倒计时10分钟'); fetchItems(); }
       else { setMessage(data.error || '启动失败'); }
-    } catch { setMessage('网络错误'); }
+    } catch { setMessage(t('common.networkError')); }
   };
 
   const handleBid = async (productId: string) => {
@@ -82,8 +85,8 @@ export default function AuctionPage() {
       });
       const data = await res.json();
       if (res.ok) { setMessage(`竞价成功！当前价 ¥${data.currentPrice}`); fetchItems(); }
-      else { setMessage(data.error || '竞价失败'); }
-    } catch { setMessage('网络错误'); }
+      else { setMessage(data.error || t('auction.bidFailed')); }
+    } catch { setMessage(t('common.networkError')); }
     setBidding(null);
   };
 
@@ -100,7 +103,7 @@ export default function AuctionPage() {
           <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-lg">🌳</span>
-              <span className="font-semibold tracking-tight text-sm">乔灌木批发拍卖</span>
+              <span className="font-semibold tracking-tight text-sm">{t('auction.subtitle')}</span>
             </div>
             <Link href="/reverse-auction" className="text-xs text-emerald-700 font-medium hover:text-emerald-900 transition-colors">鲜花倒拍 →</Link>
           </div>
@@ -111,7 +114,7 @@ export default function AuctionPage() {
             <span className="text-2xl">🔔</span>
             <div>
               <p className="text-sm font-semibold text-emerald-800">批发乔灌木正向拍卖</p>
-              <p className="text-xs text-stone-500">只展示乔灌木类拍品；倒计时10分钟，每次竞价加价5元</p>
+              <p className="text-xs text-stone-500">{t('auction.rulesDesc')}</p>
             </div>
           </div>
         </div>
@@ -134,7 +137,7 @@ export default function AuctionPage() {
                     {item.imageUrl ? <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" /> : <span className="text-6xl opacity-20">🌳</span>}
                     <div className="absolute top-3 left-3">
                       {isActive && <span className="bg-red-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full animate-pulse">🔴 LIVE</span>}
-                      {isEnded && <span className="bg-stone-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">已结束</span>}
+                      {isEnded && <span className="bg-stone-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">{t('auction.ended')}</span>}
                       {isUpcoming && <span className="bg-amber-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">待开拍</span>}
                     </div>
                     {item.isToday9am && <div className="absolute top-3 right-3"><span className="bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">今日9点</span></div>}
@@ -147,13 +150,13 @@ export default function AuctionPage() {
                       {item.specSize && <span>📏{item.specSize}</span>}
                     </div>
                     <div className="flex items-end justify-between mb-3">
-                      <div><p className="text-[10px] text-stone-400">起拍价</p><p className="text-xs text-stone-400 line-through">¥{item.basePrice}</p></div>
-                      <div className="text-right"><p className="text-[10px] text-emerald-700 font-medium">当前价</p><p className="text-xl font-bold text-emerald-700">¥{item.currentPrice}</p></div>
+                      <div><p className="text-[10px] text-stone-400">{t('auction.startingPrice')}</p><p className="text-xs text-stone-400 line-through">¥{item.basePrice}</p></div>
+                      <div className="text-right"><p className="text-[10px] text-emerald-700 font-medium">{t('reverseAuction.currentPrice')}</p><p className="text-xl font-bold text-emerald-700">¥{item.currentPrice}</p></div>
                     </div>
                     {item.currentBidder && <p className="text-xs text-stone-500 mb-2">最高出价: {item.currentBidder.name} · {item.bidCount}次出价</p>}
                     {isActive && item.remainingSeconds > 0 && (
                       <div className="flex items-center justify-center gap-2 mb-3">
-                        <span className="text-[10px] text-stone-400">剩余</span>
+                        <span className="text-[10px] text-stone-400">{t('reverseAuction.timeLeft')}</span>
                         <span className="font-mono text-lg font-bold text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-1">{formatCountdown(item.remainingSeconds)}</span>
                       </div>
                     )}
@@ -163,8 +166,8 @@ export default function AuctionPage() {
                     {isExpanded && isActive && (
                       <div className="mt-3 pt-3 border-t border-stone-100 space-y-2">
                         <input type="text" placeholder="您的姓名" value={bidName} onChange={e => setBidName(e.target.value)} className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm text-stone-900 placeholder-stone-400 focus:border-emerald-300 focus:outline-none" />
-                        <input type="tel" placeholder="手机号" value={bidPhone} onChange={e => setBidPhone(e.target.value)} className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm text-stone-900 placeholder-stone-400 focus:border-emerald-300 focus:outline-none" />
-                        <button onClick={() => handleBid(item.productId)} disabled={bidding === item.productId} className="w-full bg-amber-500 text-white py-2 rounded-xl text-xs font-bold disabled:opacity-40 hover:bg-amber-600 transition-colors">{bidding === item.productId ? '出价中...' : `确认出价 ¥${item.currentPrice + item.bidIncrement}`}</button>
+                        <input type="tel" placeholder={t('login.phonePlaceholder')} value={bidPhone} onChange={e => setBidPhone(e.target.value)} className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm text-stone-900 placeholder-stone-400 focus:border-emerald-300 focus:outline-none" />
+                        <button onClick={() => handleBid(item.productId)} disabled={bidding === item.productId} className="w-full bg-amber-500 text-white py-2 rounded-xl text-xs font-bold disabled:opacity-40 hover:bg-amber-600 transition-colors">{bidding === item.productId ? t('auction.bidding') : `确认出价 ¥${item.currentPrice + item.bidIncrement}`}</button>
                       </div>
                     )}
                   </div>
