@@ -43,3 +43,23 @@ services:
       - "29007:80"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+  # ===== SEO / 访问统计微服务 =====
+  seo-service:
+    build:
+      context: ./seo-service
+      dockerfile: Dockerfile
+    container_name: seo-service
+    restart: unless-stopped
+    ports:
+      - "3011:3011"
+    environment:
+      - NODE_ENV=production
+      - PORT=3011
+      - SITE_URL=https://2026newhorticultureecommerce.pages.dev
+      - DATA_DIR=/app/data
+    volumes:
+      - ./seo-service/data:/app/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
