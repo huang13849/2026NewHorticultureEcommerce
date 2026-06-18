@@ -7,25 +7,25 @@ import SeoTracker from './components/SeoTracker';
 export const viewport = { width: 'device-width', initialScale: 1, maximumScale: 1 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://2026newhorticultureecommerce.pages.dev'),
+  metadataBase: new URL('https://horiculture.club'),
   title: {
-    default: 'Smart Flower Supply Chain | Horticulture Ecommerce & Garden Marketplace',
-    template: '%s | Smart Flower Supply Chain',
+    default: '植物猎人 · 供应链新体验 | Plant Hunter',
+    template: '%s | 植物猎人 Plant Hunter',
   },
-  description: 'Smart flower and horticulture ecommerce platform for wholesale flower auctions, reverse auctions, map-based garden shopping, green tree certification and carbon credit services.',
-  keywords: ['flower supply chain', 'horticulture ecommerce', 'garden marketplace', 'wholesale flower auction', 'reverse flower auction', 'map flower shopping', 'green certification', 'carbon credit trees', '花卉供应链', '园艺电商', '苗木批发'],
+  description: '植物猎人 — 花卉供应链新体验。苗木拍卖、鲜花倒拍、地图购花、花园种植，一站式智能花卉供应链平台。',
+  keywords: ['植物猎人', 'Plant Hunter', 'flower supply chain', 'horticulture ecommerce', 'garden marketplace', 'wholesale flower auction', 'reverse flower auction', 'map flower shopping', 'green certification', 'carbon credit trees', '花卉供应链', '园艺电商', '苗木批发', '花卉供应链平台'],
   alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
-    url: 'https://2026newhorticultureecommerce.pages.dev',
-    siteName: 'Smart Flower Supply Chain',
-    title: 'Smart Flower Supply Chain | Horticulture Ecommerce & Garden Marketplace',
-    description: 'Connect flower origins, suppliers and buyers with auctions, map shopping, garden planting and green certification.',
+    url: 'https://horiculture.club',
+    siteName: '植物猎人 Plant Hunter',
+    title: '植物猎人 · 供应链新体验 | Plant Hunter',
+    description: '植物猎人 — 从产地到庭院，智能撮合交易，构建可信绿色价值链。',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Smart Flower Supply Chain',
-    description: 'Horticulture ecommerce, wholesale auctions, map shopping and green certification.',
+    title: '植物猎人 Plant Hunter',
+    description: '植物猎人 — 花卉供应链新体验：拍卖、地图、花园、绿色认证。',
   },
   robots: { index: true, follow: true },
 };
