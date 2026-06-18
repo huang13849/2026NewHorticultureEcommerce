@@ -53,6 +53,8 @@ services:
     restart: unless-stopped
     ports:
       - "3011:3011"
+    env_file:
+      - ./seo-service/.env
     environment:
       - NODE_ENV=production
       - PORT=3011

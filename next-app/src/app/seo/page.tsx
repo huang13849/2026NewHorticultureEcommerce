@@ -27,6 +27,20 @@ type Audit = {
 };
 type RankingMatch = { domain: string; rank: number | null; found: boolean };
 type Ranking = { keyword: string; engine: string; matches?: RankingMatch[]; rank?: number | null; found: boolean; error?: string };
+type CloudflareAnalytics = {
+  configured?: boolean;
+  source?: string;
+  error?: string;
+  requests?: number;
+  pageViews?: number;
+  uniques?: number;
+  bytes?: number;
+  cachedRequests?: number;
+  threats?: number;
+  byDay?: Record<string, { requests: number; pageViews: number; uniques: number }>;
+  note?: string;
+};
+
 type Analytics = {
   pageviews: number;
   estimatedVisitors: number;
@@ -47,10 +61,11 @@ async function getJson<T>(path: string, fallback: T): Promise<T> {
 }
 
 export default async function SeoDashboardPage() {
-  const [auditAll, rankingData, analytics] = await Promise.all([
+  const [auditAll, rankingData, analytics, cloudflare] = await Promise.all([
     getJson<{primary: string; sites: Audit[]}>('/api/seo/audit-all', { primary: 'https://horiculture.club', sites: [] }),
     getJson<{results: Ranking[]; note: string}>('/api/seo/rankings', { results: [], note: '' }),
     getJson<Analytics>('/api/analytics/summary?days=30', { pageviews: 0, estimatedVisitors: 0, byDay: {}, topHosts: [], topPages: [], topReferrers: [], note: '' }),
+    getJson<CloudflareAnalytics>('/api/analytics/cloudflare?days=30', { configured: false, error: 'Cloudflare Analytics 暂不可用' }),
   ]);
 
   const audits = auditAll.sites || [];
@@ -58,6 +73,10 @@ export default async function SeoDashboardPage() {
   const days = Object.entries(analytics.byDay || {}).sort(([a],[b]) => a.localeCompare(b)).slice(-14);
   const maxPv = Math.max(1, ...days.map(([,v]) => v));
   const rankedCount = (rankingData.results || []).filter(r => (r.matches || []).some(m => m.found) || r.found).length;
+  const realVisitors = cloudflare.uniques ?? analytics.estimatedVisitors ?? 0;
+  const realPageViews = cloudflare.pageViews ?? analytics.pageviews ?? 0;
+  const cfDays = Object.entries(cloudflare.byDay || {}).sort(([a],[b]) => a.localeCompare(b)).slice(-14);
+  const maxCfPv = Math.max(1, ...cfDays.map(([,v]) => v.pageViews || v.requests || 0));
 
   return (
     <main className="min-h-screen bg-slate-950 text-white px-5 py-8">
@@ -73,14 +92,27 @@ export default async function SeoDashboardPage() {
 
         <section className="grid md:grid-cols-4 gap-4">
           <Metric title="主域 SEO 健康分" value={`${primaryAudit.score || 0}/100`} tone="emerald" />
-          <Metric title="近30天 PV" value={String(analytics.pageviews || 0)} tone="sky" />
-          <Metric title="估算访客人数" value={String(analytics.estimatedVisitors || 0)} tone="violet" />
+          <Metric title="近30天真实 PV" value={String(realPageViews)} tone="sky" />
+          <Metric title="近30天真实访客" value={String(realVisitors)} tone="violet" />
           <Metric title="关键词已进前20" value={String(rankedCount)} tone="amber" />
         </section>
 
         <section className="rounded-3xl border border-emerald-400/20 bg-emerald-400/10 p-6 text-sm text-emerald-50">
           <b>判断：</b>“植物猎人 / Plant Hunter”作为品牌词有帮助，容易先拿到品牌搜索排名；两个域名同时存在时，最好让 <b>horiculture.club</b> 做 canonical/主域，Pages 域名做备用或 301 跳转，避免权重分散。
         </section>
+
+        <section className="grid lg:grid-cols-4 gap-4">
+          <Metric title="Cloudflare 请求" value={String(cloudflare.requests ?? 0)} tone="sky" />
+          <Metric title="Cloudflare PV" value={String(cloudflare.pageViews ?? 0)} tone="emerald" />
+          <Metric title="Cloudflare 独立访客" value={String(cloudflare.uniques ?? 0)} tone="violet" />
+          <Metric title="安全拦截/威胁" value={String(cloudflare.threats ?? 0)} tone="amber" />
+        </section>
+
+        {cloudflare.error ? (
+          <section className="rounded-3xl border border-amber-400/20 bg-amber-400/10 p-5 text-sm text-amber-100">
+            Cloudflare Analytics 暂不可用：{cloudflare.error}
+          </section>
+        ) : null}
 
         <section className="grid lg:grid-cols-2 gap-6">
           {audits.length ? audits.map((audit) => (
@@ -128,12 +160,20 @@ export default async function SeoDashboardPage() {
 
           <Card title="访问趋势（近14天）">
             <div className="space-y-2">
-              {days.length ? days.map(([d, v]) => (
+              {cfDays.length ? cfDays.map(([d, v]) => {
+                const value = v.pageViews || v.requests || 0;
+                return (
+                  <div key={d}>
+                    <div className="flex justify-between text-xs text-slate-400 mb-1"><span>{d.slice(5)}</span><span>{value} PV · {v.uniques || 0} 人</span></div>
+                    <div className="h-2 rounded bg-white/10"><div className="h-2 rounded bg-emerald-400" style={{ width: `${Math.max(4, value / maxCfPv * 100)}%` }} /></div>
+                  </div>
+                );
+              }) : days.length ? days.map(([d, v]) => (
                 <div key={d}>
                   <div className="flex justify-between text-xs text-slate-400 mb-1"><span>{d.slice(5)}</span><span>{v}</span></div>
                   <div className="h-2 rounded bg-white/10"><div className="h-2 rounded bg-emerald-400" style={{ width: `${Math.max(4, v / maxPv * 100)}%` }} /></div>
                 </div>
-              )) : <p className="text-slate-400 text-sm">暂无访问数据。公开站点要能统计，需要把 SEO API 以 HTTPS 公网域名暴露，或接 Cloudflare Analytics API。</p>}
+              )) : <p className="text-slate-400 text-sm">暂无访问数据。Cloudflare Analytics 或埋点日志均为空。</p>}
             </div>
           </Card>
         </section>
@@ -151,7 +191,7 @@ export default async function SeoDashboardPage() {
         </section>
 
         <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-6 text-sm text-slate-300">
-          <b className="text-white">访问人数说明：</b> 当前看板已经支持显示 PV、估算访客人数、按域名访问、热门页面和来源；但线上访客能不能被记录，取决于浏览器能否访问埋点接口。若部署在 Cloudflare Pages 上，建议后续接 Cloudflare Analytics API，或给 seo-service 配一个 HTTPS 公网入口。
+          <b className="text-white">访问人数说明：</b> 优先显示 Cloudflare 真实边缘统计（PV、请求、独立访客），下方按域名/热门页面来自站内埋点日志。Cloudflare Token 不写入 Git，只放服务器环境变量。
         </section>
       </div>
     </main>
