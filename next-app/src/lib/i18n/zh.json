@@ -46,12 +46,12 @@
     "shop": "商店",
     "garden": "花园",
     "profile": "我的",
-    "flowerShop": "智慧供应链"
+    "flowerShop": "植物猎人"
   },
   "home": {
-    "title": "花卉供应链",
-    "subtitle": "新体验",
-    "desc": "连接产地与市场，智能撮合交易。批发拍卖、鲜花倒拍、地图购花、花园种植——一站式花卉供应链平台。",
+    "title": "植物猎人",
+    "subtitle": "供应链新体验",
+    "desc": "从产地到庭院，智能撮合交易。苗木拍卖、鲜花倒拍、地图购花、花园种植——植物猎人，你的花卉供应链新体验。",
     "enterAuction": "进入拍卖",
     "flowerReverse": "鲜花倒拍",
     "quickEntry": {
@@ -244,10 +244,10 @@
       ]
     },
     "footer": {
-      "name": "智慧供应链",
-      "copyright": "京津冀花卉智能供应链平台 © 2026"
+      "name": "植物猎人",
+      "copyright": "植物猎人 · 供应链新体验 © 2026"
     },
-    "intelligentSupply": "Intelligent Supply Chain",
+    "intelligentSupply": "供应链新体验",
     "greenCertSubtitle": "Green Certification · Carbon Credit",
     "step": "Step {n}"
   },
@@ -383,8 +383,8 @@
     "invalidPhone": "请输入正确的手机号",
     "enterPassword": "请输入密码",
     "enterCode": "请输入验证码",
-    "appTitle": "花伴",
-    "appSlogan": "让每一朵花找到它的主人"
+    "appTitle": "植物猎人",
+    "appSlogan": "探索绿植花卉，体验供应链新范式"
   },
   "profile": {
     "title": "个人中心",
@@ -394,10 +394,10 @@
     "flowerProfile": "👤 我的",
     "certifiedBuyer": "认证采购商",
     "superAdmin": "超级管理员",
-    "flowerFriend": "花友",
+    "flowerFriend": "猎人",
     "health": "健康",
     "achievements": "种花成就",
-    "flowerCompanion": "花伴",
+    "flowerCompanion": "植物猎人",
     "adminCenter": "管理后台",
     "logout": "退出登录",
     "score": "综合评分",

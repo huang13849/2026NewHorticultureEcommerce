@@ -56,7 +56,8 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3011
-      - SITE_URL=https://2026newhorticultureecommerce.pages.dev
+      - SITE_URL=https://horiculture.club
+      - SITE_URLS=https://horiculture.club,https://2026newhorticultureecommerce.pages.dev
       - DATA_DIR=/app/data
     volumes:
       - ./seo-service/data:/app/data

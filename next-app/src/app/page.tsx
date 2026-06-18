@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { api, Product } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { useI18n } from '@/lib/i18n/context';
+import { useRegion } from '@/lib/region-context';
 import TabBar from './TabBar';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://100.76.15.64:3010/api';
@@ -25,6 +26,7 @@ function hasImg(p: any): boolean { return !!getImg(p); }
 export default function HomePage() {
   const { user } = useAuth();
   const { t } = useI18n();
+  const { region } = useRegion();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,7 +34,7 @@ export default function HomePage() {
     const load = async () => {
       let all: Product[] = [];
       try {
-        const data = await api.getHomeRecommendations();
+        const data = await api.getHomeRecommendations(region.lat, region.lng);
         all = data.sections?.flatMap((s: { products?: Product[] }) => s.products || []) || [];
       } catch { /* empty */ }
       if (all.filter(hasImg).length < 6) {
@@ -50,7 +52,7 @@ export default function HomePage() {
       setLoading(false);
     };
     load();
-  }, []);
+  }, [region.lat, region.lng]);
 
   const featured = products[0];
   const others = products.slice(1, 9);
@@ -110,12 +112,12 @@ export default function HomePage() {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'Smart Flower Supply Chain',
-    url: 'https://2026newhorticultureecommerce.pages.dev',
-    description: 'Smart flower and horticulture ecommerce platform for wholesale auctions, reverse auctions, map shopping, garden planting and green tree certification.',
+    name: '植物猎人 Plant Hunter',
+    url: 'https://horiculture.club',
+    description: '植物猎人 — 花卉供应链新体验：苗木拍卖、鲜花倒拍、地图购花、花园种植、绿色认证。',
     potentialAction: {
       '@type': 'SearchAction',
-      target: 'https://2026newhorticultureecommerce.pages.dev/shop?keyword={search_term_string}',
+      target: 'https://horiculture.club/shop?keyword={search_term_string}',
       'query-input': 'required name=search_term_string',
     },
   };
@@ -123,9 +125,9 @@ export default function HomePage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <main className="min-h-screen bg-white text-stone-900 pb-16">
+      <main className={`min-h-screen text-stone-900 pb-16 ${region.pageClass}`}>
         {/* Nav */}
-        <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-stone-200/60">
+        <nav className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b ${region.navClass}`}>
           <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-lg">🌿</span>
@@ -154,16 +156,19 @@ export default function HomePage() {
           <div className="max-w-6xl mx-auto">
             <div className="grid md:grid-cols-2 gap-8 items-center min-h-[420px]">
               <div>
-                <p className="text-xs text-emerald-700 font-semibold tracking-widest uppercase mb-4">{t('home.intelligentSupply')}</p>
+                <p className={`text-xs ${region.accentText} font-semibold tracking-widest uppercase mb-4`}>{region.badge}</p>
                 <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight mb-6">
-                  {t('home.title')}<br/><span className="text-emerald-700">{t('home.subtitle')}</span>
+                  {region.title}<br/><span className={region.accentText}>{region.subtitle}</span>
                 </h1>
                 <p className="text-stone-500 leading-relaxed max-w-md text-sm md:text-base mb-8">
-                  {t('home.desc')}
+                  {region.desc}
                 </p>
                 <div className="flex flex-wrap gap-3">
-                  <a href="/auction" className="bg-emerald-700 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:bg-emerald-800 transition-colors">{t('home.enterAuction')}</a>
-                  <a href="/reverse-auction" className="bg-white text-emerald-700 border border-emerald-200 px-6 py-3 rounded-xl text-sm font-semibold hover:bg-emerald-50 transition-colors">{t('home.flowerReverse')}</a>
+                  <a href="/auction" className={`${region.accentBg} text-white px-6 py-3 rounded-xl text-sm font-semibold ${region.accentBgHover} transition-colors`}>{t('home.enterAuction')}</a>
+                  <a href="/reverse-auction" className={`bg-white ${region.accentText} border ${region.accentBorder} px-6 py-3 rounded-xl text-sm font-semibold transition-colors`}>{t('home.flowerReverse')}</a>
+                </div>
+                <div className={`mt-5 inline-flex items-center gap-2 text-xs ${region.accentText} ${region.accentSoft} border ${region.accentBorder} rounded-full px-3 py-1.5`}>
+                  <span>{region.heroEmoji}</span><span>{region.plantLine}</span>
                 </div>
               </div>
               <div className="relative">
@@ -172,8 +177,8 @@ export default function HomePage() {
                     <img src={getImg(featured)} alt={featured.title || featured.flowerName || ''} className="w-full h-full object-cover" />
                   </div>
                 ) : (
-                  <div className="rounded-2xl bg-gradient-to-br from-emerald-50 to-amber-50 border border-stone-200 aspect-[4/3] flex items-center justify-center">
-                    <span className="text-8xl opacity-30">🌿</span>
+                  <div className={`rounded-2xl ${region.heroPanel} border border-stone-200 aspect-[4/3] flex items-center justify-center`}>
+                    <span className="text-8xl opacity-30">{region.imageFallback}</span>
                   </div>
                 )}
               </div>
@@ -185,9 +190,9 @@ export default function HomePage() {
         <section className="px-6 pb-16">
           <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
             {quickEntries.map(c => (
-              <a key={c.href} href={c.href} className="group rounded-2xl border border-stone-200 bg-white p-5 hover:border-emerald-300 hover:shadow-md transition-all">
+              <a key={c.href} href={c.href} className={`group rounded-2xl border border-stone-200 bg-white p-5 ${region.cardHover} hover:shadow-md transition-all`}>
                 <span className="text-2xl mb-3 block">{c.emoji}</span>
-                <h3 className="text-sm font-semibold text-stone-900 mb-1 group-hover:text-emerald-700 transition-colors">{c.title}</h3>
+                <h3 className={`text-sm font-semibold text-stone-900 mb-1 ${region.accentText} transition-colors`}>{c.title}</h3>
                 <p className="text-[11px] text-stone-400">{c.desc}</p>
               </a>
             ))}
@@ -199,7 +204,7 @@ export default function HomePage() {
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-stone-900">{t('home.recommendTitle')}</h2>
-              <a href="/shop" className="text-xs text-emerald-700 font-medium hover:text-emerald-900 transition-colors">{t('home.viewMore')}</a>
+              <a href="/shop" className={`text-xs ${region.accentText} font-medium transition-colors`}>{t('home.viewMore')}</a>
             </div>
             {loading ? (
               <div className="flex items-center justify-center py-16"><div className="text-3xl animate-pulse">⏳</div></div>
@@ -233,7 +238,7 @@ export default function HomePage() {
         {/* Green Certification */}
         <section className="px-6 pb-16">
           <div className="max-w-6xl mx-auto">
-            <div className="rounded-2xl bg-gradient-to-br from-emerald-700 via-emerald-800 to-stone-900 p-8 md:p-12 text-white">
+            <div className={`rounded-2xl bg-gradient-to-br ${region.certGradient} p-8 md:p-12 text-white`}>
               <div className="text-center mb-10">
                 <p className="text-xs text-emerald-200 font-semibold tracking-widest uppercase mb-2">{t('home.greenCertSubtitle')}</p>
                 <h2 className="text-2xl md:text-4xl font-bold mb-3">{t('home.greenCert.title')}</h2>

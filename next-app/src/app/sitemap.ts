@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 
-const baseUrl = 'https://2026newhorticultureecommerce.pages.dev';
+const baseUrl = 'https://horiculture.club';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const routes = ['', '/auction', '/reverse-auction', '/map', '/garden', '/shop', '/supplier-videos'].map((route) => ({

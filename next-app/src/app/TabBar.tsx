@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const tabs = [
-  { href: '/', label: '首页', emoji: '🏛' },
+  { href: '/', label: '猎人', emoji: '🌿' },
   { href: '/map', label: '地图', emoji: '🗺' },
   { href: '/auction', label: '苗木拍卖', emoji: '🌳' },
   { href: '/reverse-auction', label: '鲜花倒拍', emoji: '🌷' },
