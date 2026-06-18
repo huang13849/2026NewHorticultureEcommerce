@@ -54,7 +54,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       const stored = localStorage.getItem('lang') as Lang | null;
       if (stored && ['zh', 'en', 'de', 'ja'].includes(stored)) return stored;
     }
-    return 'en';
+    return 'zh';
   });
 
   const setLang = useCallback((l: Lang) => {

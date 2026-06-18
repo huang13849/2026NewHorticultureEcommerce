@@ -9,6 +9,8 @@ export default function SeoTracker() {
     const send = () => {
       try {
         const payload = JSON.stringify({
+          host: window.location.hostname,
+          origin: window.location.origin,
           path: window.location.pathname + window.location.search,
           referrer: document.referrer,
           title: document.title,
