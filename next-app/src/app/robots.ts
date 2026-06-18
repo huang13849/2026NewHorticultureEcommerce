@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 
-const baseUrl = 'https://2026newhorticultureecommerce.pages.dev';
+const baseUrl = 'https://horiculture.club';
 
 export default function robots(): MetadataRoute.Robots {
   return {

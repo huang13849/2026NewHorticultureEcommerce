@@ -61,9 +61,9 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen bg-white text-stone-900 flex flex-col items-center justify-center px-8">
-      <p className="text-6xl mb-4">🌸</p>
-      <h1 className="text-3xl font-bold text-emerald-700">花伴</h1>
-      <p className="text-sm text-stone-400 mt-2 mb-8">让每一朵花找到它的主人</p>
+      <p className="text-6xl mb-4">🌿</p>
+      <h1 className="text-3xl font-bold text-emerald-700">植物猎人</h1>
+      <p className="text-sm text-stone-400 mt-2 mb-8">探索绿植花卉 · 供应链新体验</p>
 
       {error && (
         <div className="w-full bg-red-50 text-red-600 text-sm p-3 rounded-xl mb-4 border border-red-200">
