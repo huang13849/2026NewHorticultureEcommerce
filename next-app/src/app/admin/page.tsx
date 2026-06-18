@@ -238,6 +238,20 @@ export default function AdminPage() {
               </div>
             </div>
 
+            {/* SEO Management */}
+            <a href="/seo" className="block rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-lime-50 p-5 hover:border-emerald-400 hover:shadow-md transition-all">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <span className="text-3xl">🔎</span>
+                  <div>
+                    <h2 className="font-bold text-sm text-emerald-950">SEO 管理看板</h2>
+                    <p className="text-xs text-emerald-700 mt-1 leading-relaxed">查看 horiculture.club 主域名 SEO 健康分、关键词排名、访问人数、热门页面和访问来源。</p>
+                  </div>
+                </div>
+                <span className="text-xs font-bold text-emerald-700 bg-white/70 border border-emerald-200 rounded-full px-3 py-1 whitespace-nowrap">进入 →</span>
+              </div>
+            </a>
+
             {/* Quick Config Checklist */}
             <div className="rounded-xl border border-stone-200 p-5">
               <h2 className="font-bold text-sm mb-4">配置清单</h2>
