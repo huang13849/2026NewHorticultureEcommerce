@@ -107,8 +107,22 @@ export default function HomePage() {
     avatar: ['👷','👰','👨\u200D💼','🧑\u200D🌾','👩\u200D💼','🧑'][i],
   }));
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'Smart Flower Supply Chain',
+    url: 'https://2026newhorticultureecommerce.pages.dev',
+    description: 'Smart flower and horticulture ecommerce platform for wholesale auctions, reverse auctions, map shopping, garden planting and green tree certification.',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: 'https://2026newhorticultureecommerce.pages.dev/shop?keyword={search_term_string}',
+      'query-input': 'required name=search_term_string',
+    },
+  };
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <main className="min-h-screen bg-white text-stone-900 pb-16">
         {/* Nav */}
         <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-stone-200/60">
