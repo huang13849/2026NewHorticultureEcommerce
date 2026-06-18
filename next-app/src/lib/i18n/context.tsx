@@ -29,7 +29,7 @@ interface I18nContextValue {
 }
 
 const I18nContext = createContext<I18nContextValue>({
-  lang: 'zh',
+  lang: 'en',
   setLang: () => {},
   t: (key) => key,
 });
@@ -54,7 +54,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       const stored = localStorage.getItem('lang') as Lang | null;
       if (stored && ['zh', 'en', 'de', 'ja'].includes(stored)) return stored;
     }
-    return 'zh';
+    return 'en';
   });
 
   const setLang = useCallback((l: Lang) => {
