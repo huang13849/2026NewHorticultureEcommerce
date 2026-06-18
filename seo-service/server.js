@@ -1,6 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
 
 const PORT = process.env.PORT || 3011;
 const SITE_URL = process.env.SITE_URL || 'https://horiculture.club';
@@ -29,13 +30,46 @@ function safeRef(r) { try { return new URL(r).hostname; } catch { return String(
 function top(obj) { return Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([name,value])=>({name,value})); }
 function buildRecommendations(x, target) { const out=[]; const targetHost = hostOf(target); if (!x.title || x.title.length < 8 || x.title.length > 80) out.push('首页 title 控制在 8-80 字符，包含“植物猎人/Plant Hunter”和核心业务词。'); if (!x.desc || x.desc.length < 35 || x.desc.length > 180) out.push('description 控制在 35-180 字符，写清业务和品牌。'); if (!x.canonical) out.push('增加 canonical，避免重复收录。'); else if (!x.canonical.includes('horiculture.club')) out.push('canonical 建议统一指向主域名 horiculture.club。'); if (!x.ogTitle) out.push('增加 OpenGraph/Twitter Card，提升分享点击率。'); if (!x.jsonLdCount) out.push('增加 JSON-LD 结构化数据：WebSite、Organization、ItemList。'); if (x.h1Count !== 1) out.push('每个页面保持一个明确 H1。'); if (x.imgWithoutAlt > 0) out.push(`有 ${x.imgWithoutAlt} 张图片缺 alt。`); if (!x.robotsOk) out.push('补 robots.txt。'); if (!x.sitemapOk) out.push('补 sitemap.xml 并提交搜索引擎。'); if (targetHost !== 'horiculture.club') out.push('这个域名建议 301 跳转到 horiculture.club，或至少 canonical 指向主域，避免权重分散。'); return out; }
 
-async function cfApi(pathname) {
-  if (!CF_API_TOKEN) throw new Error('Cloudflare API Token 未配置');
-  const res = await fetch(`https://api.cloudflare.com/client/v4${pathname}`, {
-    headers: { authorization: `Bearer ${CF_API_TOKEN}` },
+
+function cfRequestJson(pathname, { method = 'GET', body = null } = {}) {
+  if (!CF_API_TOKEN) return Promise.reject(new Error('Cloudflare API Token 未配置'));
+  const payload = body ? JSON.stringify(body) : null;
+  const forcedIp = process.env.CLOUDFLARE_API_IP || '104.19.192.177';
+  return new Promise((resolve, reject) => {
+    const req = https.request({
+      hostname: 'api.cloudflare.com',
+      servername: 'api.cloudflare.com',
+      path: pathname.startsWith('/client/v4') ? pathname : `/client/v4${pathname}`,
+      method,
+      timeout: 25000,
+      lookup: (_host, opts, cb) => {
+        if (typeof opts === 'function') { cb = opts; opts = {}; }
+        if (opts?.all) cb(null, [{ address: forcedIp, family: 4 }]);
+        else cb(null, forcedIp, 4);
+      },
+      headers: {
+        authorization: `Bearer ${CF_API_TOKEN}`,
+        ...(payload ? { 'content-type': 'application/json', 'content-length': Buffer.byteLength(payload) } : {}),
+      },
+    }, (res) => {
+      let raw = '';
+      res.setEncoding('utf8');
+      res.on('data', chunk => raw += chunk);
+      res.on('end', () => {
+        try { resolve(JSON.parse(raw || '{}')); }
+        catch (e) { reject(new Error(`Cloudflare API JSON parse failed: ${e.message}; status=${res.statusCode}`)); }
+      });
+    });
+    req.on('timeout', () => req.destroy(new Error('Cloudflare API timeout')));
+    req.on('error', reject);
+    if (payload) req.write(payload);
+    req.end();
   });
-  const data = await res.json();
-  if (!data.success) throw new Error((data.errors || []).map(e => e.message).join('; ') || `Cloudflare API ${res.status}`);
+}
+
+async function cfApi(pathname) {
+  const data = await cfRequestJson(pathname);
+  if (!data.success) throw new Error((data.errors || []).map(e => e.message).join('; ') || 'Cloudflare API error');
   return data.result;
 }
 async function getCfZoneId() {
@@ -46,10 +80,7 @@ async function getCfZoneId() {
 }
 async function verifyCloudflareToken() {
   if (!CF_API_TOKEN) return { configured: false, valid: false, error: 'Cloudflare API Token 未配置' };
-  const res = await fetch('https://api.cloudflare.com/client/v4/user/tokens/verify', {
-    headers: { authorization: `Bearer ${CF_API_TOKEN}` },
-  });
-  const data = await res.json();
+  const data = await cfRequestJson('/client/v4/user/tokens/verify');
   return {
     configured: true,
     valid: !!data.success,
@@ -76,12 +107,10 @@ async function fetchCloudflareAnalytics(days = 30) {
       }
     }
   }`;
-  const res = await fetch('https://api.cloudflare.com/client/v4/graphql', {
+  const data = await cfRequestJson('/client/v4/graphql', {
     method: 'POST',
-    headers: { authorization: `Bearer ${CF_API_TOKEN}`, 'content-type': 'application/json' },
-    body: JSON.stringify({ query, variables: { zoneTag, since, until, limit: Math.max(1, days) } }),
+    body: { query, variables: { zoneTag, since, until, limit: Math.max(1, days) } },
   });
-  const data = await res.json();
   if (data.errors?.length) throw new Error(data.errors.map(e => e.message).join('; '));
   const groups = data.data?.viewer?.zones?.[0]?.httpRequests1dGroups || [];
   const byDay = {};
