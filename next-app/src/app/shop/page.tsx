@@ -133,7 +133,7 @@ export default function ShopPage() {
         ) : filtered.length === 0 ? (
           <div className="text-center py-16 text-stone-400">{t('shop.noProducts')}</div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-4 gap-3">
             {filtered.map(p => {
               const img = getImg(p);
               const price = Number(p.sellPrice || p.price || p.settlementPrice || 0);
