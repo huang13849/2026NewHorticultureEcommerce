@@ -538,72 +538,72 @@
     "ar": "العربية"
   },
   "regionSwitch": {
-    "title": "言語 / 地域",
-    "section": "言語と地域",
-    "useCurrent": "📍 現在地を使う",
-    "locating": "位置情報を取得中…",
-    "recommended": "おすすめ",
-    "selected": "選択中",
-    "preciseUnavailable": "ブラウザの正確な位置情報は利用できません",
-    "preciseFailed": "正確な位置情報の取得に失敗しました",
-    "networkDetected": "ネットワーク位置で判定：{region}",
-    "timezoneDetected": "{reason}。タイムゾーンで判定：{region}",
-    "currentDetected": "現在地で判定：{region}"
+    "title": "Langue / Région",
+    "section": "Langue et région",
+    "useCurrent": "📍 Utiliser la position actuelle",
+    "locating": "Localisation…",
+    "recommended": "Recommandé",
+    "selected": "Sélectionné",
+    "preciseUnavailable": "La géolocalisation précise du navigateur est indisponible",
+    "preciseFailed": "La géolocalisation précise a échoué",
+    "networkDetected": "Détecté par la position réseau : {region}",
+    "timezoneDetected": "{reason} ; détecté par fuseau horaire : {region}",
+    "currentDetected": "Détecté depuis la position actuelle : {region}"
   },
   "regions": {
     "cn": {
-      "name": "中国",
-      "short": "中国",
-      "badge": "中国エリア · 中国庭園サプライチェーン",
+      "name": "Chine",
+      "short": "Chine",
+      "badge": "Chine · Chaîne horticole des jardins chinois",
       "title": "Plant Hunter",
-      "subtitle": "新しいサプライチェーン体験",
-      "desc": "中国庭園と北方花木市場を軸に、産地・事業者・庭づくりのシーンをつなぎます。苗木オークション、花の逆オークション、地図購入、ガーデン栽培をワンストップで。",
-      "plantLine": "おすすめ：牡丹、マキ、シロマツ、金木犀、バラ、中国盆栽"
+      "subtitle": "Une nouvelle expérience supply chain",
+      "desc": "Autour des jardins chinois et des marchés horticoles du Nord : origine, marchands et scénarios de jardin connectés en un seul parcours.",
+      "plantLine": "Recommandé : pivoine, podocarpus, pin blanc, osmanthe, rose, bonsaï chinois"
     },
     "us": {
-      "name": "米国",
-      "short": "米国",
-      "badge": "米国エリア · アメリカンガーデン供給網",
+      "name": "États-Unis",
+      "short": "USA",
+      "badge": "États-Unis · Chaîne des jardins américains",
       "title": "Plant Hunter",
-      "subtitle": "新しいサプライチェーン体験",
-      "desc": "アメリカの庭、ガーデンセンター、コミュニティ緑化向けに、産地直結、地図購入、安定した履行を提供します。",
-      "plantLine": "おすすめ：アジサイ、ラベンダー、バラ、多肉植物、観賞用グラス、庭木"
+      "subtitle": "Une nouvelle expérience supply chain",
+      "desc": "Pour jardins américains, garden centers et espaces verts communautaires, avec sourcing direct, achat cartographique et exécution fiable.",
+      "plantLine": "Recommandé : hortensia, lavande, rose, succulentes, graminées ornementales, arbres de jardin"
     },
     "de": {
-      "name": "ドイツ",
-      "short": "ドイツ",
-      "badge": "ドイツエリア · 欧州フォレストガーデン供給網",
+      "name": "Allemagne",
+      "short": "Allemagne",
+      "badge": "Allemagne · Chaîne des jardins forestiers européens",
       "title": "Plant Hunter",
-      "subtitle": "新しいサプライチェーン体験",
-      "desc": "欧州庭園、森の景観、持続可能な園芸調達向けに、グリーン認証、炭素価値、産地追跡、厳格な履行を重視します。",
-      "plantLine": "おすすめ：クレマチス、ヤグルマギク、ハーブ、球根花、トウヒ、ヨーロッパブナ"
+      "subtitle": "Une nouvelle expérience supply chain",
+      "desc": "Pour jardins européens, paysages forestiers et achats horticoles durables, avec certification verte, valeur carbone, traçabilité et rigueur logistique.",
+      "plantLine": "Recommandé : clématite, bleuet, aromatiques, bulbes, épicéa, hêtre européen"
     },
     "jp": {
-      "name": "日本",
-      "short": "日本",
-      "badge": "日本エリア · 和風庭園サプライチェーン",
+      "name": "Japon",
+      "short": "Japon",
+      "badge": "Japon · Chaîne des jardins japonais",
       "title": "Plant Hunter",
-      "subtitle": "新しいサプライチェーン体験",
-      "desc": "和風庭園、屋上緑化、精品園芸向けに、厳選産地、丁寧な履行、季節の花材供給を重視します。",
-      "plantLine": "おすすめ：桜、楓、紫陽花、椿、黒松、苔庭植物"
+      "subtitle": "Une nouvelle expérience supply chain",
+      "desc": "Pour jardins japonais, toitures végétalisées et horticulture premium, avec origines sélectionnées, exécution précise et fleurs saisonnières.",
+      "plantLine": "Recommandé : cerisier, érable, hortensia, camélia, pin noir, plantes de jardin de mousse"
     },
     "fr": {
       "name": "France",
       "short": "France",
-      "badge": "France · French garden supply chain",
+      "badge": "France · Chaîne des jardins à la française",
       "title": "Plant Hunter",
-      "subtitle": "A New Supply Chain Experience",
-      "desc": "For French gardens, estate landscapes, and urban floristry, highlighting romantic borders, terroir-driven sourcing, and premium horticulture fulfillment.",
-      "plantLine": "Recommended: lavender, iris, rose, plane tree, grapevine, French border plants"
+      "subtitle": "Une nouvelle expérience supply chain",
+      "desc": "Pour jardins à la française, domaines paysagers et fleuristerie urbaine : bordures romantiques, terroirs d’origine et horticulture premium.",
+      "plantLine": "Recommandé : lavande, iris, rose, platane, vigne, plantes de massif à la française"
     },
     "sa": {
-      "name": "Saudi Arabia",
-      "short": "Saudi",
-      "badge": "Saudi Arabia · Desert oasis supply chain",
+      "name": "Arabie saoudite",
+      "short": "Arabie",
+      "badge": "Arabie saoudite · Chaîne des oasis désertiques",
       "title": "Plant Hunter",
-      "subtitle": "A New Supply Chain Experience",
-      "desc": "For desert oases, drought-tolerant landscapes, and premium urban greening, focused on heat-tolerant plants, water efficiency, and reliable cross-region fulfillment.",
-      "plantLine": "Recommended: date palm, palm, bougainvillea, desert rose, olive, drought-tolerant herbs"
+      "subtitle": "Une nouvelle expérience supply chain",
+      "desc": "Pour oasis désertiques, paysages sobres en eau et verdissement urbain haut de gamme, avec plantes résistantes à la chaleur et efficacité hydrique.",
+      "plantLine": "Recommandé : palmier dattier, palmier, bougainvillier, rose du désert, olivier, aromatiques résistantes à la sécheresse"
     }
   }
 }

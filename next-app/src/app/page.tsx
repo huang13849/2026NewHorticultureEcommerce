@@ -125,7 +125,7 @@ export default function HomePage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <main className={`min-h-screen text-stone-900 pb-16 ${region.pageClass}`}>
+      <main className={`relative overflow-hidden min-h-screen text-stone-900 pb-16 ${region.pageClass} ${region.skylineClass || ''}`}> 
         {/* Nav */}
         <nav className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b ${region.navClass}`}>
           <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
@@ -156,19 +156,19 @@ export default function HomePage() {
           <div className="max-w-6xl mx-auto">
             <div className="grid md:grid-cols-2 gap-8 items-center min-h-[420px]">
               <div>
-                <p className={`text-xs ${region.accentText} font-semibold tracking-widest uppercase mb-4`}>{region.badge}</p>
+                <p className={`text-xs ${region.accentText} font-semibold tracking-widest uppercase mb-4`}>{t(`regions.${region.code}.badge`)}</p>
                 <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-tight mb-6">
-                  {region.title}<br/><span className={region.accentText}>{region.subtitle}</span>
+                  {t(`regions.${region.code}.title`)}<br/><span className={region.accentText}>{t(`regions.${region.code}.subtitle`)}</span>
                 </h1>
                 <p className="text-stone-500 leading-relaxed max-w-md text-sm md:text-base mb-8">
-                  {region.desc}
+                  {t(`regions.${region.code}.desc`)}
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <a href="/auction" className={`${region.accentBg} text-white px-6 py-3 rounded-xl text-sm font-semibold ${region.accentBgHover} transition-colors`}>{t('home.enterAuction')}</a>
                   <a href="/reverse-auction" className={`bg-white ${region.accentText} border ${region.accentBorder} px-6 py-3 rounded-xl text-sm font-semibold transition-colors`}>{t('home.flowerReverse')}</a>
                 </div>
                 <div className={`mt-5 inline-flex items-center gap-2 text-xs ${region.accentText} ${region.accentSoft} border ${region.accentBorder} rounded-full px-3 py-1.5`}>
-                  <span>{region.heroEmoji}</span><span>{region.plantLine}</span>
+                  <span>{region.heroEmoji}</span><span>{t(`regions.${region.code}.plantLine`)}</span>
                 </div>
               </div>
               <div className="relative">
