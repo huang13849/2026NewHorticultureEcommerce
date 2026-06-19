@@ -26,9 +26,13 @@ router.get('/', async (req, res) => {
       lat,
       radius = 50,
       sort = 'recommend',
+      includeOutOfStock = 'false',
     } = req.query;
 
     const filter = { status: { $ne: 'deleted' } };
+    if (includeOutOfStock !== 'true') {
+      filter.stock = { $gt: 0 };
+    }
 
     if (keyword) {
       filter.$or = [
@@ -133,6 +137,7 @@ router.get('/map/markers', async (req, res) => {
 
     const filter = {
       status: { $ne: 'deleted' },
+      stock: { $gt: 0 },
     };
 
     // 如果有边界坐标，使用 $geoWithin 聚合
