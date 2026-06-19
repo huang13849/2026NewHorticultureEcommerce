@@ -9,6 +9,7 @@ const API_KEY = 'flower-app-key-2024';
 
 const GATEWAY = process.env.API_GATEWAY_URL || 'http://100.96.54.109:3007';
 const MONGO_BASE = `${GATEWAY}/api/mongo`;
+const PG_BASE = `${GATEWAY}/api/pg`;
 
 const client = axios.create({
   timeout: 15000,
@@ -119,6 +120,26 @@ async function distinct(collection, field, filter = {}) {
   return results.map(r => r.value).filter(Boolean);
 }
 
+
+
+/**
+ * PostgreSQL: 插入行（通过 API Gateway 写 Primary）
+ */
+async function pgInsert(database, table, data) {
+  const res = await client.post(`${PG_BASE}/${database}/${table}`, data);
+  return res.data.data || res.data;
+}
+
+/**
+ * PostgreSQL: 查询表（通过 API Gateway，可 readFrom=standby）
+ */
+async function pgFind(database, table, { filter = {}, sort = '', page = 1, limit = 50, fields = '*', readFrom = 'primary' } = {}) {
+  const res = await client.get(`${PG_BASE}/${database}/${table}`, {
+    params: { filter: JSON.stringify(filter), sort, page, limit, fields, readFrom },
+  });
+  return res.data;
+}
+
 module.exports = {
   find,
   findById,
@@ -130,4 +151,6 @@ module.exports = {
   aggregate,
   insertMany,
   distinct,
+  pgInsert,
+  pgFind,
 };
