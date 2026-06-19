@@ -56,13 +56,13 @@ router.get('/home', async (req, res) => {
     const nearbyHot = await getNearbyHot(location, 6);
     // 2. 新品推荐
     const newProducts = await db.find('products', {
-      filter: { status: { $ne: 'deleted' } },
+      filter: { status: { $ne: 'deleted' }, stock: { $gt: 0 } },
       sort: { createdAt: -1 },
       limit: 6,
     });
     // 3. 特价推荐
     const onSale = await db.find('products', {
-      filter: { status: { $ne: 'deleted' }, discountPrice: { $exists: true, $gt: 0 } },
+      filter: { status: { $ne: 'deleted' }, stock: { $gt: 0 }, discountPrice: { $exists: true, $gt: 0 } },
       sort: { discountPrice: 1 },
       limit: 6,
     });
@@ -81,7 +81,7 @@ router.get('/home', async (req, res) => {
 });
 
 async function getNearbyHot(location, limit) {
-  const query = { status: { $ne: 'deleted' } };
+  const query = { status: { $ne: 'deleted' }, stock: { $gt: 0 } };
   const products = await db.find('products', {
     filter: query,
     sort: { salesCount: -1, createdAt: -1 },
@@ -116,7 +116,7 @@ async function generateRecommendations({ user, location, sessionId, limit = 10 }
   // 2. 基于用户历史偏好
   if (user?.preferences?.categories?.length) {
     const preferredProducts = await db.find('products', {
-      filter: { status: { $ne: 'deleted' }, category: { $in: user.preferences.categories } },
+      filter: { status: { $ne: 'deleted' }, stock: { $gt: 0 }, category: { $in: user.preferences.categories } },
       limit: limit * 2,
     });
     preferredProducts.forEach(p => {
@@ -126,7 +126,7 @@ async function generateRecommendations({ user, location, sessionId, limit = 10 }
 
   // 3. 基于热门度
   const hotProducts = await db.find('products', {
-    filter: { status: { $ne: 'deleted' } },
+    filter: { status: { $ne: 'deleted' }, stock: { $gt: 0 } },
     sort: { salesCount: -1 },
     limit: limit * 2,
   });
@@ -137,7 +137,7 @@ async function generateRecommendations({ user, location, sessionId, limit = 10 }
 
   // 4. 新品加分
   const newProducts = await db.find('products', {
-    filter: { status: { $ne: 'deleted' } },
+    filter: { status: { $ne: 'deleted' }, stock: { $gt: 0 } },
     sort: { createdAt: -1 },
     limit: limit,
   });
@@ -179,6 +179,7 @@ async function getNearbyProducts(location, limit) {
   const products = await db.find('products', {
     filter: {
       status: { $ne: 'deleted' },
+      stock: { $gt: 0 },
       'location.coordinates': { $exists: true },
     },
     limit: limit * 5,
