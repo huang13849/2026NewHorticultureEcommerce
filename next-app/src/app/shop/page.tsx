@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/lib/i18n/context';
+import { useRegion, type RegionCode } from '@/lib/region-context';
 import TabBar from '../TabBar';
 
 interface Product {
@@ -30,6 +31,42 @@ interface CartItem {
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://100.76.15.64:3010/api';
 
+type CurrencyCode = 'CNY' | 'USD' | 'EUR' | 'JPY' | 'SAR';
+
+const REGION_CURRENCY: Record<RegionCode, CurrencyCode> = {
+  cn: 'CNY',
+  us: 'USD',
+  de: 'EUR',
+  jp: 'JPY',
+  fr: 'EUR',
+  sa: 'SAR',
+};
+
+const FALLBACK_RATES: Record<CurrencyCode, number> = {
+  CNY: 1,
+  USD: 0.138,
+  EUR: 0.128,
+  JPY: 21.8,
+  SAR: 0.518,
+};
+
+const CURRENCY_LOCALE: Record<CurrencyCode, string> = {
+  CNY: 'zh-CN',
+  USD: 'en-US',
+  EUR: 'de-DE',
+  JPY: 'ja-JP',
+  SAR: 'ar-SA',
+};
+
+function formatCurrency(cnyAmount: number, currency: CurrencyCode, rate: number): string {
+  const amount = cnyAmount * rate;
+  return new Intl.NumberFormat(CURRENCY_LOCALE[currency], {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: currency === 'JPY' ? 0 : 2,
+  }).format(amount);
+}
+
 function getImg(p: Product): string {
   const raw = (p.images as string[])?.[0]
     || (p.panorama_images as string[])?.[0]
@@ -43,10 +80,13 @@ function getImg(p: Product): string {
 export default function ShopPage() {
   const router = useRouter();
   const { t } = useI18n();
+  const { region } = useRegion();
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [rates, setRates] = useState<Record<CurrencyCode, number>>(FALLBACK_RATES);
+  const [rateSource, setRateSource] = useState<'live' | 'fallback' | 'loading'>('loading');
 
   useEffect(() => {
     const load = async () => {
@@ -73,6 +113,26 @@ export default function ShopPage() {
     }
   }, [cart]);
 
+  useEffect(() => {
+    let alive = true;
+    const loadRates = async () => {
+      try {
+        setRateSource('loading');
+        const res = await fetch(`${API}/currency/rates?base=CNY`, { cache: 'no-store' });
+        const data = await res.json();
+        if (!alive) return;
+        setRates({ ...FALLBACK_RATES, ...(data.rates || {}) });
+        setRateSource(data.source === 'live' ? 'live' : 'fallback');
+      } catch {
+        if (!alive) return;
+        setRates(FALLBACK_RATES);
+        setRateSource('fallback');
+      }
+    };
+    loadRates();
+    return () => { alive = false; };
+  }, []);
+
   const addToCart = (product: Product) => {
     const img = getImg(product);
     const price = Number(product.sellPrice || product.price || product.settlementPrice || 0);
@@ -97,6 +157,9 @@ export default function ShopPage() {
 
   const totalItems = cart.reduce((sum, i) => sum + i.quantity, 0);
   const totalAmount = cart.filter(i => i.checked).reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const currency = REGION_CURRENCY[region.code] || 'CNY';
+  const exchangeRate = rates[currency] || FALLBACK_RATES[currency];
+  const fxLabel = rateSource === 'live' ? '实时汇率' : rateSource === 'loading' ? '汇率加载中' : '备用汇率';
 
   const filtered = search
     ? products.filter(p => {
@@ -115,6 +178,7 @@ export default function ShopPage() {
       <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-xl border-b border-stone-200/60 px-6 py-4">
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-bold text-center flex-1">{t('shop.flowerShop')}</h1>
+          <div className="text-[10px] text-stone-400 whitespace-nowrap">{region.flag} {currency}</div>
         </div>
       </div>
 
@@ -125,6 +189,10 @@ export default function ShopPage() {
           placeholder={t('shop.searchPlaceholder')}
           className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200 transition-colors"
         />
+        <div className="mt-2 flex items-center justify-between text-[10px] text-stone-400">
+          <span>当前地区：{region.flag} {t(`regions.${region.code}.name`)} · 币种 {currency}</span>
+          <span>{fxLabel} · 1 CNY ≈ {exchangeRate.toFixed(currency === 'JPY' ? 2 : 4)} {currency}</span>
+        </div>
       </div>
 
       <div className="max-w-6xl mx-auto px-6 md:px-10 py-5">
@@ -133,7 +201,7 @@ export default function ShopPage() {
         ) : filtered.length === 0 ? (
           <div className="text-center py-16 text-stone-400">{t('shop.noProducts')}</div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {filtered.map(p => {
               const img = getImg(p);
               const price = Number(p.sellPrice || p.price || p.settlementPrice || 0);
@@ -156,7 +224,7 @@ export default function ShopPage() {
                   <div className="p-2.5">
                     <h4 className="text-xs font-medium text-stone-900 truncate">{name}</h4>
                     <div className="flex items-center justify-between mt-1.5">
-                      <span className="text-sm font-bold text-emerald-700">¥{price.toFixed(2)}</span>
+                      <span className="text-sm font-bold text-emerald-700">{formatCurrency(price, currency, exchangeRate)}</span>
                       <button onClick={() => addToCart(p)} className="bg-emerald-700 text-white text-[10px] px-2.5 py-1 rounded-lg hover:bg-emerald-800 transition-colors">
                         + {t('product.addToCart')}
                       </button>
@@ -175,7 +243,7 @@ export default function ShopPage() {
           <div className="max-w-6xl mx-auto px-6 md:px-10 py-3 flex items-center justify-between">
             <div>
               <span className="text-xs text-stone-500">🛒 {t('shop.cartCount', { count: totalItems })} </span>
-              <span className="text-lg font-bold text-emerald-700">¥{totalAmount.toFixed(2)}</span>
+              <span className="text-lg font-bold text-emerald-700">{formatCurrency(totalAmount, currency, exchangeRate)}</span>
             </div>
             <div className="flex gap-2">
               <button onClick={() => setCart([])} className="text-xs text-stone-400 px-3 py-2">{t('cart.clear')}</button>
