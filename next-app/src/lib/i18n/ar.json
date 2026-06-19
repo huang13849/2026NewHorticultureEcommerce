@@ -538,72 +538,72 @@
     "ar": "العربية"
   },
   "regionSwitch": {
-    "title": "言語 / 地域",
-    "section": "言語と地域",
-    "useCurrent": "📍 現在地を使う",
-    "locating": "位置情報を取得中…",
-    "recommended": "おすすめ",
-    "selected": "選択中",
-    "preciseUnavailable": "ブラウザの正確な位置情報は利用できません",
-    "preciseFailed": "正確な位置情報の取得に失敗しました",
-    "networkDetected": "ネットワーク位置で判定：{region}",
-    "timezoneDetected": "{reason}。タイムゾーンで判定：{region}",
-    "currentDetected": "現在地で判定：{region}"
+    "title": "اللغة / المنطقة",
+    "section": "اللغة والمنطقة",
+    "useCurrent": "📍 استخدام الموقع الحالي",
+    "locating": "جارٍ تحديد الموقع…",
+    "recommended": "موصى به",
+    "selected": "محدد",
+    "preciseUnavailable": "الموقع الدقيق في المتصفح غير متاح",
+    "preciseFailed": "فشل تحديد الموقع الدقيق",
+    "networkDetected": "تم التعرف عبر موقع الشبكة: {region}",
+    "timezoneDetected": "{reason}؛ تم التعرف عبر المنطقة الزمنية: {region}",
+    "currentDetected": "تم التعرف من الموقع الحالي: {region}"
   },
   "regions": {
     "cn": {
-      "name": "中国",
-      "short": "中国",
-      "badge": "中国エリア · 中国庭園サプライチェーン",
+      "name": "الصين",
+      "short": "الصين",
+      "badge": "الصين · سلسلة توريد الحدائق الصينية",
       "title": "Plant Hunter",
-      "subtitle": "新しいサプライチェーン体験",
-      "desc": "中国庭園と北方花木市場を軸に、産地・事業者・庭づくりのシーンをつなぎます。苗木オークション、花の逆オークション、地図購入、ガーデン栽培をワンストップで。",
-      "plantLine": "おすすめ：牡丹、マキ、シロマツ、金木犀、バラ、中国盆栽"
+      "subtitle": "تجربة جديدة لسلسلة التوريد",
+      "desc": "ربط المنشأ والتجار ومشاهد الحدائق الصينية في تجربة واحدة تشمل المزادات والشراء على الخريطة والزراعة المنزلية.",
+      "plantLine": "موصى به: الفاوانيا، بودوكاربوس، الصنوبر الأبيض، الأوسمانثوس، الورد، بونساي صيني"
     },
     "us": {
-      "name": "米国",
-      "short": "米国",
-      "badge": "米国エリア · アメリカンガーデン供給網",
+      "name": "الولايات المتحدة",
+      "short": "أمريكا",
+      "badge": "الولايات المتحدة · سلسلة توريد الحدائق الأمريكية",
       "title": "Plant Hunter",
-      "subtitle": "新しいサプライチェーン体験",
-      "desc": "アメリカの庭、ガーデンセンター、コミュニティ緑化向けに、産地直結、地図購入、安定した履行を提供します。",
-      "plantLine": "おすすめ：アジサイ、ラベンダー、バラ、多肉植物、観賞用グラス、庭木"
+      "subtitle": "تجربة جديدة لسلسلة التوريد",
+      "desc": "للفناءات الأمريكية ومراكز الحدائق والتشجير المجتمعي، مع توريد مباشر من المنشأ وشراء عبر الخريطة وتنفيذ موثوق.",
+      "plantLine": "موصى به: هدرانجيا، لافندر، ورد، عصاريات، أعشاب زينة، أشجار حدائق"
     },
     "de": {
-      "name": "ドイツ",
-      "short": "ドイツ",
-      "badge": "ドイツエリア · 欧州フォレストガーデン供給網",
+      "name": "ألمانيا",
+      "short": "ألمانيا",
+      "badge": "ألمانيا · سلسلة توريد حدائق الغابات الأوروبية",
       "title": "Plant Hunter",
-      "subtitle": "新しいサプライチェーン体験",
-      "desc": "欧州庭園、森の景観、持続可能な園芸調達向けに、グリーン認証、炭素価値、産地追跡、厳格な履行を重視します。",
-      "plantLine": "おすすめ：クレマチス、ヤグルマギク、ハーブ、球根花、トウヒ、ヨーロッパブナ"
+      "subtitle": "تجربة جديدة لسلسلة التوريد",
+      "desc": "للحدائق الأوروبية والمناظر الغابية والمشتريات المستدامة، مع شهادات خضراء وتتبع المنشأ وتنفيذ دقيق.",
+      "plantLine": "موصى به: كليماتيس، قنطريون، أعشاب عطرية، أزهار بصلية، تنوب، زان أوروبي"
     },
     "jp": {
-      "name": "日本",
-      "short": "日本",
-      "badge": "日本エリア · 和風庭園サプライチェーン",
+      "name": "اليابان",
+      "short": "اليابان",
+      "badge": "اليابان · سلسلة توريد الحدائق اليابانية",
       "title": "Plant Hunter",
-      "subtitle": "新しいサプライチェーン体験",
-      "desc": "和風庭園、屋上緑化、精品園芸向けに、厳選産地、丁寧な履行、季節の花材供給を重視します。",
-      "plantLine": "おすすめ：桜、楓、紫陽花、椿、黒松、苔庭植物"
+      "subtitle": "تجربة جديدة لسلسلة التوريد",
+      "desc": "للحدائق اليابانية والأسطح الخضراء والبستنة الراقية، مع منشأ مختار وتنفيذ دقيق وزهور موسمية.",
+      "plantLine": "موصى به: ساكورا، قيقب، هدرانجيا، كاميليا، صنوبر أسود، نباتات حدائق الطحالب"
     },
     "fr": {
-      "name": "France",
-      "short": "France",
-      "badge": "France · French garden supply chain",
+      "name": "فرنسا",
+      "short": "فرنسا",
+      "badge": "فرنسا · سلسلة توريد الحدائق الفرنسية",
       "title": "Plant Hunter",
-      "subtitle": "A New Supply Chain Experience",
-      "desc": "For French gardens, estate landscapes, and urban floristry, highlighting romantic borders, terroir-driven sourcing, and premium horticulture fulfillment.",
-      "plantLine": "Recommended: lavender, iris, rose, plane tree, grapevine, French border plants"
+      "subtitle": "تجربة جديدة لسلسلة التوريد",
+      "desc": "للحدائق الفرنسية والمناظر الريفية وفنون الزهور الحضرية، مع أحواض رومانسية ومناطق منشأ مميزة وتنفيذ فاخر.",
+      "plantLine": "موصى به: لافندر، سوسن، ورد، دلب، كرمة، نباتات أحواض فرنسية"
     },
     "sa": {
-      "name": "Saudi Arabia",
-      "short": "Saudi",
-      "badge": "Saudi Arabia · Desert oasis supply chain",
+      "name": "المملكة العربية السعودية",
+      "short": "السعودية",
+      "badge": "السعودية · سلسلة توريد واحات الصحراء",
       "title": "Plant Hunter",
-      "subtitle": "A New Supply Chain Experience",
-      "desc": "For desert oases, drought-tolerant landscapes, and premium urban greening, focused on heat-tolerant plants, water efficiency, and reliable cross-region fulfillment.",
-      "plantLine": "Recommended: date palm, palm, bougainvillea, desert rose, olive, drought-tolerant herbs"
+      "subtitle": "تجربة جديدة لسلسلة التوريد",
+      "desc": "للواحات الصحراوية والمناظر المقاومة للجفاف والتشجير الحضري الراقي، مع نباتات تتحمل الحرارة وكفاءة عالية في المياه.",
+      "plantLine": "موصى به: نخيل التمر، النخيل، الجهنمية، وردة الصحراء، الزيتون، أعشاب مقاومة للجفاف"
     }
   }
 }

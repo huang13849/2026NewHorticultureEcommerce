@@ -531,6 +531,79 @@
   },
   "langSwitch": {
     "zh": "中文",
-    "en": "English"
+    "en": "English",
+    "de": "Deutsch",
+    "ja": "日本語",
+    "fr": "Français",
+    "ar": "العربية"
+  },
+  "regionSwitch": {
+    "title": "语言 / 地区",
+    "section": "语言与地区",
+    "useCurrent": "📍 使用当前位置",
+    "locating": "正在定位…",
+    "recommended": "推荐",
+    "selected": "当前",
+    "preciseUnavailable": "浏览器精确定位不可用",
+    "preciseFailed": "精确定位失败",
+    "networkDetected": "已用网络位置识别：{region}",
+    "timezoneDetected": "{reason}，已按时区识别：{region}",
+    "currentDetected": "已用当前位置识别：{region}"
+  },
+  "regions": {
+    "cn": {
+      "name": "中国",
+      "short": "中国",
+      "badge": "中国区 · 中式园林供应链",
+      "title": "植物猎人",
+      "subtitle": "供应链新体验",
+      "desc": "以中式园林和北方花木市场为核心，连接产地、商家与庭院场景。苗木拍卖、鲜花倒拍、地图购花、花园种植，一站式完成。",
+      "plantLine": "推荐：牡丹、罗汉松、白皮松、桂花、月季、国风盆景"
+    },
+    "us": {
+      "name": "美国",
+      "short": "美国",
+      "badge": "美国区 · 美式花园供应链",
+      "title": "Plant Hunter",
+      "subtitle": "供应链新体验",
+      "desc": "面向美式庭院、花园中心与社区绿化场景，突出原产地直连、地图采购和稳定履约，让绿植花卉采购更像一次植物狩猎。",
+      "plantLine": "推荐：绣球、薰衣草、玫瑰、多肉、观赏草、庭院乔木"
+    },
+    "de": {
+      "name": "德国",
+      "short": "德国",
+      "badge": "德国区 · 欧式森林花园供应链",
+      "title": "Plant Hunter",
+      "subtitle": "供应链新体验",
+      "desc": "面向欧式花园、森林系景观和可持续园艺采购，强调绿色认证、碳汇价值、产地追踪与严谨的供应链履约。",
+      "plantLine": "推荐：铁线莲、矢车菊、香草植物、球根花卉、云杉、欧洲山毛榉"
+    },
+    "jp": {
+      "name": "日本",
+      "short": "日本",
+      "badge": "日本区 · 和风庭园供应链",
+      "title": "Plant Hunter",
+      "subtitle": "供应链新体验",
+      "desc": "面向和风庭园、屋上绿化和精品园艺场景，强调严选产地、精细履约与季节花材供给。",
+      "plantLine": "推荐：樱花、枫树、绣球、山茶、黑松、苔藓庭园植物"
+    },
+    "fr": {
+      "name": "法国",
+      "short": "法国",
+      "badge": "法国区 · 法式花园供应链",
+      "title": "Plant Hunter",
+      "subtitle": "供应链新体验",
+      "desc": "面向法式花园、庄园景观与城市花艺场景，突出浪漫花境、产区风土和精品园艺履约。",
+      "plantLine": "推荐：薰衣草、鸢尾、玫瑰、梧桐、葡萄藤、法式花境植物"
+    },
+    "sa": {
+      "name": "沙特阿拉伯",
+      "short": "沙特",
+      "badge": "沙特区 · 沙漠绿洲供应链",
+      "title": "Plant Hunter",
+      "subtitle": "供应链新体验",
+      "desc": "面向沙漠绿洲、耐旱景观和高端城市绿化场景，突出耐热植物、水资源效率与稳定跨区域履约。",
+      "plantLine": "推荐：椰枣、棕榈、九重葛、沙漠玫瑰、橄榄、耐旱草本"
+    }
   }
 }
