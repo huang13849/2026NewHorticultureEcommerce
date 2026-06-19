@@ -8,6 +8,7 @@ export const metadata: Metadata = {
 };
 
 const SEO_API = process.env.NEXT_PUBLIC_SEO_API_URL || 'http://100.76.15.64:3011';
+const FLOWER_API = process.env.NEXT_PUBLIC_API_URL || 'http://100.76.15.64:3010/api';
 const PRIMARY_DOMAIN = 'horiculture.club';
 
 type Audit = {
@@ -34,10 +35,21 @@ type Analytics = {
   topPages: {name:string; value:number}[];
   topReferrers: {name:string; value:number}[];
 };
+type SearchLog = { id: number; keyword: string; normalized_keyword: string; result_count: number; region_code?: string; lang?: string; source?: string; created_at: string };
+type SearchLogsResp = { logs: SearchLog[]; total: number };
 
 async function getJson<T>(path: string, fallback: T): Promise<T> {
   try {
     const res = await fetch(`${SEO_API}${path}`, { next: { revalidate: 300 } });
+    if (!res.ok) return fallback;
+    return res.json();
+  } catch { return fallback; }
+}
+
+
+async function getFlowerJson<T>(path: string, fallback: T): Promise<T> {
+  try {
+    const res = await fetch(`${FLOWER_API}${path}`, { next: { revalidate: 60 } });
     if (!res.ok) return fallback;
     return res.json();
   } catch { return fallback; }
@@ -48,11 +60,12 @@ function rankText(rank?: number | null) {
 }
 
 export default async function SeoDashboardPage() {
-  const [auditAll, rankingData, analytics, cloudflare] = await Promise.all([
+  const [auditAll, rankingData, analytics, cloudflare, searchLogsResp] = await Promise.all([
     getJson<{primary: string; sites: Audit[]}>('/api/seo/audit-all', { primary: 'https://horiculture.club', sites: [] }),
     getJson<{results: Ranking[]; note: string}>('/api/seo/rankings', { results: [], note: '' }),
     getJson<Analytics>('/api/analytics/summary?days=30', { topPages: [], topReferrers: [] }),
     getJson<CloudflareAnalytics>('/api/analytics/cloudflare?days=30', { configured: false, error: 'Cloudflare Analytics 暂不可用' }),
+    getFlowerJson<SearchLogsResp>('/search/logs?limit=200', { logs: [], total: 0 }),
   ]);
 
   const audits = auditAll.sites || [];
@@ -61,6 +74,15 @@ export default async function SeoDashboardPage() {
   const rankedCount = rankings.filter(r => (r.matches || []).some(m => m.found) || r.found).length;
   const days = Object.entries(cloudflare.byDay || {}).sort(([a],[b]) => a.localeCompare(b)).slice(-14);
   const maxPv = Math.max(1, ...days.map(([,v]) => v.pageViews || v.requests || 0));
+  const searchLogs = searchLogsResp.logs || [];
+  const keywordStats = Object.values(searchLogs.reduce((acc, x) => {
+    const key = x.normalized_keyword || x.keyword;
+    if (!acc[key]) acc[key] = { keyword: x.keyword, count: 0, results: 0, last: x.created_at };
+    acc[key].count += 1;
+    acc[key].results += Number(x.result_count || 0);
+    if (x.created_at > acc[key].last) acc[key].last = x.created_at;
+    return acc;
+  }, {} as Record<string, { keyword: string; count: number; results: number; last: string }>)).sort((a,b) => b.count - a.count).slice(0, 12);
   const primaryOk = primaryAudit.score >= 80 && primaryAudit.robots?.ok && primaryAudit.sitemap?.ok && primaryAudit.hasBrand;
   const actions = [
     primaryOk ? '基础 SEO 已达标，下一步重点做内容页和外链。' : '先修主域基础项：robots、sitemap、canonical、品牌词。',
@@ -137,6 +159,26 @@ export default async function SeoDashboardPage() {
               <Status label="主域 canonical" ok={(primaryAudit.canonical || '').includes(PRIMARY_DOMAIN)} />
             </div>
             {primaryAudit.recommendations?.length ? <p className="text-xs text-amber-200 mt-4">待优化：{primaryAudit.recommendations[0]}</p> : <p className="text-xs text-emerald-200 mt-4">基础项正常。</p>}
+          </Card>
+        </section>
+
+        <section className="grid lg:grid-cols-3 gap-5">
+          <Card title="站内商品搜索词 · SEO 需求" className="lg:col-span-2">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="text-slate-400"><tr><th className="text-left py-2">搜索词</th><th className="text-right">次数</th><th className="text-right">平均结果</th><th className="text-right">最近</th></tr></thead>
+                <tbody>
+                  {keywordStats.length ? keywordStats.map((x) => <tr key={x.keyword} className="border-t border-white/10"><td className="py-2 pr-3 font-medium">{x.keyword}</td><td className="text-right">{x.count}</td><td className="text-right">{Math.round(x.results / Math.max(1, x.count))}</td><td className="text-right text-xs text-slate-400">{x.last?.slice(5, 16).replace('T', ' ')}</td></tr>) : <tr><td className="py-3 text-slate-400" colSpan={4}>暂无搜索记录。</td></tr>}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-xs text-slate-500 mt-3">数据来源：主页商品搜索框 → flower-api → API Gateway → PostgreSQL 主从集群。</p>
+          </Card>
+          <Card title="最近搜索明细">
+            <div className="space-y-2 text-sm max-h-72 overflow-auto pr-1">
+              {searchLogs.slice(0, 12).map(x => <div key={x.id} className="border-b border-white/10 pb-2"><div className="flex justify-between gap-3"><span>{x.keyword}</span><b className="text-emerald-300">{x.result_count}</b></div><p className="text-xs text-slate-500 mt-1">{x.region_code || '-'} · {x.lang || '-'} · {x.created_at?.slice(0, 19).replace('T', ' ')}</p></div>)}
+              {!searchLogs.length && <p className="text-slate-400">暂无数据</p>}
+            </div>
           </Card>
         </section>
 
