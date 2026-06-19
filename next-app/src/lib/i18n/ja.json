@@ -249,7 +249,14 @@
     },
     "intelligentSupply": "Intelligent Supply Chain",
     "greenCertSubtitle": "Green Certification · Carbon Credit",
-    "step": "Step {n}"
+    "step": "Step {n}",
+    "searchTitle": "商品検索",
+    "searchSubtitle": "検索語はSEO分析用にPostgreSQLクラスターへ保存されます。",
+    "searchPlaceholder": "花、苗木、カテゴリ、サプライヤー語句を検索…",
+    "searching": "検索中…",
+    "clearSearch": "検索をクリア",
+    "searchProductsTitle": "検索結果",
+    "searchResultMeta": "キーワード「{keyword}」で {count} 件の商品が見つかりました"
   },
   "auction": {
     "title": "Tree Auction",

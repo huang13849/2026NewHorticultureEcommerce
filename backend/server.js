@@ -21,6 +21,7 @@ app.use('/api/payment', require('./routes/payment'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/wechat-pay', require('./routes/wechat-pay'));
 app.use('/api/auction', require('./routes/auction'));
+app.use('/api/search', require('./routes/search'));
 
 
 // ===== 健康检查 =====
