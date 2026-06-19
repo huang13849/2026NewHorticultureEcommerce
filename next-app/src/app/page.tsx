@@ -484,10 +484,28 @@ export default function HomePage() {
           </div>
         </section>
 
-        <footer className="py-10 px-6 border-t border-stone-200/60">
-          <div className="max-w-6xl mx-auto text-center">
-            <div className="font-semibold tracking-tight text-sm text-stone-900 mb-1">{t('home.footer.name')}</div>
-            <div className="text-[11px] text-stone-400">{t('home.footer.copyright')}</div>
+        <footer className="py-10 px-6 border-t border-stone-200/60 bg-white/45 backdrop-blur-sm">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-[1.2fr_2fr] gap-6 items-start">
+              <div>
+                <div className={`font-semibold tracking-tight text-base ${region.accentText} mb-1`}>{t('home.footer.name')}</div>
+                <div className="text-[11px] text-stone-400">{t('home.footer.copyright')}</div>
+              </div>
+              <div className="grid sm:grid-cols-3 gap-3 text-xs">
+                <a href="tel:+8618511987921" className="rounded-2xl border border-stone-200 bg-white/75 p-4 hover:shadow-sm transition-shadow">
+                  <div className="text-stone-400 mb-1">{t('home.footer.phone')}</div>
+                  <div className="font-semibold text-stone-800">(+86) 18511987921</div>
+                </a>
+                <a href="mailto:huang13849@hotmail.com" className="rounded-2xl border border-stone-200 bg-white/75 p-4 hover:shadow-sm transition-shadow">
+                  <div className="text-stone-400 mb-1">{t('home.footer.email')}</div>
+                  <div className="font-semibold text-stone-800 break-all">huang13849@hotmail.com</div>
+                </a>
+                <div className="rounded-2xl border border-stone-200 bg-white/75 p-4">
+                  <div className="text-stone-400 mb-1">{t('home.footer.address')}</div>
+                  <div className="font-semibold text-stone-800">中国北京市丰台区新宫</div>
+                </div>
+              </div>
+            </div>
           </div>
         </footer>
       </main>

@@ -118,7 +118,7 @@ export default function ShopPage() {
         </div>
       </div>
 
-      <div className="px-4 pt-4">
+      <div className="max-w-6xl mx-auto px-6 md:px-10 pt-5">
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
@@ -127,13 +127,13 @@ export default function ShopPage() {
         />
       </div>
 
-      <div className="px-4 py-4">
+      <div className="max-w-6xl mx-auto px-6 md:px-10 py-5">
         {loading ? (
           <div className="flex items-center justify-center py-16"><div className="text-3xl animate-pulse">⏳</div></div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-16 text-stone-400">{t('shop.noProducts')}</div>
         ) : (
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-3">
             {filtered.map(p => {
               const img = getImg(p);
               const price = Number(p.sellPrice || p.price || p.settlementPrice || 0);
@@ -171,8 +171,8 @@ export default function ShopPage() {
       </div>
 
       {cart.length > 0 && (
-        <div className="fixed bottom-14 left-0 right-0 bg-white border-t border-stone-200 px-6 py-3 z-10">
-          <div className="flex items-center justify-between">
+        <div className="fixed bottom-14 left-0 right-0 bg-white border-t border-stone-200 z-10">
+          <div className="max-w-6xl mx-auto px-6 md:px-10 py-3 flex items-center justify-between">
             <div>
               <span className="text-xs text-stone-500">🛒 {t('shop.cartCount', { count: totalItems })} </span>
               <span className="text-lg font-bold text-emerald-700">¥{totalAmount.toFixed(2)}</span>
@@ -184,7 +184,7 @@ export default function ShopPage() {
               </button>
             </div>
           </div>
-          <div className="flex gap-2 mt-2 overflow-x-auto pb-1">
+          <div className="max-w-6xl mx-auto px-6 md:px-10 flex gap-2 mt-2 overflow-x-auto pb-2">
             {cart.map(item => (
               <div key={item.productId} className="flex items-center gap-1.5 bg-stone-50 rounded-lg px-2 py-1 flex-shrink-0">
                 <span className="text-xs">{item.image ? '' : '🌿'}</span>

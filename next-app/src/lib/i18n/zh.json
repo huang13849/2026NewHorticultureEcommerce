@@ -245,7 +245,10 @@
     },
     "footer": {
       "name": "植物猎人",
-      "copyright": "植物猎人 · 供应链新体验 © 2026"
+      "copyright": "植物猎人 · 供应链新体验 © 2026",
+      "phone": "电话",
+      "email": "邮箱",
+      "address": "地址"
     },
     "intelligentSupply": "供应链新体验",
     "greenCertSubtitle": "Green Certification · Carbon Credit",

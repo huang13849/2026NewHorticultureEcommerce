@@ -245,7 +245,10 @@
     },
     "footer": {
       "name": "Smart Supply Chain",
-      "copyright": "Beijing-Tianjin-Hebei Flower Supply Chain Platform © 2026"
+      "copyright": "Beijing-Tianjin-Hebei Flower Supply Chain Platform © 2026",
+      "phone": "Telefon",
+      "email": "E-Mail",
+      "address": "Adresse"
     },
     "intelligentSupply": "Intelligent Supply Chain",
     "greenCertSubtitle": "Green Certification · Carbon Credit",
