@@ -13,7 +13,7 @@ function ipHash(req) {
 }
 
 async function searchProducts(keyword, limit = 24) {
-  const filter = { status: { $ne: 'deleted' } };
+  const filter = { status: { $ne: 'deleted' }, stock: { $gt: 0 } };
   if (keyword) {
     filter.$or = [
       { name: { $regex: keyword, $options: 'i' } },
