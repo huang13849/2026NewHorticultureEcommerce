@@ -249,7 +249,14 @@
     },
     "intelligentSupply": "Intelligent Supply Chain",
     "greenCertSubtitle": "Green Certification · Carbon Credit",
-    "step": "Step {n}"
+    "step": "Step {n}",
+    "searchTitle": "Search products",
+    "searchSubtitle": "Search terms are stored in the PostgreSQL cluster for SEO strategy analysis.",
+    "searchPlaceholder": "Search flowers, trees, categories, supplier keywords…",
+    "searching": "Searching…",
+    "clearSearch": "Clear search",
+    "searchProductsTitle": "Search results",
+    "searchResultMeta": "Keyword “{keyword}” found {count} related products"
   },
   "auction": {
     "title": "Tree Auction",
