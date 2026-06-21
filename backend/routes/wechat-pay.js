@@ -71,7 +71,7 @@ async function syncPurchaseOrder(order) {
       personal_tag: '花伴商城,微信支付',
       payment_order_id: order.orderId,
       payment_channel: '微信支付',
-      region: order.region || REGION,
+      region: 'cn',
       product_subtotal: order.subtotal || order.totalAmount,
       shipping_fee: order.shippingFee || 0,
       coupon_code: order.couponCode || '',
@@ -79,7 +79,7 @@ async function syncPurchaseOrder(order) {
       income_amount: order.totalAmount,
       cost_amount: order.costAmount || 0,
       expense_amount: order.costAmount || 0,
-      profit_amount: order.profitAmount != null ? order.profitAmount : Number((order.totalAmount || 0) - (order.costAmount || 0)).toFixed(2),
+      profit_amount: order.profitAmount != null ? order.profitAmount : Number((order.totalAmount || 0) - (order.costAmount || 0) - (order.expenseAmount || 0) - (order.couponDiscount || 0) - (order.shippingFee || 0)).toFixed(2),
     };
     await axios.post(ORDER_SERVICE_URL + '/api/orders', payload, { timeout: 15000 });
   } catch (e) {
@@ -259,7 +259,7 @@ router.post('/order', async (req, res) => {
       memberName: customer.name || '',
       phone: customer.phone || '',
       status: 'pending',
-      region: REGION,
+      region: 'cn',
       createdAt: new Date().toISOString(),
       paidAt: null,
     };
