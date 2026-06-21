@@ -10,6 +10,7 @@ const tabs = [
   { href: '/reverse-auction', label: '鲜花倒拍', emoji: '🌷' },
   { href: '/shop', label: '商店', emoji: '🛒' },
   { href: '/garden', label: '花园', emoji: '🌱' },
+  { href: '/orders', label: '订单', emoji: '📋' },
   { href: '/profile', label: '我的', emoji: '👤' },
 ];
 

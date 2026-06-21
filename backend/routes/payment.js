@@ -101,6 +101,7 @@ async function syncPurchaseOrder(order) {
 
 
 const SITE_URL = process.env.SITE_URL || 'http://100.76.15.64:3000';
+const REGION = process.env.REGION || 'global';
 
 const PROVIDERS = {
   stripe: {
@@ -263,6 +264,7 @@ router.post('/checkout', async (req, res) => {
       memberName: customer.name || '',
       phone: customer.phone || '',
       deliveryAddress,
+      region: REGION,
       createdAt: new Date().toISOString(),
       paidAt: provider.configured ? null : new Date().toISOString(),
       checkoutUrl: '',
@@ -352,7 +354,9 @@ router.get('/order/:orderId', async (req, res) => {
 
 router.get('/orders', async (req, res) => {
   try {
-    const orders = await db.find('orders', { sort: JSON.stringify({ createdAt: -1 }) });
+    const filter = {};
+    if (req.query.region) filter.region = req.query.region;
+    const orders = await db.find('orders', { filter, sort: { createdAt: -1 } });
     res.json({ orders, total: orders.length });
   } catch (err) {
     res.status(500).json({ error: err.message });

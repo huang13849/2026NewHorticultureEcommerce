@@ -13,6 +13,7 @@ services:
       - PORT=3010
       - JWT_SECRET=flower-shop-jwt-secret-2024-prod
       - API_GATEWAY_URL=http://100.96.54.109:3007
+      - REGION=global
     extra_hosts:
       - "host.docker.internal:host-gateway"
 

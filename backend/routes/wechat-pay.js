@@ -42,6 +42,7 @@ if (process.env.WECHAT_PRIVATE_KEY) {
 }
 
 const IS_CONFIGURED = !!(WX_MCH_ID && WX_API_V3_KEY && WX_SERIAL_NO && privateKeyPem);
+const REGION = process.env.REGION || 'cn';
 
 if (!IS_CONFIGURED) {
   console.warn('[WechatPay] ⚠️  微信支付未完整配置，使用模拟模式');
@@ -222,6 +223,7 @@ router.post('/order', async (req, res) => {
       payScene,
       openid: openid || '',
       status: 'pending',
+      region: REGION,
       createdAt: new Date().toISOString(),
       paidAt: null,
     };
