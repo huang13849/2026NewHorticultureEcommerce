@@ -7,7 +7,7 @@ import SeoTracker from './components/SeoTracker';
 export const viewport = { width: 'device-width', initialScale: 1, maximumScale: 1 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://horiculture.club'),
+  metadataBase: new URL('https://horiculture.space'),
   title: {
     default: '植物猎人 · 供应链新体验 | Plant Hunter',
     template: '%s | 植物猎人 Plant Hunter',
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
-    url: 'https://horiculture.club',
+    url: 'https://horiculture.space',
     siteName: '植物猎人 Plant Hunter',
     title: '植物猎人 · 供应链新体验 | Plant Hunter',
     description: '植物猎人 — 从产地到庭院，智能撮合交易，构建可信绿色价值链。',
