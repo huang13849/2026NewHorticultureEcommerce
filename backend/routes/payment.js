@@ -238,10 +238,7 @@ router.post('/checkout', async (req, res) => {
     const provider = PROVIDERS[payMethod];
     if (!provider) return res.status(400).json({ error: '不支持的支付方式' });
 
-    if (payMethod === 'alipay' && !provider.configured) {
-      return res.status(400).json({ error: '支付宝暂未开通。' });
-    }
-
+    // Alipay: always allow (mock if not configured)
     const orderItems = await enrichItems(items);
     const quote = buildQuote(orderItems, couponCode);
     const orderId = `PAY${Date.now()}${Math.random().toString(36).slice(2, 8).toUpperCase()}`;

@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 
 type LoginMode = 'code' | 'password';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || '/';
   const { login, user } = useAuth();
   const [mode, setMode] = useState<LoginMode>('code');
   const [phone, setPhone] = useState('');
@@ -19,7 +21,7 @@ export default function LoginPage() {
   // If already logged in, redirect
   if (user && !loading) {
     // Use setTimeout to avoid setState during render
-    setTimeout(() => router.push('/'), 0);
+    setTimeout(() => router.push(redirectTo), 0);
     return (
       <main className="min-h-screen bg-white text-stone-900 flex items-center justify-center">
         <div className="text-center">
@@ -50,7 +52,7 @@ export default function LoginPage() {
       console.log('[Login] Success:', result.nickname, result.role);
       // Ensure token persistence, then hard redirect so RootLayout rehydrates from storage/cookie.
       await new Promise(r => setTimeout(r, 150));
-      window.location.href = '/';
+      window.location.href = redirectTo;
     } catch (e: any) {
       console.error('[Login] Failed:', e.message);
       setError(e.message || '登录失败');
@@ -133,5 +135,17 @@ export default function LoginPage() {
         {mode === 'code' ? '验证码输入 123456 即可登录' : '管理员使用手机号+密码登录'}
       </p>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-white text-stone-900 flex items-center justify-center">
+        <p className="text-sm text-stone-500">加载中...</p>
+      </main>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }
