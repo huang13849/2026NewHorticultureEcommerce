@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import TabBar from '../TabBar';
 import { useI18n } from '@/lib/i18n/context';
+import { useAuth } from '@/lib/auth-context';
 
 type PayMethod = 'stripe' | 'paypal' | 'alipay' | 'wechat';
 type PayStatus = 'idle' | 'creating' | 'redirecting' | 'success' | 'failed';
@@ -25,8 +26,32 @@ const IS_GLOBAL = REGION === 'global';
 
 function PaymentContent() {
   const { t } = useI18n();
+  const { user, loading: authLoading } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  // Login guard
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login?redirect=/payment');
+    }
+  }, [authLoading, user, router]);
+
+  if (authLoading) {
+    return (
+      <main className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <p className="text-stone-400">加载中…</p>
+      </main>
+    );
+  }
+
+  if (!user) {
+    return (
+      <main className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <p className="text-stone-400">请先登录</p>
+      </main>
+    );
+  }
   const fromCart = searchParams.get('from') === 'cart';
 
   const [products, setProducts] = useState<PayProduct[]>([]);
@@ -113,6 +138,7 @@ function PaymentContent() {
           body: JSON.stringify({
             payMethod: 'wechat',
             payScene: wechatScene,
+            customer: { name: user?.nickname || '', phone: user?.phone || '' },
             items: products.map(p => ({ productId: p.id, name: p.name, price: p.price, quantity: p.quantity || 1, image: p.image })),
           }),
         });
@@ -264,6 +290,7 @@ function PaymentContent() {
             <div className="text-4xl mb-2">✅</div>
             <p className="font-bold text-emerald-800">支付流程已创建</p>
             <p className="text-xs text-emerald-700 mt-1">订单号：{orderId}</p>
+            <p className="text-sm font-bold text-emerald-800 mt-2">应付金额：¥{totalAmount.toFixed(2)}</p>
             {message && <p className="text-xs text-emerald-700 mt-2">{message}</p>}
             {wechatCodeUrl && <img src={wechatCodeUrl} alt="微信支付二维码" className="mx-auto mt-3 w-48 h-48 rounded-xl border" />}
             <button
