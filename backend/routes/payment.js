@@ -84,6 +84,7 @@ async function syncPurchaseOrder(order) {
     personal_tag: '花伴商城,Stripe',
     payment_order_id: order.orderId,
     payment_channel: order.provider || order.payMethod,
+    region: order.region || REGION || 'global',
     product_subtotal: order.subtotal,
     shipping_fee: order.shippingFee,
     coupon_code: order.couponCode || '',
