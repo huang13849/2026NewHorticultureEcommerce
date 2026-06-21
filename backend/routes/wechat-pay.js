@@ -53,6 +53,40 @@ if (!IS_CONFIGURED) {
   console.log(`[WechatPay]    MchID: ${WX_MCH_ID}`);
 }
 
+// ===== 同步到购买订单管理 =====
+const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL || 'http://100.96.54.109:3008';
+
+async function syncPurchaseOrder(order) {
+  try {
+    const axios = require('axios');
+    const payload = {
+      member_id: order.memberId || '',
+      member_name: order.memberName || '花伴用户',
+      phone: order.phone || '',
+      business_type: '团购/电商',
+      purchase_time: order.paidAt || new Date().toISOString(),
+      delivery_address: order.deliveryAddress || '',
+      product_id: (order.items || []).map(i => i.productId).filter(Boolean),
+      product_title: (order.items || []).map(i => i.name + ' ×' + (i.quantity || 1)),
+      personal_tag: '花伴商城,微信支付',
+      payment_order_id: order.orderId,
+      payment_channel: '微信支付',
+      region: order.region || REGION,
+      product_subtotal: order.subtotal || order.totalAmount,
+      shipping_fee: order.shippingFee || 0,
+      coupon_code: order.couponCode || '',
+      coupon_discount: order.couponDiscount || 0,
+      income_amount: order.totalAmount,
+      cost_amount: order.costAmount || 0,
+      expense_amount: order.costAmount || 0,
+      profit_amount: order.profitAmount != null ? order.profitAmount : Number((order.totalAmount || 0) - (order.costAmount || 0)).toFixed(2),
+    };
+    await axios.post(ORDER_SERVICE_URL + '/api/orders', payload, { timeout: 15000 });
+  } catch (e) {
+    console.error('[WechatPay] syncPurchaseOrder failed:', e.message);
+  }
+}
+
 // ===== 商品列表（从 API Gateway 同步） =====
 router.get('/products', async (req, res) => {
   try {
@@ -184,7 +218,7 @@ function buildJSAPIPayParams(prepayId) {
 // ===== API: 创建订单 =====
 router.post('/order', async (req, res) => {
   try {
-    const { items, payMethod = 'wechat', payScene = 'jsapi', openid } = req.body;
+    const { items, payMethod = 'wechat', payScene = 'jsapi', openid, customer = {} } = req.body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: '购物车不能为空' });
@@ -222,6 +256,8 @@ router.post('/order', async (req, res) => {
       payMethod,
       payScene,
       openid: openid || '',
+      memberName: customer.name || '',
+      phone: customer.phone || '',
       status: 'pending',
       region: REGION,
       createdAt: new Date().toISOString(),
@@ -278,12 +314,14 @@ router.post('/order', async (req, res) => {
     }
 
     // ===== 模拟支付（未配置或降级） =====
+    // Sync to order-service
+    syncPurchaseOrder({ ...order, memberId: customer.phone || '', paidAt: new Date().toISOString(), status: 'mock_paid' }).catch(() => {});
     res.json({
       orderId,
       totalAmount: order.totalAmount,
       payMethod,
       payScene: payScene || 'mock',
-      status: 'pending',
+      status: 'mock_paid',
       mock: true,
       payUrl: `weixin://pay?orderId=${orderId}&amount=${order.totalAmount}`,
       qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(orderId)}`,
