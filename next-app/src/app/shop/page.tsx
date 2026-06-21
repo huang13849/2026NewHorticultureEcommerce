@@ -13,6 +13,8 @@ interface Product {
   sellPrice?: number;
   price?: number;
   settlementPrice?: number;
+  shippingFee?: number;
+  shipping_description?: string;
   category?: string;
   panorama_images?: string[];
   detail_images?: string[];
@@ -76,6 +78,17 @@ function getImg(p: Product): string {
   if (raw.startsWith('http')) return raw;
   return `http://100.96.54.109:9000/supply-chain/${raw}`;
 }
+
+function getShippingText(p: Product): string {
+  if (typeof p.shipping_description === 'string' && p.shipping_description.trim()) {
+    return p.shipping_description.trim();
+  }
+  if (p.shippingFee === 0) return '免运费';
+  if (typeof p.shippingFee === 'number' && p.shippingFee > 0) return `运费 ¥${p.shippingFee}`;
+  return '';
+}
+
+const shippingBadgeClass = 'mt-1.5 inline-flex max-w-full items-center gap-1 rounded-full border border-orange-100 bg-gradient-to-r from-orange-50 via-amber-50 to-yellow-50 px-2 py-0.5 text-[10px] font-medium text-orange-700 shadow-[0_1px_5px_rgba(251,146,60,0.14)]';
 
 export default function ShopPage() {
   const router = useRouter();
@@ -206,6 +219,7 @@ export default function ShopPage() {
               const img = getImg(p);
               const price = Number(p.sellPrice || p.price || p.settlementPrice || 0);
               const name = p.title || p.flowerName || t('home.unnamed');
+              const shippingText = getShippingText(p);
               const inCart = cart.find(i => i.productId === p._id);
               return (
                 <div key={p._id} className="rounded-2xl border border-stone-200 bg-white overflow-hidden hover:border-emerald-300 hover:shadow-md transition-all">
@@ -223,6 +237,12 @@ export default function ShopPage() {
                   </div>
                   <div className="p-2.5">
                     <h4 className="text-xs font-medium text-stone-900 truncate">{name}</h4>
+                    {shippingText && (
+                      <div className={shippingBadgeClass} title={shippingText}>
+                        <span className="grid h-4 w-4 flex-shrink-0 place-items-center rounded-full bg-white/80 text-[9px] shadow-sm">🚚</span>
+                        <span className="truncate">{shippingText}</span>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between mt-1.5">
                       <span className="text-sm font-bold text-emerald-700">{formatCurrency(price, currency, exchangeRate)}</span>
                       <button onClick={() => addToCart(p)} className="bg-emerald-700 text-white text-[10px] px-2.5 py-1 rounded-lg hover:bg-emerald-800 transition-colors">
