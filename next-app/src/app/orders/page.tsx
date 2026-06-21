@@ -45,12 +45,22 @@ const STATUS_MAP: Record<string, { label: string; color: string }> = {
   cancelled: { label: '已取消', color: 'bg-red-100 text-red-600' },
 };
 
-const PAY_METHOD_LABELS: Record<string, string> = {
-  stripe: 'Stripe',
-  paypal: 'PayPal',
-  alipay: '支付宝',
-  wechat: '微信支付',
+const PAY_CHANNEL_LABELS: Record<string, { label: string; icon: string }> = {
+  stripe: { label: 'Stripe', icon: '💳' },
+  paypal: { label: 'PayPal', icon: '🅿️' },
+  alipay: { label: '支付宝', icon: '💙' },
+  wechat: { label: '微信支付', icon: '💚' },
 };
+
+function getPayChannel(payMethod: string, provider?: string): string {
+  const key = (payMethod || provider || '').toLowerCase();
+  return PAY_CHANNEL_LABELS[key]?.label || provider || payMethod || '未知';
+}
+
+function getPayIcon(payMethod: string, provider?: string): string {
+  const key = (payMethod || provider || '').toLowerCase();
+  return PAY_CHANNEL_LABELS[key]?.icon || '💰';
+}
 
 export default function OrdersPage() {
   const [region, setRegion] = useState<Region>(REGION === 'cn' ? 'cn' : 'global');
@@ -58,13 +68,13 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
+  const fetchOrders = (r: Region) => {
     setLoading(true);
     setError('');
-    fetch(`${API}/payment/orders?region=${region}`)
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
+    fetch(`${API}/payment/orders?region=${r}`)
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
       })
       .then(d => {
         setOrders(d.orders || []);
@@ -74,6 +84,10 @@ export default function OrdersPage() {
         setError(err.message);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchOrders(region);
   }, [region]);
 
   const totalAmount = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
@@ -86,28 +100,30 @@ export default function OrdersPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-6 md:px-10 py-6 space-y-5">
-        {/* Region Toggle */}
-        <div className="flex justify-center gap-2">
-          <button
-            onClick={() => setRegion('cn')}
-            className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
-              region === 'cn'
-                ? 'bg-sky-600 text-white shadow-lg shadow-sky-200'
-                : 'bg-white border border-stone-200 text-stone-500 hover:border-stone-300'
-            }`}
-          >
-            🇨🇳 国内订单
-          </button>
-          <button
-            onClick={() => setRegion('global')}
-            className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${
-              region === 'global'
-                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
-                : 'bg-white border border-stone-200 text-stone-500 hover:border-stone-300'
-            }`}
-          >
-            🌍 国际订单
-          </button>
+        {/* Region Toggle — 国内/国际 */}
+        <div className="flex justify-center">
+          <div className="inline-flex rounded-2xl border border-stone-200 bg-white p-1 shadow-sm">
+            <button
+              onClick={() => setRegion('cn')}
+              className={`px-8 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${
+                region === 'cn'
+                  ? 'bg-sky-600 text-white shadow-md'
+                  : 'text-stone-500 hover:text-stone-700'
+              }`}
+            >
+              🇨🇳 国内订单
+            </button>
+            <button
+              onClick={() => setRegion('global')}
+              className={`px-8 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${
+                region === 'global'
+                  ? 'bg-indigo-600 text-white shadow-md'
+                  : 'text-stone-500 hover:text-stone-700'
+              }`}
+            >
+              🌍 国际订单
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -143,6 +159,7 @@ export default function OrdersPage() {
               const statusInfo = STATUS_MAP[order.status] || STATUS_MAP.pending;
               return (
                 <div key={order._id || order.orderId} className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+                  {/* Header: orderId + status + time */}
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <p className="text-xs text-stone-400 font-mono">{order.orderId}</p>
@@ -175,11 +192,13 @@ export default function OrdersPage() {
                     ))}
                   </div>
 
-                  {/* Footer */}
+                  {/* Footer: 支付渠道 + 优惠 + 金额 */}
                   <div className="flex items-center justify-between pt-2 border-t border-stone-100">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-stone-400">
-                        {PAY_METHOD_LABELS[order.payMethod] || order.provider || order.payMethod}
+                      {/* 支付渠道 */}
+                      <span className="inline-flex items-center gap-1 text-xs bg-stone-100 text-stone-600 px-2 py-1 rounded-lg">
+                        <span>{getPayIcon(order.payMethod, order.provider)}</span>
+                        <span className="font-medium">{getPayChannel(order.payMethod, order.provider)}</span>
                       </span>
                       {order.couponCode && (
                         <span className="text-xs bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded">
