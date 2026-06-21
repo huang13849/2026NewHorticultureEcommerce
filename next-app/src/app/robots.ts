@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next';
 
 export const dynamic = 'force-static';
 
-const baseUrl = 'https://horiculture.space';
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://horiculture.space';
 
 export default function robots(): MetadataRoute.Robots {
   return {
