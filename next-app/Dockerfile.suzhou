@@ -15,6 +15,7 @@ RUN cp next.config.docker.ts next.config.ts
 ENV NEXT_TELEMETRY_DISABLED=1
 # 同源 /api，由 nginx 反代到 flower-api
 ENV NEXT_PUBLIC_API_URL=/api
+ENV NEXT_PUBLIC_SITE_URL=http://106.12.91.182
 # 国内版：仅显示支付宝 + 微信支付
 ENV NEXT_PUBLIC_REGION=cn
 RUN npm run build
