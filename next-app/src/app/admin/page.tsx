@@ -245,7 +245,7 @@ export default function AdminPage() {
                   <span className="text-3xl">🔎</span>
                   <div>
                     <h2 className="font-bold text-sm text-emerald-950">SEO 管理看板</h2>
-                    <p className="text-xs text-emerald-700 mt-1 leading-relaxed">查看 horiculture.club 主域名 SEO 健康分、关键词排名、访问人数、热门页面和访问来源。</p>
+                    <p className="text-xs text-emerald-700 mt-1 leading-relaxed">查看国外 horiculture.space 与国内苏州站 106.12.91.182 的 SEO 健康分、关键词排名、访问人数、热门页面和访问来源。</p>
                   </div>
                 </div>
                 <span className="text-xs font-bold text-emerald-700 bg-white/70 border border-emerald-200 rounded-full px-3 py-1 whitespace-nowrap">进入 →</span>

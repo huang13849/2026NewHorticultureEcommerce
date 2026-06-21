@@ -9,10 +9,14 @@ export const metadata: Metadata = {
 
 const SEO_API = process.env.NEXT_PUBLIC_SEO_API_URL || 'http://100.76.15.64:3011';
 const FLOWER_API = process.env.NEXT_PUBLIC_API_URL || 'http://100.76.15.64:3010/api';
-const PRIMARY_DOMAIN = 'horiculture.club';
+const OVERSEAS_DOMAIN = 'horiculture.space';
+const DOMESTIC_DOMAIN = '106.12.91.182';
+const OVERSEAS_URL = 'https://horiculture.space';
+const DOMESTIC_URL = 'http://106.12.91.182';
 
 type Audit = {
   score: number;
+  status?: number;
   host: string;
   canonical: string;
   hasBrand?: boolean;
@@ -61,7 +65,7 @@ function rankText(rank?: number | null) {
 
 export default async function SeoDashboardPage() {
   const [auditAll, rankingData, analytics, cloudflare, searchLogsResp] = await Promise.all([
-    getJson<{primary: string; sites: Audit[]}>('/api/seo/audit-all', { primary: 'https://horiculture.club', sites: [] }),
+    getJson<{primary: string; sites: Audit[]}>('/api/seo/audit-all', { primary: OVERSEAS_URL, sites: [] }),
     getJson<{results: Ranking[]; note: string}>('/api/seo/rankings', { results: [], note: '' }),
     getJson<Analytics>('/api/analytics/summary?days=30', { topPages: [], topReferrers: [] }),
     getJson<CloudflareAnalytics>('/api/analytics/cloudflare?days=30', { configured: false, error: 'Cloudflare Analytics 暂不可用' }),
@@ -69,7 +73,9 @@ export default async function SeoDashboardPage() {
   ]);
 
   const audits = auditAll.sites || [];
-  const primaryAudit = audits.find(a => a.host === PRIMARY_DOMAIN) || audits[0] || { score: 0, host: PRIMARY_DOMAIN, canonical: '', hasBrand: false, robots: { ok: false, status: 0 }, sitemap: { ok: false, status: 0 }, recommendations: ['SEO service 暂时不可达'] };
+  const overseasAudit = audits.find(a => a.host === OVERSEAS_DOMAIN) || audits[0] || { score: 0, host: OVERSEAS_DOMAIN, canonical: '', hasBrand: false, robots: { ok: false, status: 0 }, sitemap: { ok: false, status: 0 }, recommendations: ['SEO service 暂时不可达'] };
+  const domesticAudit = audits.find(a => a.host === DOMESTIC_DOMAIN) || { score: 0, host: DOMESTIC_DOMAIN, canonical: '', hasBrand: false, robots: { ok: false, status: 0 }, sitemap: { ok: false, status: 0 }, recommendations: ['国内苏州站暂未返回 SEO 审计数据'] };
+  const primaryAudit = overseasAudit;
   const rankings = (rankingData.results || []).slice(0, 10);
   const rankedCount = rankings.filter(r => (r.matches || []).some(m => m.found) || r.found).length;
   const days = Object.entries(cloudflare.byDay || {}).sort(([a],[b]) => a.localeCompare(b)).slice(-14);
@@ -88,7 +94,7 @@ export default async function SeoDashboardPage() {
     primaryOk ? '基础 SEO 已达标，下一步重点做内容页和外链。' : '先修主域基础项：robots、sitemap、canonical、品牌词。',
     rankedCount === 0 ? '优先攻品牌词：植物猎人、Plant Hunter、植物猎人 花卉。' : '继续扩展长尾词，把已进榜关键词做内容加固。',
     '每周新增 2-3 篇内容页：苗木拍卖、地图购花、花卉供应链、绿植碳汇。',
-    '把 pages.dev 做备用域；主推广、外链、sitemap 都使用 horiculture.club。',
+    '国外主推广、外链、sitemap 使用 horiculture.space；国内流量入口独立走苏州 nginx。',
   ];
 
   return (
@@ -98,15 +104,15 @@ export default async function SeoDashboardPage() {
           <div>
             <a href="/admin" className="text-emerald-300 text-sm">← 返回管理后台</a>
             <h1 className="text-3xl md:text-4xl font-bold mt-3">SEO 管理</h1>
-            <p className="text-slate-400 mt-2">主域：horiculture.club · 品牌词：植物猎人 / Plant Hunter</p>
+            <p className="text-slate-400 mt-2">国外：horiculture.space · 国内：106.12.91.182 · 品牌词：植物猎人 / Plant Hunter</p>
           </div>
-          <a href="https://horiculture.club" className="hidden md:inline-flex rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-200">打开主站</a>
+          <a href={OVERSEAS_URL} className="hidden md:inline-flex rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-200">打开国外站</a>
         </header>
 
         <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Metric title="SEO 分" value={`${primaryAudit.score || 0}`} sub="/100" tone="emerald" />
-          <Metric title="30天 PV" value={String(cloudflare.pageViews ?? 0)} sub="Cloudflare" tone="sky" />
-          <Metric title="30天访客" value={String(cloudflare.uniques ?? 0)} sub="独立访客" tone="violet" />
+          <Metric title="国外 SEO" value={`${overseasAudit.score || 0}`} sub="horiculture.space" tone="emerald" />
+          <Metric title="国内 SEO" value={`${domesticAudit.score || 0}`} sub="苏州 nginx" tone="sky" />
+          <Metric title="30天 PV" value={String(cloudflare.pageViews ?? 0)} sub="Cloudflare 国外" tone="violet" />
           <Metric title="进前20词" value={String(rankedCount)} sub={`${rankings.length} 个跟踪词`} tone="amber" />
         </section>
 
@@ -137,13 +143,13 @@ export default async function SeoDashboardPage() {
         </section>
 
         <section className="grid lg:grid-cols-2 gap-5">
-          <Card title="关键词排名 · Bing 前20">
+          <Card title="国外关键词排名 · Bing 前20">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="text-slate-400"><tr><th className="text-left py-2">关键词</th><th className="text-right">主域排名</th></tr></thead>
                 <tbody>
                   {rankings.map((r) => {
-                    const primary = (r.matches || []).find(m => m.domain === PRIMARY_DOMAIN);
+                    const primary = (r.matches || []).find(m => m.domain === OVERSEAS_DOMAIN);
                     return <tr key={r.keyword} className="border-t border-white/10"><td className="py-2 pr-3">{r.keyword}</td><td className="text-right font-semibold">{rankText(primary?.rank)}</td></tr>;
                   })}
                 </tbody>
@@ -151,14 +157,25 @@ export default async function SeoDashboardPage() {
             </div>
           </Card>
 
-          <Card title="基础状态">
+          <Card title="国外基础状态">
             <div className="grid grid-cols-2 gap-3 text-sm">
-              <Status label="品牌词" ok={!!primaryAudit.hasBrand} />
-              <Status label="robots.txt" ok={!!primaryAudit.robots?.ok} />
-              <Status label="sitemap.xml" ok={!!primaryAudit.sitemap?.ok} />
-              <Status label="主域 canonical" ok={(primaryAudit.canonical || '').includes(PRIMARY_DOMAIN)} />
+              <Status label="品牌词" ok={!!overseasAudit.hasBrand} />
+              <Status label="robots.txt" ok={!!overseasAudit.robots?.ok} />
+              <Status label="sitemap.xml" ok={!!overseasAudit.sitemap?.ok} />
+              <Status label="国外 canonical" ok={(overseasAudit.canonical || '').includes(OVERSEAS_DOMAIN)} />
             </div>
-            {primaryAudit.recommendations?.length ? <p className="text-xs text-amber-200 mt-4">待优化：{primaryAudit.recommendations[0]}</p> : <p className="text-xs text-emerald-200 mt-4">基础项正常。</p>}
+            {overseasAudit.recommendations?.length ? <p className="text-xs text-amber-200 mt-4">待优化：{overseasAudit.recommendations[0]}</p> : <p className="text-xs text-emerald-200 mt-4">国外基础项正常。</p>}
+          </Card>
+
+          <Card title="国内苏州站基础状态">
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <Status label="品牌词" ok={!!domesticAudit.hasBrand} />
+              <Status label="robots.txt" ok={!!domesticAudit.robots?.ok} />
+              <Status label="sitemap.xml" ok={!!domesticAudit.sitemap?.ok} />
+              <Status label="苏州 nginx" ok={(domesticAudit.status || 0) >= 200 && (domesticAudit.status || 0) < 400} />
+            </div>
+            {domesticAudit.recommendations?.length ? <p className="text-xs text-amber-200 mt-4">待优化：{domesticAudit.recommendations[0]}</p> : <p className="text-xs text-emerald-200 mt-4">国内基础项正常。</p>}
+            <a href={DOMESTIC_URL} className="inline-flex mt-4 rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-200">打开国内站</a>
           </Card>
         </section>
 

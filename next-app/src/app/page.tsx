@@ -204,11 +204,11 @@ export default function HomePage() {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: '植物猎人 Plant Hunter',
-    url: 'https://horiculture.club',
+    url: 'https://horiculture.space',
     description: '植物猎人 — 花卉供应链新体验：苗木拍卖、鲜花倒拍、地图购花、花园种植、绿色认证。',
     potentialAction: {
       '@type': 'SearchAction',
-      target: 'https://horiculture.club/shop?keyword={search_term_string}',
+      target: 'https://horiculture.space/shop?keyword={search_term_string}',
       'query-input': 'required name=search_term_string',
     },
   };
