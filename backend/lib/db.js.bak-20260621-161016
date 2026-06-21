@@ -2,12 +2,6 @@
  * API Gateway 数据库客户端
  * 将所有 MongoDB 操作通过 API Gateway (http://100.96.54.109:3007/api/mongo) 进行
  * 不再直接连接 MongoDB
- *
- * 区域化图片 URL 重写:
- *   MINIO_REWRITE_FROM / MINIO_REWRITE_TO 环境变量
- *   都设了才生效;读操作返回前递归把字符串里的 FROM 替换为 TO。
- *   苏州国内版用:FROM=http://100.96.54.109:9000  TO=http://img.horiculture.club (或本地公网入口)
- *   Mac Mini / 海外不设环境变量 -> 零侵入。
  */
 
 const axios = require('axios');
@@ -21,31 +15,6 @@ const client = axios.create({
   timeout: 15000,
   headers: { 'X-API-Key': API_KEY },
 });
-
-// ============ 图片 URL 重写 ============
-const REWRITE_FROM = process.env.MINIO_REWRITE_FROM || '';
-const REWRITE_TO = process.env.MINIO_REWRITE_TO || '';
-const REWRITE_ENABLED = REWRITE_FROM && REWRITE_TO;
-
-if (REWRITE_ENABLED) {
-  console.log(`[db] MinIO URL rewrite enabled: ${REWRITE_FROM} -> ${REWRITE_TO}`);
-}
-
-function rewriteImages(data) {
-  if (!REWRITE_ENABLED || data == null) return data;
-  if (typeof data === 'string') {
-    return data.includes(REWRITE_FROM) ? data.split(REWRITE_FROM).join(REWRITE_TO) : data;
-  }
-  if (Array.isArray(data)) {
-    for (let i = 0; i < data.length; i++) data[i] = rewriteImages(data[i]);
-    return data;
-  }
-  if (typeof data === 'object') {
-    for (const k of Object.keys(data)) data[k] = rewriteImages(data[k]);
-    return data;
-  }
-  return data;
-}
 
 /**
  * 查询文档列表
@@ -61,7 +30,7 @@ async function find(collection, { filter = {}, sort = {}, page, limit, fields } 
   if (fields) params.fields = fields;
 
   const res = await client.get(`${MONGO_BASE}/${collection}`, { params });
-  return rewriteImages(res.data.data || []);
+  return res.data.data || [];
 }
 
 /**
@@ -70,7 +39,7 @@ async function find(collection, { filter = {}, sort = {}, page, limit, fields } 
  */
 async function findById(collection, id) {
   const res = await client.get(`${MONGO_BASE}/${collection}/${id}`);
-  return rewriteImages(res.data.data || null);
+  return res.data.data || null;
 }
 
 /**
@@ -81,7 +50,7 @@ async function findOne(collection, filter = {}) {
     params: { filter: JSON.stringify(filter), limit: 1 },
   });
   const docs = res.data.data || [];
-  return rewriteImages(docs[0] || null);
+  return docs[0] || null;
 }
 
 /**
@@ -127,7 +96,7 @@ async function count(collection, filter = {}) {
  */
 async function aggregate(collection, pipeline) {
   const res = await client.post(`${MONGO_BASE}/${collection}/aggregate`, pipeline);
-  return rewriteImages(res.data.data || []);
+  return res.data.data || [];
 }
 
 /**
@@ -168,8 +137,6 @@ async function pgFind(database, table, { filter = {}, sort = '', page = 1, limit
   const res = await client.get(`${PG_BASE}/${database}/${table}`, {
     params: { filter: JSON.stringify(filter), sort, page, limit, fields, readFrom },
   });
-  // pgFind 返回完整响应（含 data/total 等），递归改写 data 字段里的图片
-  if (res.data && res.data.data) res.data.data = rewriteImages(res.data.data);
   return res.data;
 }
 
@@ -186,5 +153,4 @@ module.exports = {
   distinct,
   pgInsert,
   pgFind,
-  rewriteImages, // 暴露给其他模块使用（如直接 axios 调用 gateway 的地方）
 };

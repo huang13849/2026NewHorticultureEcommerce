@@ -12,12 +12,100 @@ const express = require('express');
 const router = express.Router();
 const db = require('../lib/db');
 
+const axios = require('axios');
+const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL || 'http://100.96.54.109:3008';
+const stripeConfigured = !!process.env.STRIPE_SECRET_KEY;
+
+const COUPONS = {
+  NEWUSER10: { code: 'NEWUSER10', title: '新人立减10元', type: 'amount', value: 10, minSubtotal: 30 },
+  FLOWER8: { code: 'FLOWER8', title: '花友专享 8 折', type: 'percent', value: 20, minSubtotal: 50, maxDiscount: 30 },
+  FREESHIP: { code: 'FREESHIP', title: '免运费券', type: 'shipping', value: 999, minSubtotal: 20 },
+};
+
+function roundMoney(n) { return Math.round(Number(n || 0) * 100) / 100; }
+function estimateShipping(subtotal, items) {
+  if (subtotal >= 199) return 0;
+  const qty = items.reduce((sum, i) => sum + Number(i.quantity || 1), 0);
+  return roundMoney(8 + Math.max(0, qty - 1) * 2);
+}
+function applyCoupon(subtotal, shippingFee, couponCode) {
+  const code = String(couponCode || '').trim().toUpperCase();
+  if (!code) return { couponCode: '', couponTitle: '', couponDiscount: 0, couponMessage: '' };
+  const coupon = COUPONS[code];
+  if (!coupon) return { couponCode: code, couponTitle: '', couponDiscount: 0, couponMessage: '优惠券不存在' };
+  if (subtotal < coupon.minSubtotal) return { couponCode: code, couponTitle: coupon.title, couponDiscount: 0, couponMessage: `满 ¥${coupon.minSubtotal} 可用` };
+  let discount = 0;
+  if (coupon.type === 'amount') discount = coupon.value;
+  if (coupon.type === 'percent') discount = subtotal * coupon.value / 100;
+  if (coupon.type === 'shipping') discount = shippingFee;
+  if (coupon.maxDiscount) discount = Math.min(discount, coupon.maxDiscount);
+  discount = Math.min(roundMoney(discount), roundMoney(subtotal + shippingFee));
+  return { couponCode: code, couponTitle: coupon.title, couponDiscount: discount, couponMessage: discount > 0 ? '已优惠' : '' };
+}
+async function enrichItems(items) {
+  const normalized = normalizeItems(items).orderItems;
+  const enriched = [];
+  for (const item of normalized) {
+    let costPrice = 0;
+    let shippingDescription = '';
+    try {
+      if (item.productId && !String(item.productId).startsWith('test-')) {
+        const product = await db.findById('products', item.productId);
+        if (product) {
+          costPrice = Number(product.costPrice || product.settlementPrice || 0);
+          shippingDescription = product.shipping_description || '';
+        }
+      }
+    } catch (_) {}
+    enriched.push({ ...item, costPrice: roundMoney(costPrice), lineCost: roundMoney(costPrice * item.quantity), shippingDescription });
+  }
+  return enriched;
+}
+function buildQuote(items, couponCode = '') {
+  const subtotal = roundMoney(items.reduce((sum, i) => sum + Number(i.price || 0) * Number(i.quantity || 1), 0));
+  const shippingFee = estimateShipping(subtotal, items);
+  const coupon = applyCoupon(subtotal, shippingFee, couponCode);
+  const totalAmount = Math.max(0.01, roundMoney(subtotal + shippingFee - coupon.couponDiscount));
+  const costAmount = roundMoney(items.reduce((sum, i) => sum + Number(i.lineCost || 0), 0));
+  const profitAmount = roundMoney(totalAmount - costAmount);
+  return { subtotal, shippingFee, ...coupon, totalAmount, costAmount, profitAmount };
+}
+async function syncPurchaseOrder(order) {
+  if (order.syncedPurchaseOrderId) return order.syncedPurchaseOrderId;
+  const payload = {
+    member_id: order.memberId || '',
+    member_name: order.memberName || '花伴用户',
+    phone: order.phone || '',
+    business_type: '团购/电商',
+    purchase_time: order.paidAt || new Date().toISOString(),
+    delivery_address: order.deliveryAddress || '',
+    product_id: order.items.map(i => i.productId).filter(Boolean),
+    product_title: order.items.map(i => `${i.name} ×${i.quantity}`),
+    personal_tag: '花伴商城,Stripe',
+    payment_order_id: order.orderId,
+    payment_channel: order.provider || order.payMethod,
+    product_subtotal: order.subtotal,
+    shipping_fee: order.shippingFee,
+    coupon_code: order.couponCode || '',
+    coupon_discount: order.couponDiscount || 0,
+    income_amount: order.totalAmount,
+    cost_amount: order.costAmount || 0,
+    expense_amount: order.costAmount || 0,
+    profit_amount: order.profitAmount != null ? order.profitAmount : roundMoney(Number(order.totalAmount || 0) - Number(order.costAmount || 0)),
+  };
+  const res = await axios.post(`${ORDER_SERVICE_URL}/api/orders`, payload, { timeout: 15000 });
+  const id = res.data?.data?.id || res.data?.id || null;
+  if (id && order._id) await db.update('orders', order._id, { syncedPurchaseOrderId: id, syncedAt: new Date().toISOString() });
+  return id;
+}
+
+
 const SITE_URL = process.env.SITE_URL || 'http://100.76.15.64:3000';
 
 const PROVIDERS = {
   stripe: {
     name: 'Stripe',
-    configured: !!(process.env.STRIPE_CHECKOUT_URL || process.env.STRIPE_PAYMENT_LINK_URL || process.env.STRIPE_SECRET_KEY),
+    configured: !!(stripeConfigured || process.env.STRIPE_CHECKOUT_URL || process.env.STRIPE_PAYMENT_LINK_URL),
     checkoutUrl: process.env.STRIPE_CHECKOUT_URL || process.env.STRIPE_PAYMENT_LINK_URL || '',
     note: 'Supports cards / Apple Pay / Google Pay when configured.',
   },
@@ -86,6 +174,46 @@ router.get('/config-status', (req, res) => {
   res.json(PROVIDERS);
 });
 
+
+router.get('/coupons', (req, res) => {
+  res.json({ coupons: Object.values(COUPONS) });
+});
+
+router.post('/quote', async (req, res) => {
+  try {
+    const items = await enrichItems(req.body.items || []);
+    const quote = buildQuote(items, req.body.couponCode || '');
+    res.json({ items, ...quote, currency: 'CNY' });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.post('/confirm-stripe', async (req, res) => {
+  try {
+    const { sessionId, orderId } = req.body;
+    let order = null;
+    if (sessionId) order = await db.findOne('orders', { stripeSessionId: sessionId });
+    if (!order && orderId) order = await db.findOne('orders', { orderId });
+    if (!order) return res.status(404).json({ error: '订单不存在' });
+    let paid = order.status === 'paid' || order.status === 'mock_paid';
+    if (stripeConfigured && sessionId) {
+      const sessionRes = await axios.get(`https://api.stripe.com/v1/checkout/sessions/${sessionId}`, {
+        auth: { username: process.env.STRIPE_SECRET_KEY, password: '' },
+        timeout: 15000,
+      });
+      paid = sessionRes.data.payment_status === 'paid';
+    }
+    if (!paid) return res.status(400).json({ error: '支付尚未完成', order });
+    const updates = { status: 'paid', paidAt: order.paidAt || new Date().toISOString() };
+    if (order.status !== 'paid') order = await db.update('orders', order._id, updates);
+    const purchaseOrderId = await syncPurchaseOrder({ ...order, ...updates });
+    res.json({ ok: true, order: { ...order, ...updates, syncedPurchaseOrderId: purchaseOrderId } });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/products', async (req, res) => {
   try {
     const products = await db.find('products', { limit: 50 });
@@ -104,46 +232,85 @@ router.get('/products', async (req, res) => {
 
 router.post('/checkout', async (req, res) => {
   try {
-    const { items, payMethod = 'stripe' } = req.body;
+    const { items, payMethod = 'stripe', couponCode = '', customer = {}, deliveryAddress = '' } = req.body;
     const provider = PROVIDERS[payMethod];
     if (!provider) return res.status(400).json({ error: '不支持的支付方式' });
 
     if (payMethod === 'alipay' && !provider.configured) {
-      return res.status(400).json({ error: '支付宝暂未开通：请先确认企业资质、网站/应用合规和备案要求。' });
+      return res.status(400).json({ error: '支付宝暂未开通。' });
     }
 
-    const { orderItems, totalAmount } = normalizeItems(items);
+    const orderItems = await enrichItems(items);
+    const quote = buildQuote(orderItems, couponCode);
     const orderId = `PAY${Date.now()}${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+    let checkoutUrl = '';
+    let stripeSessionId = '';
     const order = {
       orderId,
       items: orderItems,
-      totalAmount,
+      subtotal: quote.subtotal,
+      shippingFee: quote.shippingFee,
+      couponCode: quote.couponCode,
+      couponTitle: quote.couponTitle,
+      couponDiscount: quote.couponDiscount,
+      totalAmount: quote.totalAmount,
+      costAmount: quote.costAmount,
+      profitAmount: quote.profitAmount,
       currency: 'CNY',
       payMethod,
       provider: provider.name,
       status: provider.configured ? 'pending' : 'mock_paid',
+      memberName: customer.name || '',
+      phone: customer.phone || '',
+      deliveryAddress,
       createdAt: new Date().toISOString(),
       paidAt: provider.configured ? null : new Date().toISOString(),
       checkoutUrl: '',
+      stripeSessionId: '',
     };
 
-    if (provider.configured && provider.checkoutUrl) {
+    if (payMethod === 'stripe' && stripeConfigured) {
+      const form = new URLSearchParams();
+      form.set('mode', 'payment');
+      form.set('success_url', `${SITE_URL}/payment?status=success&session_id={CHECKOUT_SESSION_ID}&orderId=${orderId}`);
+      form.set('cancel_url', `${SITE_URL}/payment?status=cancel&orderId=${orderId}`);
+      form.set('metadata[orderId]', orderId);
+      if (quote.couponCode) form.set('metadata[couponCode]', quote.couponCode);
+      // Stripe Checkout charges the final payable amount as one order line so coupon/shipping math matches our quote exactly.
+      form.set('line_items[0][quantity]', '1');
+      form.set('line_items[0][price_data][currency]', 'cny');
+      form.set('line_items[0][price_data][product_data][name]', `花伴商城订单 ${orderId}`);
+      form.set('line_items[0][price_data][product_data][description]', `商品小计 ¥${quote.subtotal} + 运费 ¥${quote.shippingFee} - 优惠 ¥${quote.couponDiscount}`);
+      form.set('line_items[0][price_data][unit_amount]', String(Math.max(1, Math.round(quote.totalAmount * 100))));
+      const sessionRes = await axios.post('https://api.stripe.com/v1/checkout/sessions', form, {
+        auth: { username: process.env.STRIPE_SECRET_KEY, password: '' },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        timeout: 20000,
+      });
+      checkoutUrl = sessionRes.data.url;
+      stripeSessionId = sessionRes.data.id;
+      order.checkoutUrl = checkoutUrl;
+      order.stripeSessionId = stripeSessionId;
+    } else if (provider.configured && provider.checkoutUrl) {
       order.checkoutUrl = appendCheckoutParams(provider.checkoutUrl, order);
+      checkoutUrl = order.checkoutUrl;
     }
 
-    await db.create('orders', order);
+    const saved = await db.create('orders', order);
+    if (!provider.configured) {
+      try { await syncPurchaseOrder({ ...order, _id: saved._id }); } catch (e) { console.error('sync mock order failed:', e.message); }
+    }
 
     res.json({
       orderId,
-      totalAmount,
+      stripeSessionId,
+      ...quote,
       payMethod,
       provider: provider.name,
       status: order.status,
-      checkoutUrl: order.checkoutUrl,
+      checkoutUrl,
       mock: !provider.configured,
-      message: provider.configured
-        ? '支付订单已创建'
-        : `${provider.name} 尚未配置真实收银台，当前为模拟支付成功。`,
+      message: provider.configured ? '支付订单已创建' : `${provider.name} 尚未配置真实收银台，当前为模拟支付成功。`,
     });
   } catch (err) {
     res.status(400).json({ error: err.message });
