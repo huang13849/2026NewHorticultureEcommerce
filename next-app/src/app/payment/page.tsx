@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import TabBar from '../TabBar';
 import { useI18n } from '@/lib/i18n/context';
 
@@ -26,6 +26,7 @@ const IS_GLOBAL = REGION === 'global';
 function PaymentContent() {
   const { t } = useI18n();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const fromCart = searchParams.get('from') === 'cart';
 
   const [products, setProducts] = useState<PayProduct[]>([]);
@@ -265,6 +266,12 @@ function PaymentContent() {
             <p className="text-xs text-emerald-700 mt-1">订单号：{orderId}</p>
             {message && <p className="text-xs text-emerald-700 mt-2">{message}</p>}
             {wechatCodeUrl && <img src={wechatCodeUrl} alt="微信支付二维码" className="mx-auto mt-3 w-48 h-48 rounded-xl border" />}
+            <button
+              onClick={() => router.push('/orders')}
+              className="mt-4 px-6 py-2.5 rounded-xl bg-emerald-700 text-white text-sm font-bold hover:bg-emerald-800 transition-colors"
+            >
+              📋 查看订单
+            </button>
           </section>
         )}
 
