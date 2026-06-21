@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import TabBar from '../TabBar';
 import { useI18n } from '@/lib/i18n/context';
+import { useAuth } from '@/lib/auth-context';
 import LangSwitch from '@/app/components/LangSwitch';
 
 interface CartItem {
@@ -18,7 +19,31 @@ interface CartItem {
 
 export default function CartPage() {
   const { t } = useI18n();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+
+  // Login guard: redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login?redirect=/cart');
+    }
+  }, [authLoading, user, router]);
+
+  if (authLoading) {
+    return (
+      <main className="min-h-screen bg-[#0a0e1a] text-white flex items-center justify-center">
+        <p className="text-[#6b7280]">加载中…</p>
+      </main>
+    );
+  }
+
+  if (!user) {
+    return (
+      <main className="min-h-screen bg-[#0a0e1a] text-white flex items-center justify-center">
+        <p className="text-[#6b7280]">请先登录</p>
+      </main>
+    );
+  }
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
 
