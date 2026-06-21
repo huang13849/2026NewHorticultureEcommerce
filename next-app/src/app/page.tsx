@@ -8,6 +8,7 @@ import { useRegion, type RegionCode } from '@/lib/region-context';
 import TabBar from './TabBar';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://100.76.15.64:3010/api';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://horiculture.space';
 
 function getImg(p: any): string {
   const raw = (p.images as string[])?.[0]
@@ -204,11 +205,11 @@ export default function HomePage() {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: '植物猎人 Plant Hunter',
-    url: 'https://horiculture.space',
+    url: SITE_URL,
     description: '植物猎人 — 花卉供应链新体验：苗木拍卖、鲜花倒拍、地图购花、花园种植、绿色认证。',
     potentialAction: {
       '@type': 'SearchAction',
-      target: 'https://horiculture.space/shop?keyword={search_term_string}',
+      target: `${SITE_URL}/shop?keyword={search_term_string}`,
       'query-input': 'required name=search_term_string',
     },
   };
