@@ -16,6 +16,8 @@ export interface Product {
   sellPrice?: number;
   settlementPrice?: number;
   costPrice?: number;
+  shippingFee?: number;
+  shipping_description?: string;
   images?: string[];
   panorama_images?: string[];
   package_images?: string[];
