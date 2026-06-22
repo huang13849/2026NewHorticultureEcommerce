@@ -204,9 +204,9 @@ export default function HomePage() {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: '植物猎人 Plant Hunter',
+    name: 'Plant Hunter',
     url: SITE_URL,
-    description: '植物猎人 — 花卉供应链新体验：苗木拍卖、鲜花倒拍、地图购花、花园种植、绿色认证。',
+    description: 'Plant Hunter — a smart horticulture supply chain experience for tree auctions, reverse flower auctions, map shopping, garden planting, and green certification.',
     potentialAction: {
       '@type': 'SearchAction',
       target: `${SITE_URL}/shop?keyword={search_term_string}`,
