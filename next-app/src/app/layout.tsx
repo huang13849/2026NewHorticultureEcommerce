@@ -11,23 +11,23 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://horiculture.space'
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: '植物猎人 · 供应链新体验 | Plant Hunter',
-    template: '%s | 植物猎人 Plant Hunter',
+    default: 'Plant Hunter · A New Supply Chain Experience',
+    template: '%s | Plant Hunter',
   },
-  description: '植物猎人 — 花卉供应链新体验。苗木拍卖、鲜花倒拍、地图购花、花园种植，一站式智能花卉供应链平台。',
+  description: 'Plant Hunter — a smart horticulture supply chain platform for tree auctions, reverse flower auctions, map shopping, garden planting, green certification, and carbon credit trees.',
   keywords: ['植物猎人', 'Plant Hunter', 'flower supply chain', 'horticulture ecommerce', 'garden marketplace', 'wholesale flower auction', 'reverse flower auction', 'map flower shopping', 'green certification', 'carbon credit trees', '花卉供应链', '园艺电商', '苗木批发', '花卉供应链平台'],
   alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
     url: SITE_URL,
-    siteName: '植物猎人 Plant Hunter',
-    title: '植物猎人 · 供应链新体验 | Plant Hunter',
-    description: '植物猎人 — 从产地到庭院，智能撮合交易，构建可信绿色价值链。',
+    siteName: 'Plant Hunter',
+    title: 'Plant Hunter · A New Supply Chain Experience',
+    description: 'Plant Hunter connects origins, merchants, and garden scenarios with a trusted green value chain.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: '植物猎人 Plant Hunter',
-    description: '植物猎人 — 花卉供应链新体验：拍卖、地图、花园、绿色认证。',
+    title: 'Plant Hunter',
+    description: 'Plant Hunter — horticulture supply chain, auctions, maps, gardens, and green certification.',
   },
   robots: { index: true, follow: true },
 };

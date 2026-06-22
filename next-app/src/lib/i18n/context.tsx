@@ -19,6 +19,9 @@ export const LANGS: { code: Lang; label: string; native: string }[] = [
   { code: 'ar', label: 'AR', native: 'العربية' },
 ];
 
+const DEFAULT_LANG: Lang = process.env.NEXT_PUBLIC_DEFAULT_LANG === 'zh' ? 'zh' : 'en';
+const LANG_STORAGE_KEY = `lang:${DEFAULT_LANG}`;
+
 const dictionaries: Record<Lang, Record<string, unknown>> = {
   zh: zhDict as Record<string, unknown>,
   en: enDict as Record<string, unknown>,
@@ -57,15 +60,15 @@ function resolve(obj: unknown, key: string): string | undefined {
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(() => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('lang') as Lang | null;
+      const stored = localStorage.getItem(LANG_STORAGE_KEY) as Lang | null;
       if (stored && ['zh', 'en', 'de', 'ja', 'fr', 'ar'].includes(stored)) return stored;
     }
-    return process.env.NEXT_PUBLIC_DEFAULT_LANG === 'zh' ? 'zh' : 'en';
+    return DEFAULT_LANG;
   });
 
   const setLang = useCallback((l: Lang) => {
     setLangState(l);
-    if (typeof window !== 'undefined') localStorage.setItem('lang', l);
+    if (typeof window !== 'undefined') localStorage.setItem(LANG_STORAGE_KEY, l);
   }, []);
 
   const t = useCallback((key: string, params?: Record<string, string | number>): string => {
