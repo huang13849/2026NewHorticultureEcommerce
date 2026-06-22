@@ -7,8 +7,9 @@ import deDict from '@/lib/i18n/de.json';
 import jaDict from '@/lib/i18n/ja.json';
 import frDict from '@/lib/i18n/fr.json';
 import arDict from '@/lib/i18n/ar.json';
+import ruDict from '@/lib/i18n/ru.json';
 
-export type Lang = 'zh' | 'en' | 'de' | 'ja' | 'fr' | 'ar';
+export type Lang = 'zh' | 'en' | 'de' | 'ja' | 'fr' | 'ar' | 'ru';
 
 export const LANGS: { code: Lang; label: string; native: string }[] = [
   { code: 'zh', label: '中', native: '中文' },
@@ -17,6 +18,7 @@ export const LANGS: { code: Lang; label: string; native: string }[] = [
   { code: 'ja', label: 'JA', native: '日本語' },
   { code: 'fr', label: 'FR', native: 'Français' },
   { code: 'ar', label: 'AR', native: 'العربية' },
+  { code: 'ru', label: 'RU', native: 'Русский' },
 ];
 
 const DEFAULT_LANG: Lang = process.env.NEXT_PUBLIC_DEFAULT_LANG === 'zh' ? 'zh' : 'en';
@@ -29,6 +31,7 @@ const dictionaries: Record<Lang, Record<string, unknown>> = {
   ja: jaDict as Record<string, unknown>,
   fr: frDict as Record<string, unknown>,
   ar: arDict as Record<string, unknown>,
+  ru: ruDict as Record<string, unknown>,
 };
 
 interface I18nContextValue {
@@ -61,7 +64,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem(LANG_STORAGE_KEY) as Lang | null;
-      if (stored && ['zh', 'en', 'de', 'ja', 'fr', 'ar'].includes(stored)) return stored;
+      if (stored && ['zh', 'en', 'de', 'ja', 'fr', 'ar', 'ru'].includes(stored)) return stored;
     }
     return DEFAULT_LANG;
   });

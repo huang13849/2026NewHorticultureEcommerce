@@ -615,5 +615,13 @@
       "desc": "Pour oasis désertiques, paysages sobres en eau et verdissement urbain haut de gamme, avec plantes résistantes à la chaleur et efficacité hydrique.",
       "plantLine": "Recommandé : palmier dattier, palmier, bougainvillier, rose du désert, olivier, aromatiques résistantes à la sécheresse"
     }
+  },
+  "tabbar": {
+    "collector": "Collectionneur",
+    "map": "Carte",
+    "seedlingAuction": "Vente aux enchères de jeunes plants",
+    "reverseFlowerAuction": "Vente aux enchères inversée de fleurs fraîches",
+    "shop": "Boutique",
+    "mine": "Mon espace"
   }
 }
