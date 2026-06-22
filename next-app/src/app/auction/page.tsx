@@ -5,6 +5,7 @@ import Link from 'next/link';
 import TabBar from '../TabBar';
 import { useI18n } from '@/lib/i18n/context';
 import LangSwitch from '@/app/components/LangSwitch';
+import PlantHunterLogo from '@/app/components/PlantHunterLogo';
 
 interface AuctionItem {
   productId: string;
@@ -101,8 +102,8 @@ export default function AuctionPage() {
       <main className="min-h-screen bg-white text-stone-900 pb-20">
         <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-stone-200/60">
           <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">🌳</span>
+            <div className="flex items-center gap-2.5">
+              <PlantHunterLogo />
               <span className="font-semibold tracking-tight text-sm">{t('auction.subtitle')}</span>
             </div>
             <Link href="/reverse-auction" className="text-xs text-emerald-700 font-medium hover:text-emerald-900 transition-colors">鲜花倒拍 →</Link>
@@ -111,7 +112,7 @@ export default function AuctionPage() {
 
         <div className="max-w-6xl mx-auto px-6 pt-6">
           <div className="rounded-2xl bg-emerald-50 border border-emerald-200/60 p-5 flex items-center gap-4">
-            <span className="text-2xl">🔔</span>
+            <PlantHunterLogo size="md" />
             <div>
               <p className="text-sm font-semibold text-emerald-800">批发乔灌木正向拍卖</p>
               <p className="text-xs text-stone-500">{t('auction.rulesDesc')}</p>
