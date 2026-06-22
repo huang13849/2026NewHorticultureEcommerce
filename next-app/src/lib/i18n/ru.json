@@ -246,20 +246,20 @@
     "footer": {
       "name": "Smart Supply Chain",
       "copyright": "Beijing-Tianjin-Hebei Flower Supply Chain Platform © 2026",
-      "phone": "電話",
-      "email": "メール",
-      "address": "住所"
+      "phone": "Phone",
+      "email": "Email",
+      "address": "Address"
     },
     "intelligentSupply": "Intelligent Supply Chain",
     "greenCertSubtitle": "Green Certification · Carbon Credit",
     "step": "Step {n}",
-    "searchTitle": "商品検索",
-    "searchSubtitle": "検索語はSEO分析用にPostgreSQLクラスターへ保存されます。",
-    "searchPlaceholder": "花、苗木、カテゴリ、サプライヤー語句を検索…",
-    "searching": "検索中…",
-    "clearSearch": "検索をクリア",
-    "searchProductsTitle": "検索結果",
-    "searchResultMeta": "キーワード「{keyword}」で {count} 件の商品が見つかりました"
+    "searchTitle": "Search products",
+    "searchSubtitle": "Search terms are stored in the PostgreSQL cluster for SEO strategy analysis.",
+    "searchPlaceholder": "Search flowers, trees, categories, supplier keywords…",
+    "searching": "Searching…",
+    "clearSearch": "Clear search",
+    "searchProductsTitle": "Search results",
+    "searchResultMeta": "Keyword “{keyword}” found {count} related products"
   },
   "auction": {
     "title": "Tree Auction",
@@ -548,60 +548,60 @@
     "ar": "العربية"
   },
   "regionSwitch": {
-    "title": "言語 / 地域",
-    "section": "言語と地域",
-    "useCurrent": "📍 現在地を使う",
-    "locating": "位置情報を取得中…",
-    "recommended": "おすすめ",
-    "selected": "選択中",
-    "preciseUnavailable": "ブラウザの正確な位置情報は利用できません",
-    "preciseFailed": "正確な位置情報の取得に失敗しました",
-    "networkDetected": "ネットワーク位置で判定：{region}",
-    "timezoneDetected": "{reason}。タイムゾーンで判定：{region}",
-    "currentDetected": "現在地で判定：{region}"
+    "title": "Language / Region",
+    "section": "Language & Region",
+    "useCurrent": "📍 Use current location",
+    "locating": "Locating…",
+    "recommended": "Recommended",
+    "selected": "Selected",
+    "preciseUnavailable": "Precise browser location is unavailable",
+    "preciseFailed": "Precise location failed",
+    "networkDetected": "Detected by network location: {region}",
+    "timezoneDetected": "{reason}; detected by timezone: {region}",
+    "currentDetected": "Detected from current location: {region}"
   },
   "regions": {
     "cn": {
-      "name": "中国",
-      "short": "中国",
-      "badge": "中国エリア · 中国庭園サプライチェーン",
-      "title": "植物コレクター",
-      "subtitle": "新しいサプライチェーン体験",
-      "desc": "中国庭園と北方花木市場を軸に、産地・事業者・庭づくりのシーンをつなぎます。苗木オークション、花の逆オークション、地図購入、ガーデン栽培をワンストップで。",
-      "plantLine": "おすすめ：牡丹、マキ、シロマツ、金木犀、バラ、中国盆栽"
+      "name": "China",
+      "short": "China",
+      "badge": "China · Chinese garden supply chain",
+      "title": "Plant Collector",
+      "subtitle": "A New Supply Chain Experience",
+      "desc": "Built around Chinese gardens and northern horticulture markets, connecting origins, merchants, and courtyard scenarios. Tree auctions, flower reverse auctions, map shopping, and garden planting in one place.",
+      "plantLine": "Recommended: peony, podocarpus, lacebark pine, osmanthus, rose, Chinese bonsai"
     },
     "us": {
-      "name": "米国",
-      "short": "米国",
-      "badge": "米国エリア · アメリカンガーデン供給網",
-      "title": "植物コレクター",
-      "subtitle": "新しいサプライチェーン体験",
-      "desc": "アメリカの庭、ガーデンセンター、コミュニティ緑化向けに、産地直結、地図購入、安定した履行を提供します。",
-      "plantLine": "おすすめ：アジサイ、ラベンダー、バラ、多肉植物、観賞用グラス、庭木"
+      "name": "United States",
+      "short": "US",
+      "badge": "United States · American garden supply chain",
+      "title": "Plant Collector",
+      "subtitle": "A New Supply Chain Experience",
+      "desc": "For American yards, garden centers, and community landscaping, with origin-direct sourcing, map-based purchasing, and reliable fulfillment.",
+      "plantLine": "Recommended: hydrangea, lavender, rose, succulents, ornamental grasses, landscape trees"
     },
     "de": {
-      "name": "ドイツ",
-      "short": "ドイツ",
-      "badge": "ドイツエリア · 欧州フォレストガーデン供給網",
-      "title": "植物コレクター",
-      "subtitle": "新しいサプライチェーン体験",
-      "desc": "欧州庭園、森の景観、持続可能な園芸調達向けに、グリーン認証、炭素価値、産地追跡、厳格な履行を重視します。",
-      "plantLine": "おすすめ：クレマチス、ヤグルマギク、ハーブ、球根花、トウヒ、ヨーロッパブナ"
+      "name": "Germany",
+      "short": "Germany",
+      "badge": "Germany · European forest garden supply chain",
+      "title": "Plant Collector",
+      "subtitle": "A New Supply Chain Experience",
+      "desc": "For European gardens, forest-style landscapes, and sustainable horticulture procurement, emphasizing green certification, carbon value, origin tracking, and rigorous fulfillment.",
+      "plantLine": "Recommended: clematis, cornflower, herbs, bulbs, spruce, European beech"
     },
     "jp": {
-      "name": "日本",
-      "short": "日本",
-      "badge": "日本エリア · 和風庭園サプライチェーン",
-      "title": "植物コレクター",
-      "subtitle": "新しいサプライチェーン体験",
-      "desc": "和風庭園、屋上緑化、精品園芸向けに、厳選産地、丁寧な履行、季節の花材供給を重視します。",
-      "plantLine": "おすすめ：桜、楓、紫陽花、椿、黒松、苔庭植物"
+      "name": "Japan",
+      "short": "Japan",
+      "badge": "Japan · Japanese garden supply chain",
+      "title": "Plant Collector",
+      "subtitle": "A New Supply Chain Experience",
+      "desc": "For Japanese gardens, rooftop greening, and boutique horticulture, emphasizing curated origins, precise fulfillment, and seasonal flower supply.",
+      "plantLine": "Recommended: cherry blossom, maple, hydrangea, camellia, black pine, moss garden plants"
     },
     "fr": {
       "name": "France",
       "short": "France",
       "badge": "France · French garden supply chain",
-      "title": "植物コレクター",
+      "title": "Plant Collector",
       "subtitle": "A New Supply Chain Experience",
       "desc": "For French gardens, estate landscapes, and urban floristry, highlighting romantic borders, terroir-driven sourcing, and premium horticulture fulfillment.",
       "plantLine": "Recommended: lavender, iris, rose, plane tree, grapevine, French border plants"
@@ -610,18 +610,18 @@
       "name": "Saudi Arabia",
       "short": "Saudi",
       "badge": "Saudi Arabia · Desert oasis supply chain",
-      "title": "植物コレクター",
+      "title": "Plant Collector",
       "subtitle": "A New Supply Chain Experience",
       "desc": "For desert oases, drought-tolerant landscapes, and premium urban greening, focused on heat-tolerant plants, water efficiency, and reliable cross-region fulfillment.",
       "plantLine": "Recommended: date palm, palm, bougainvillea, desert rose, olive, drought-tolerant herbs"
     }
   },
   "tabbar": {
-    "collector": "コレクター",
-    "map": "地図",
-    "seedlingAuction": "苗木オークション",
-    "reverseFlowerAuction": "花の逆オークション",
-    "shop": "ショップ",
-    "mine": "マイページ"
+    "collector": "Коллекционер",
+    "map": "Карта",
+    "seedlingAuction": "Аукцион саженцев",
+    "reverseFlowerAuction": "Обратный аукцион на срезанные цветы",
+    "shop": "Магазин",
+    "mine": "Личный кабинет"
   }
 }

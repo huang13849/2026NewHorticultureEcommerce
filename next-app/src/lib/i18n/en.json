@@ -615,5 +615,13 @@
       "desc": "For desert oases, drought-tolerant landscapes, and premium urban greening, focused on heat-tolerant plants, water efficiency, and reliable cross-region fulfillment.",
       "plantLine": "Recommended: date palm, palm, bougainvillea, desert rose, olive, drought-tolerant herbs"
     }
+  },
+  "tabbar": {
+    "collector": "Collector",
+    "map": "Map",
+    "seedlingAuction": "Seedling Auction",
+    "reverseFlowerAuction": "Reverse Flower Auction",
+    "shop": "Shop",
+    "mine": "Mine"
   }
 }
