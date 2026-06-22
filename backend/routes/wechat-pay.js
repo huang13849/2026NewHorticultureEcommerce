@@ -218,10 +218,13 @@ function buildJSAPIPayParams(prepayId) {
 // ===== API: 创建订单 =====
 router.post('/order', async (req, res) => {
   try {
-    const { items, payMethod = 'wechat', payScene = 'jsapi', openid, customer = {} } = req.body;
+    const { items, payMethod = 'wechat', payScene = 'jsapi', openid, customer = {}, deliveryAddress = '' } = req.body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: '购物车不能为空' });
+    }
+    if (!String(deliveryAddress || '').trim()) {
+      return res.status(400).json({ error: '请先填写收货地址' });
     }
 
     // 计算总价
@@ -258,6 +261,7 @@ router.post('/order', async (req, res) => {
       openid: openid || '',
       memberName: customer.name || '',
       phone: customer.phone || '',
+      deliveryAddress,
       status: 'pending',
       region: 'cn',
       createdAt: new Date().toISOString(),
