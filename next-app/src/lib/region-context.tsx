@@ -130,7 +130,7 @@ function detectRegion(latitude: number, longitude: number): RegionCode {
   if (latitude >= 24 && latitude <= 46 && longitude >= 122 && longitude <= 146) return 'jp';
   if (latitude >= 41 && latitude <= 52 && longitude >= -5.5 && longitude <= 9.5) return 'fr';
   if (latitude >= 16 && latitude <= 33 && longitude >= 34 && longitude <= 56) return 'sa';
-  return 'cn';
+  return DEFAULT_REGION;
 }
 
 function detectRegionByCountry(countryCode?: string): RegionCode | null {
@@ -152,7 +152,7 @@ function detectRegionByTimezone(): RegionCode {
   if (tz === 'Asia/Tokyo') return 'jp';
   if (tz === 'Europe/Paris') return 'fr';
   if (tz === 'Asia/Riyadh') return 'sa';
-  return 'cn';
+  return DEFAULT_REGION;
 }
 
 interface RegionContextValue {
@@ -163,8 +163,11 @@ interface RegionContextValue {
   detectFromBrowser: () => void;
 }
 
+const DEFAULT_REGION: RegionCode = process.env.NEXT_PUBLIC_DEFAULT_REGION === 'cn' ? 'cn' : 'us';
+const REGION_STORAGE_KEY = `plantHunterRegion:${DEFAULT_REGION}`;
+
 const RegionContext = createContext<RegionContextValue>({
-  region: REGION_MAP.cn,
+  region: REGION_MAP[DEFAULT_REGION],
   setRegionCode: () => {},
   locating: false,
   locateError: '',
@@ -172,18 +175,18 @@ const RegionContext = createContext<RegionContextValue>({
 });
 
 export function RegionProvider({ children }: { children: ReactNode }) {
-  const [code, setCode] = useState<RegionCode>('cn');
+  const [code, setCode] = useState<RegionCode>(DEFAULT_REGION);
   const [locating, setLocating] = useState(false);
   const [locateError, setLocateError] = useState('');
 
   useEffect(() => {
-    const stored = localStorage.getItem('plantHunterRegion') as RegionCode | null;
+    const stored = localStorage.getItem(REGION_STORAGE_KEY) as RegionCode | null;
     if (stored && REGION_MAP[stored]) setCode(stored);
   }, []);
 
   const setRegionCode = (next: RegionCode) => {
     setCode(next);
-    localStorage.setItem('plantHunterRegion', next);
+    localStorage.setItem(REGION_STORAGE_KEY, next);
     setLocateError('');
   };
 
