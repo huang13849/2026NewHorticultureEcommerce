@@ -1,4 +1,4 @@
-const API_ORIGIN = 'http://106.12.91.182';
+const API_ORIGIN = 'http://106-12-91-182.sslip.io';
 const OVERSEAS_ORIGIN = 'https://horiculture.space';
 
 function rewriteMinioUrls(value) {

@@ -1,4 +1,4 @@
-const MINIO_ORIGIN = 'http://106.12.91.182';
+const MINIO_ORIGIN = 'http://106-12-91-182.sslip.io';
 
 export async function onRequest(context) {
   const { request } = context;
