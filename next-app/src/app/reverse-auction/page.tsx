@@ -5,6 +5,7 @@ import Link from 'next/link';
 import TabBar from '../TabBar';
 import { useI18n } from '@/lib/i18n/context';
 import LangSwitch from '@/app/components/LangSwitch';
+import PlantHunterLogo from '@/app/components/PlantHunterLogo';
 
 interface Product {
   _id: string;
@@ -107,8 +108,8 @@ export default function ReverseAuctionPage() {
       <main className="min-h-screen bg-white text-stone-900 pb-20">
         <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-stone-200/60">
           <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <span className="text-lg">🌷</span>
+            <Link href="/" className="flex items-center gap-2.5">
+              <PlantHunterLogo />
               <span className="text-stone-900 font-semibold tracking-tight text-sm">{t('reverseAuction.title')}</span>
             </Link>
             <Link href="/auction" className="text-xs text-emerald-700 font-medium hover:text-emerald-900 transition-colors">苗木正拍 →</Link>
@@ -117,7 +118,10 @@ export default function ReverseAuctionPage() {
 
         <section className="max-w-6xl mx-auto px-6 pt-10 pb-8">
           <div className="rounded-2xl bg-gradient-to-br from-emerald-50 via-white to-amber-50 border border-stone-200/80 p-8 md:p-12">
-            <p className="text-xs text-emerald-700 font-semibold tracking-widest uppercase mb-3">Reverse Auction · Flower Clock</p>
+            <div className="flex items-center gap-3 mb-3">
+              <PlantHunterLogo size="md" />
+              <p className="text-xs text-emerald-700 font-semibold tracking-widest uppercase">Reverse Auction · Flower Clock</p>
+            </div>
             <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-stone-900 mb-4">百合 / 鲜花倒拍</h1>
             <p className="text-stone-500 leading-relaxed max-w-2xl text-sm md:text-base">
               鲜花越快成交越新鲜。当前盘面每 <b className="text-stone-800">10 秒</b> 刷新一次倒计时，
