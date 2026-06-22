@@ -1,6 +1,9 @@
 import type { NextConfig } from 'next';
 
-const isCFPages = process.env.CF_PAGES === '1';
+// Cloudflare Pages build env currently provides NEXT_PUBLIC_REGION=global,
+// but not always CF_PAGES=1. Treat the global Pages build as static export
+// so npm run build regenerates out/ for horiculture.space.
+const isCFPages = process.env.CF_PAGES === '1' || process.env.NEXT_PUBLIC_REGION === 'global';
 
 const nextConfig: NextConfig = {
   output: isCFPages ? 'export' : 'standalone',
