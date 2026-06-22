@@ -11,23 +11,23 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://horiculture.space'
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: 'Plant Hunter · A New Supply Chain Experience',
-    template: '%s | Plant Hunter',
+    default: 'Plant Collector · A New Supply Chain Experience',
+    template: '%s | Plant Collector',
   },
-  description: 'Plant Hunter — a smart horticulture supply chain platform for tree auctions, reverse flower auctions, map shopping, garden planting, green certification, and carbon credit trees.',
-  keywords: ['植物猎人', 'Plant Hunter', 'flower supply chain', 'horticulture ecommerce', 'garden marketplace', 'wholesale flower auction', 'reverse flower auction', 'map flower shopping', 'green certification', 'carbon credit trees', '花卉供应链', '园艺电商', '苗木批发', '花卉供应链平台'],
+  description: 'Plant Collector — a smart horticulture supply chain platform for tree auctions, reverse flower auctions, map shopping, garden planting, green certification, and carbon credit trees.',
+  keywords: ['植物收藏家', 'Plant Collector', 'flower supply chain', 'horticulture ecommerce', 'garden marketplace', 'wholesale flower auction', 'reverse flower auction', 'map flower shopping', 'green certification', 'carbon credit trees', '花卉供应链', '园艺电商', '苗木批发', '花卉供应链平台'],
   alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
     url: SITE_URL,
-    siteName: 'Plant Hunter',
-    title: 'Plant Hunter · A New Supply Chain Experience',
-    description: 'Plant Hunter connects origins, merchants, and garden scenarios with a trusted green value chain.',
+    siteName: 'Plant Collector',
+    title: 'Plant Collector · A New Supply Chain Experience',
+    description: 'Plant Collector connects origins, merchants, and garden scenarios with a trusted green value chain.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Plant Hunter',
-    description: 'Plant Hunter — horticulture supply chain, auctions, maps, gardens, and green certification.',
+    title: 'Plant Collector',
+    description: 'Plant Collector — horticulture supply chain, auctions, maps, gardens, and green certification.',
   },
   robots: { index: true, follow: true },
 };
