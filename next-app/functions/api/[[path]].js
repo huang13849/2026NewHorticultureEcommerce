@@ -47,6 +47,14 @@ export async function onRequest(context) {
   responseHeaders.delete('content-length');
   responseHeaders.delete('content-encoding');
 
+  if (request.method === 'HEAD') {
+    return new Response(null, {
+      status: upstream.status,
+      statusText: upstream.statusText,
+      headers: responseHeaders,
+    });
+  }
+
   if (contentType.includes('application/json')) {
     const data = await upstream.json();
     return new Response(JSON.stringify(rewriteMinioUrls(data)), {
