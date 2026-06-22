@@ -10,7 +10,7 @@ export default function LoginPrompt({ message = '登录后即可使用完整功�
   return (
     <div className="flex flex-col items-center justify-center min-h-[50vh] px-8">
       <p className="text-5xl mb-4">🌿</p>
-      <h2 className="text-2xl font-bold text-green-600">植物猎人</h2>
+      <h2 className="text-2xl font-bold text-green-600">植物收藏家</h2>
       <p className="text-sm text-yellow-800 mt-2 text-center">{message}</p>
       <Link
         href="/login"

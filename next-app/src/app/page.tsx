@@ -204,9 +204,9 @@ export default function HomePage() {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'Plant Hunter',
+    name: 'Plant Collector',
     url: SITE_URL,
-    description: 'Plant Hunter — a smart horticulture supply chain experience for tree auctions, reverse flower auctions, map shopping, garden planting, and green certification.',
+    description: 'Plant Collector — a smart horticulture supply chain experience for tree auctions, reverse flower auctions, map shopping, garden planting, and green certification.',
     potentialAction: {
       '@type': 'SearchAction',
       target: `${SITE_URL}/shop?keyword={search_term_string}`,
@@ -251,7 +251,7 @@ export default function HomePage() {
               <div className="rounded-[2rem] bg-white/45 backdrop-blur-sm border border-white/60 shadow-[0_24px_80px_rgba(15,23,42,0.08)] p-6 md:p-8">
                 <p className={`text-xs ${region.accentText} font-semibold tracking-widest uppercase mb-4`}>{t(`regions.${region.code}.badge`)}</p>
                 <div className="relative inline-block mb-6">
-                  <div className={`text-[10px] md:text-xs ${region.accentText} opacity-60 tracking-[0.42em] uppercase mb-2`}>{titleOrnamentByRegion[region.code] || '✦ Plant Hunter ✦'}</div>
+                  <div className={`text-[10px] md:text-xs ${region.accentText} opacity-60 tracking-[0.42em] uppercase mb-2`}>{titleOrnamentByRegion[region.code] || '✦ Plant Collector ✦'}</div>
                   <h1 className={`relative leading-tight ${titleClassByRegion[region.code] || 'text-4xl md:text-5xl font-bold'}`}>
                     <span className="absolute -left-3 -top-2 w-2 h-2 rounded-full bg-current opacity-25" />
                     <span className="absolute -right-4 top-1/2 w-8 h-px bg-current opacity-20" />
