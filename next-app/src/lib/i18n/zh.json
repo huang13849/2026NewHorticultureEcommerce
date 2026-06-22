@@ -615,5 +615,13 @@
       "desc": "面向沙漠绿洲、耐旱景观和高端城市绿化场景，突出耐热植物、水资源效率与稳定跨区域履约。",
       "plantLine": "推荐：椰枣、棕榈、九重葛、沙漠玫瑰、橄榄、耐旱草本"
     }
+  },
+  "tabbar": {
+    "collector": "收藏家",
+    "map": "地图",
+    "seedlingAuction": "苗木拍卖",
+    "reverseFlowerAuction": "鲜花倒拍",
+    "shop": "商店",
+    "mine": "我的"
   }
 }
