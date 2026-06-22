@@ -17,10 +17,6 @@ export default function RegionSwitch({ className }: { className?: string }) {
     setOpen(false);
   };
 
-  useEffect(() => {
-    const langMap: Record<RegionCode, Lang> = { cn: 'zh', us: 'en', de: 'de', jp: 'ja', fr: 'fr', sa: 'ar' };
-    setLang(langMap[region.code]);
-  }, [region.code, setLang]);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
