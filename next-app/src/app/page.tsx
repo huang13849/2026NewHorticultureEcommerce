@@ -74,7 +74,12 @@ export default function HomePage() {
       let all: Product[] = [];
       try {
         const data = await api.getHomeRecommendations(region.lat, region.lng);
-        all = data.sections?.flatMap((s: { products?: Product[] }) => s.products || []) || [];
+        const seen = new Set<string>();
+        all = (data.sections?.flatMap((s: { products?: Product[] }) => s.products || []) || []).filter((p: Product) => {
+          if (!p._id || seen.has(p._id)) return false;
+          seen.add(p._id);
+          return true;
+        });
       } catch { /* empty */ }
       if (all.filter(hasImg).length < 6) {
         try {

@@ -52,20 +52,33 @@ router.get('/home', async (req, res) => {
     const { lng, lat } = req.query;
     const location = lng && lat ? { lng: parseFloat(lng), lat: parseFloat(lat) } : null;
 
+    const seenIds = new Set();
+    const takeUnique = (products, limit = 6) => {
+      const result = [];
+      for (const product of products || []) {
+        const id = String(product._id || product.id || '');
+        if (!id || seenIds.has(id)) continue;
+        seenIds.add(id);
+        result.push(product);
+        if (result.length >= limit) break;
+      }
+      return result;
+    };
+
     // 1. 附近热门
-    const nearbyHot = await getNearbyHot(location, 6);
-    // 2. 新品推荐
-    const newProducts = await db.find('products', {
+    const nearbyHot = takeUnique(await getNearbyHot(location, 18), 6);
+    // 2. 新品推荐（排除已在附近热门出现的商品）
+    const newProducts = takeUnique(await db.find('products', {
       filter: { status: { $ne: 'deleted' }, stock: { $gt: 0 } },
       sort: { createdAt: -1 },
-      limit: 6,
-    });
-    // 3. 特价推荐
-    const onSale = await db.find('products', {
+      limit: 18,
+    }), 6);
+    // 3. 特价推荐（排除前两个分组已出现的商品）
+    const onSale = takeUnique(await db.find('products', {
       filter: { status: { $ne: 'deleted' }, stock: { $gt: 0 }, discountPrice: { $exists: true, $gt: 0 } },
       sort: { discountPrice: 1 },
-      limit: 6,
-    });
+      limit: 18,
+    }), 6);
 
     res.json({
       sections: [
