@@ -5,10 +5,33 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import TabBar from '../TabBar';
 import { useI18n } from '@/lib/i18n/context';
 import { useAuth } from '@/lib/auth-context';
+import { api, type Address } from '@/lib/api';
 
 type PayMethod = 'stripe' | 'paypal' | 'alipay' | 'wechat';
 type PayStatus = 'idle' | 'creating' | 'redirecting' | 'success' | 'failed';
 type WechatPayScene = 'native' | 'h5' | 'jsapi';
+
+const EMPTY_ADDRESS: Address = {
+  name: '',
+  phone: '',
+  province: '',
+  city: '',
+  district: '',
+  detail: '',
+  isDefault: true,
+};
+
+function isAddressComplete(addr?: Partial<Address> | null) {
+  if (!addr) return false;
+  return ['name', 'phone', 'province', 'city', 'district', 'detail'].every(key =>
+    String((addr as any)[key] || '').trim().length > 0
+  );
+}
+
+function formatAddress(addr?: Partial<Address> | null) {
+  if (!addr) return '';
+  return [addr.province, addr.city, addr.district, addr.detail].filter(Boolean).join('');
+}
 
 interface PayProduct {
   id: string;
@@ -60,6 +83,61 @@ function PaymentContent() {
   const [orderId, setOrderId] = useState('');
   const [message, setMessage] = useState('');
   const [paymentConfig, setPaymentConfig] = useState<any>(null);
+  const [addressList, setAddressList] = useState<Address[]>([]);
+  const [selectedAddressIndex, setSelectedAddressIndex] = useState(-1);
+  const [addressForm, setAddressForm] = useState<Address>(EMPTY_ADDRESS);
+  const [savingAddress, setSavingAddress] = useState(false);
+  const [addressMessage, setAddressMessage] = useState('');
+
+  useEffect(() => {
+    const list = (user?.address || []).filter(isAddressComplete) as Address[];
+    setAddressList(list);
+    if (list.length > 0) {
+      const defaultIndex = list.findIndex(a => a.isDefault);
+      const idx = defaultIndex >= 0 ? defaultIndex : 0;
+      setSelectedAddressIndex(idx);
+      setAddressForm({ ...list[idx], isDefault: true });
+    } else {
+      setSelectedAddressIndex(-1);
+      setAddressForm({
+        ...EMPTY_ADDRESS,
+        name: user?.nickname || '',
+        phone: user?.phone || '',
+      });
+    }
+  }, [user?.id, user?.address, user?.nickname, user?.phone]);
+
+  const selectedAddress = selectedAddressIndex >= 0 ? addressList[selectedAddressIndex] : addressForm;
+  const hasPayableAddress = isAddressComplete(selectedAddress);
+  const deliveryAddressText = formatAddress(selectedAddress);
+
+  const updateAddressField = (field: keyof Address, value: string | boolean) => {
+    setAddressForm(prev => ({ ...prev, [field]: value }));
+    setSelectedAddressIndex(-1);
+    setAddressMessage('');
+  };
+
+  const handleSaveAddress = async () => {
+    if (!isAddressComplete(addressForm)) {
+      setAddressMessage('请把收货人、电话、省市区和详细地址都填完整');
+      return false;
+    }
+    try {
+      setSavingAddress(true);
+      const result = await api.updateAddress({ ...addressForm, isDefault: true });
+      const list = (result.address || []).filter(isAddressComplete) as Address[];
+      setAddressList(list);
+      const foundIndex = list.findIndex(a => a.detail === addressForm.detail && a.phone === addressForm.phone);
+      setSelectedAddressIndex(foundIndex >= 0 ? foundIndex : 0);
+      setAddressMessage('收货地址已保存');
+      return true;
+    } catch (err: any) {
+      setAddressMessage(err.message || '保存地址失败');
+      return false;
+    } finally {
+      setSavingAddress(false);
+    }
+  };
 
   // 微信支付
   const [wechatScene, setWechatScene] = useState<WechatPayScene>('native');
@@ -126,6 +204,16 @@ function PaymentContent() {
 
   const handlePay = async () => {
     if (products.length === 0 || totalAmount <= 0) return;
+    if (!hasPayableAddress) {
+      setPayStatus('failed');
+      setMessage('请先填写完整收货地址，再进行支付。');
+      setAddressMessage('没有完整收货地址，不能支付');
+      return;
+    }
+    if (selectedAddressIndex < 0) {
+      const ok = await handleSaveAddress();
+      if (!ok) return;
+    }
     setPayStatus('creating');
     setMessage('');
 
@@ -138,7 +226,8 @@ function PaymentContent() {
           body: JSON.stringify({
             payMethod: 'wechat',
             payScene: wechatScene,
-            customer: { name: user?.nickname || '', phone: user?.phone || '' },
+            customer: { name: selectedAddress.name || user?.nickname || '', phone: selectedAddress.phone || user?.phone || '' },
+            deliveryAddress: deliveryAddressText,
             items: products.map(p => ({ productId: p.id, name: p.name, price: p.price, quantity: p.quantity || 1, image: p.image })),
           }),
         });
@@ -175,6 +264,8 @@ function PaymentContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           payMethod,
+          customer: { name: selectedAddress.name || user?.nickname || '', phone: selectedAddress.phone || user?.phone || '' },
+          deliveryAddress: deliveryAddressText,
           items: products.map(p => ({ productId: p.id, name: p.name, price: p.price, quantity: p.quantity || 1, image: p.image })),
         }),
       });
@@ -240,6 +331,66 @@ function PaymentContent() {
               ))}
             </div>
           )}
+        </section>
+
+        <section className="rounded-3xl border border-stone-200 bg-white p-5 md:p-6 shadow-sm">
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div>
+              <h2 className="text-lg font-bold">收货地址</h2>
+              <p className="text-xs text-stone-400 mt-1">支付前必须填写完整地址，订单会同步到购买订单管理</p>
+            </div>
+            <span className={`text-xs px-2 py-1 rounded-full ${hasPayableAddress ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
+              {hasPayableAddress ? '已填写' : '待填写'}
+            </span>
+          </div>
+
+          {addressList.length > 0 && (
+            <div className="space-y-2 mb-4">
+              {addressList.map((addr, idx) => (
+                <button
+                  key={`${addr.phone}-${addr.detail}-${idx}`}
+                  type="button"
+                  onClick={() => { setSelectedAddressIndex(idx); setAddressForm({ ...addr, isDefault: true }); setAddressMessage(''); }}
+                  className={`w-full text-left rounded-2xl border p-3 transition-colors ${selectedAddressIndex === idx ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200 bg-white hover:border-stone-300'}`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-bold">{addr.name} <span className="ml-2 text-stone-500 font-normal">{addr.phone}</span></p>
+                    {selectedAddressIndex === idx && <span className="text-xs font-bold text-emerald-700">✓ 使用</span>}
+                  </div>
+                  <p className="text-xs text-stone-500 mt-1">{formatAddress(addr)}</p>
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => { setSelectedAddressIndex(-1); setAddressForm({ ...EMPTY_ADDRESS, name: user?.nickname || '', phone: user?.phone || '' }); setAddressMessage(''); }}
+                className="text-xs font-bold text-emerald-700"
+              >
+                + 新增/改用其他地址
+              </button>
+            </div>
+          )}
+
+          {selectedAddressIndex < 0 && (
+            <div className="grid md:grid-cols-2 gap-3">
+              <input value={addressForm.name} onChange={e => updateAddressField('name', e.target.value)} placeholder="收货人" className="rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+              <input value={addressForm.phone} onChange={e => updateAddressField('phone', e.target.value)} placeholder="联系电话" className="rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+              <input value={addressForm.province} onChange={e => updateAddressField('province', e.target.value)} placeholder="省/直辖市" className="rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+              <input value={addressForm.city} onChange={e => updateAddressField('city', e.target.value)} placeholder="城市" className="rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+              <input value={addressForm.district} onChange={e => updateAddressField('district', e.target.value)} placeholder="区/县" className="rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+              <input value={addressForm.detail} onChange={e => updateAddressField('detail', e.target.value)} placeholder="详细地址：街道、门牌号" className="rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+              <button
+                type="button"
+                onClick={handleSaveAddress}
+                disabled={savingAddress}
+                className="md:col-span-2 rounded-xl bg-stone-900 text-white py-2.5 text-sm font-bold disabled:bg-stone-300"
+              >
+                {savingAddress ? '保存中…' : '保存并用于本次支付'}
+              </button>
+            </div>
+          )}
+
+          {addressMessage && <p className={`mt-3 text-xs ${hasPayableAddress ? 'text-emerald-700' : 'text-red-600'}`}>{addressMessage}</p>}
+          {!hasPayableAddress && <p className="mt-3 text-xs text-red-600">没有完整收货地址，支付按钮不可用。</p>}
         </section>
 
         <section className="rounded-3xl border border-stone-200 bg-white p-5 md:p-6 shadow-sm">
@@ -317,8 +468,8 @@ function PaymentContent() {
               <span className="text-xs text-stone-500">合计: </span>
               <span className="text-xl font-bold text-emerald-700">¥{totalAmount.toFixed(2)}</span>
             </div>
-            <button onClick={handlePay} disabled={products.length === 0 || payStatus === 'creating' || payStatus === 'redirecting'} className={`px-6 md:px-8 py-3 rounded-xl text-sm font-bold transition-colors ${products.length > 0 ? 'bg-emerald-700 text-white hover:bg-emerald-800' : 'bg-stone-200 text-stone-400 cursor-not-allowed'}`}>
-              {payStatus === 'creating' ? '创建中…' : payStatus === 'redirecting' ? '跳转中…' : `使用 ${paymentMethods.find(x => x.key === payMethod)?.name || '支付'} 支付`}
+            <button onClick={handlePay} disabled={products.length === 0 || !hasPayableAddress || payStatus === 'creating' || payStatus === 'redirecting'} className={`px-6 md:px-8 py-3 rounded-xl text-sm font-bold transition-colors ${products.length > 0 && hasPayableAddress ? 'bg-emerald-700 text-white hover:bg-emerald-800' : 'bg-stone-200 text-stone-400 cursor-not-allowed'}`}>
+              {!hasPayableAddress ? '请先填写收货地址' : payStatus === 'creating' ? '创建中…' : payStatus === 'redirecting' ? '跳转中…' : `使用 ${paymentMethods.find(x => x.key === payMethod)?.name || '支付'} 支付`}
             </button>
           </div>
         </div>

@@ -235,6 +235,7 @@ router.get('/products', async (req, res) => {
 router.post('/checkout', async (req, res) => {
   try {
     const { items, payMethod = 'stripe', couponCode = '', customer = {}, deliveryAddress = '' } = req.body;
+    if (!String(deliveryAddress || '').trim()) return res.status(400).json({ error: '请先填写收货地址' });
     const provider = PROVIDERS[payMethod];
     if (!provider) return res.status(400).json({ error: '不支持的支付方式' });
 
