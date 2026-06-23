@@ -36,7 +36,7 @@ export const REGIONS: RegionTheme[] = [
   {
     code: 'cn', flag: '🇨🇳', label: '中国', shortLabel: '中国', recommended: false,
     lat: 39.9042, lng: 116.4074,
-    badge: '中国区 · 中式园林供应链', title: '植物猎人', subtitle: '供应链新体验',
+    badge: '中国区 · 中式园林供应链', title: '植物收藏家', subtitle: '供应链新体验',
     desc: '以中式园林和北方花木市场为核心，连接产地、商家与庭院场景。苗木拍卖、鲜花倒拍、地图购花、花园种植，一站式完成。',
     plantLine: '推荐：牡丹、罗汉松、白皮松、桂花、月季、国风盆景', heroEmoji: '🏮',
     navClass: 'bg-white/85 border-stone-200/60',
