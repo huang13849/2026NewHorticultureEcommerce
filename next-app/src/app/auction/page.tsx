@@ -35,7 +35,7 @@ export default function AuctionPage() {
   const [bidding, setBidding] = useState<string | null>(null);
   const [message, setMessage] = useState('');
 
-  const API = process.env.NEXT_PUBLIC_API_URL || 'http://100.76.15.64:3010/api';
+  const API = process.env.NEXT_PUBLIC_API_URL || "/api";
 
   const fetchItems = useCallback(async () => {
     try {

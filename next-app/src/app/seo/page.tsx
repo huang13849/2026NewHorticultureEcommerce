@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 const SEO_API = process.env.NEXT_PUBLIC_SEO_API_URL || 'http://100.76.15.64:3011';
-const FLOWER_API = process.env.NEXT_PUBLIC_API_URL || 'http://100.76.15.64:3010/api';
+const FLOWER_API = process.env.NEXT_PUBLIC_API_URL || "/api";
 const OVERSEAS_DOMAIN = 'horiculture.space';
 const DOMESTIC_DOMAIN = '106.12.91.182';
 const OVERSEAS_URL = 'https://horiculture.space';
@@ -41,6 +41,8 @@ type Analytics = {
 };
 type SearchLog = { id: number; keyword: string; normalized_keyword: string; result_count: number; region_code?: string; lang?: string; source?: string; created_at: string };
 type SearchLogsResp = { logs: SearchLog[]; total: number };
+type TrendItem = { keyword: string; score: number; momentum: 'high'|'medium'|'low'|string; source: string; audience: string; summary: string; adTitle: string; adCopy: string; visualPrompt: string; cta: string; route: string; tags?: string[]; sources?: string[] };
+type TrendsResp = { updatedAt?: string; nextUpdateHint?: string; domestic: TrendItem[]; overseas: TrendItem[]; allKeywords?: string[] };
 
 async function getJson<T>(path: string, fallback: T): Promise<T> {
   try {
@@ -64,12 +66,13 @@ function rankText(rank?: number | null) {
 }
 
 export default async function SeoDashboardPage() {
-  const [auditAll, rankingData, analytics, cloudflare, searchLogsResp] = await Promise.all([
+  const [auditAll, rankingData, analytics, cloudflare, searchLogsResp, trends] = await Promise.all([
     getJson<{primary: string; sites: Audit[]}>('/api/seo/audit-all', { primary: OVERSEAS_URL, sites: [] }),
     getJson<{results: Ranking[]; note: string}>('/api/seo/rankings', { results: [], note: '' }),
     getJson<Analytics>('/api/analytics/summary?days=30', { topPages: [], topReferrers: [] }),
     getJson<CloudflareAnalytics>('/api/analytics/cloudflare?days=30', { configured: false, error: 'Cloudflare Analytics 暂不可用' }),
     getFlowerJson<SearchLogsResp>('/search/logs?limit=200', { logs: [], total: 0 }),
+    getJson<TrendsResp>('/api/seo/trends', { domestic: [], overseas: [], allKeywords: [] }),
   ]);
 
   const audits = auditAll.sites || [];
@@ -142,6 +145,31 @@ export default async function SeoDashboardPage() {
           </Card>
         </section>
 
+
+
+        <section className="grid lg:grid-cols-2 gap-5">
+          <TrendColumn title="国内流行趋势 · 适合中文首页大图" subtitle="点击关键词可直接进入广告创意/落地页素材" items={trends.domestic || []} region="domestic" />
+          <TrendColumn title="国外流行趋势 · 适合海外首页大图" subtitle="面向 Google / Bing / Pinterest / TikTok 的英文创意方向" items={trends.overseas || []} region="overseas" />
+        </section>
+
+        <Card title="关键词 → 创意广告 → 首页大图框 工作台">
+          <div className="grid md:grid-cols-3 gap-4 text-sm">
+            {[...(trends.domestic || []), ...(trends.overseas || [])].slice(0, 6).map((x) => (
+              <a key={`${x.keyword}-${x.adTitle}`} href={x.route || `/shop?keyword=${encodeURIComponent(x.keyword)}`} className="group rounded-2xl border border-white/10 bg-slate-900/70 p-4 hover:border-emerald-300/60 transition-colors">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-emerald-300 font-semibold">#{x.keyword}</span>
+                  <span className="text-[10px] rounded-full bg-white/10 px-2 py-0.5 text-slate-300">{x.score}</span>
+                </div>
+                <h3 className="mt-3 font-bold text-white leading-snug">{x.adTitle}</h3>
+                <p className="mt-2 text-xs text-slate-400 leading-relaxed">{x.adCopy}</p>
+                <p className="mt-3 text-[11px] text-violet-200 line-clamp-2">🎨 {x.visualPrompt}</p>
+                <span className="mt-4 inline-flex text-xs text-emerald-200 group-hover:text-emerald-100">{x.cta || '生成创意广告'} →</span>
+              </a>
+            ))}
+          </div>
+          <p className="text-xs text-slate-500 mt-4">更新时间：{trends.updatedAt ? new Date(trends.updatedAt).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }) : '待更新'} · {trends.nextUpdateHint || '趋势数据每日更新。'}</p>
+        </Card>
+
         <section className="grid lg:grid-cols-2 gap-5">
           <Card title="国外关键词排名 · Bing 前20">
             <div className="overflow-x-auto">
@@ -209,6 +237,42 @@ export default async function SeoDashboardPage() {
         </section>
       </div>
     </main>
+  );
+}
+
+
+function TrendColumn({ title, subtitle, items, region }: { title: string; subtitle: string; items: TrendItem[]; region: 'domestic'|'overseas' }) {
+  return (
+    <Card title={title}>
+      <p className="text-xs text-slate-500 -mt-2 mb-4">{subtitle}</p>
+      <div className="space-y-3">
+        {items.length ? items.map((x, i) => (
+          <details key={`${region}-${x.keyword}`} className="group rounded-2xl border border-white/10 bg-slate-900/60 p-4 open:border-emerald-300/40">
+            <summary className="cursor-pointer list-none">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs text-slate-500">{String(i + 1).padStart(2, '0')}</span>
+                    <a href={x.route || `/shop?keyword=${encodeURIComponent(x.keyword)}`} className="font-semibold text-emerald-300 hover:text-emerald-200">{x.keyword}</a>
+                    <span className={`text-[10px] rounded-full px-2 py-0.5 ${x.momentum === 'high' ? 'bg-rose-400/15 text-rose-200' : 'bg-amber-400/15 text-amber-200'}`}>{x.momentum === 'high' ? '上升快' : '稳定热'}</span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-1">{x.summary}</p>
+                </div>
+                <div className="text-right shrink-0"><div className="text-2xl font-bold text-white">{x.score}</div><div className="text-[10px] text-slate-500">trend</div></div>
+              </div>
+            </summary>
+            <div className="mt-4 border-t border-white/10 pt-4 text-xs text-slate-300 space-y-3">
+              <div><b className="text-slate-100">广告标题：</b>{x.adTitle}</div>
+              <div><b className="text-slate-100">广告文案：</b>{x.adCopy}</div>
+              <div><b className="text-slate-100">画面提示词：</b><span className="text-violet-200">{x.visualPrompt}</span></div>
+              <div className="flex flex-wrap gap-2">{(x.tags || []).map(t => <span key={t} className="rounded-full bg-white/10 px-2 py-1 text-[10px] text-slate-300">{t}</span>)}</div>
+              <div className="text-slate-500">来源：{x.source} · 人群：{x.audience}</div>
+              {(x.sources || []).length ? <div className="space-y-1">{(x.sources || []).slice(0, 2).map(u => <a key={u} href={u} className="block break-all text-sky-300 hover:text-sky-200">{u}</a>)}</div> : null}
+            </div>
+          </details>
+        )) : <p className="text-slate-400 text-sm">暂无趋势数据。</p>}
+      </div>
+    </Card>
   );
 }
 

@@ -42,7 +42,7 @@ interface PayProduct {
   quantity?: number;
 }
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://100.76.15.64:3010/api';
+const API = process.env.NEXT_PUBLIC_API_URL || "/api";
 const REGION = process.env.NEXT_PUBLIC_REGION || ''; // 'cn' | 'global' | '' (dev=all)
 const IS_CN = REGION === 'cn';
 const IS_GLOBAL = REGION === 'global';
@@ -323,7 +323,7 @@ function PaymentContent() {
               {products.map(p => (
                 <div key={p.id} className="py-3 flex items-center gap-3">
                   <div className="w-14 h-14 rounded-xl bg-stone-100 flex items-center justify-center overflow-hidden flex-shrink-0">
-                    {p.image ? <img src={p.image.startsWith('http') ? p.image : `http://100.96.54.109:9000/supply-chain/${p.image}`} alt={p.name} className="w-full h-full object-cover" /> : <span className="text-xl opacity-30">🌿</span>}
+                    {p.image ? <img src={p.image.startsWith('http') ? p.image : `/minio/supply-chain/${p.image}`} alt={p.name} className="w-full h-full object-cover" /> : <span className="text-xl opacity-30">🌿</span>}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate">{p.name}</p>

@@ -31,7 +31,7 @@ interface CartItem {
   checked: boolean;
 }
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://100.76.15.64:3010/api';
+const API = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 type CurrencyCode = 'CNY' | 'USD' | 'EUR' | 'JPY' | 'SAR';
 
@@ -76,7 +76,7 @@ function getImg(p: Product): string {
     || '';
   if (!raw) return '';
   if (raw.startsWith('http')) return raw;
-  return `http://100.96.54.109:9000/supply-chain/${raw}`;
+  return `/minio/supply-chain/${raw}`;
 }
 
 function getShippingText(p: Product): string {
