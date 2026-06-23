@@ -2,11 +2,12 @@
 
 import { useEffect } from 'react';
 
-const SEO_API = process.env.NEXT_PUBLIC_SEO_API_URL || 'http://100.76.15.64:3011';
+const SEO_API = process.env.NEXT_PUBLIC_SEO_API_URL || (process.env.NEXT_PUBLIC_REGION === "global" ? "" : "http://100.76.15.64:3011");
 
 export default function SeoTracker() {
   useEffect(() => {
     const send = () => {
+      if (!SEO_API) return;
       try {
         const payload = JSON.stringify({
           host: window.location.hostname,
