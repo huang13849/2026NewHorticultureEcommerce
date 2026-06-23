@@ -31,3 +31,19 @@ services:
       - flower-api
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
+  seo-service:
+    build:
+      context: ./seo-service
+      dockerfile: Dockerfile
+    container_name: seo-service
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3011:3011"
+    env_file:
+      - ./seo-service/.env
+    environment:
+      - NODE_ENV=production
+      - PORT=3011
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
