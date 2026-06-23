@@ -5,7 +5,7 @@
 
 import { cache } from 'react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://100.76.15.64:3010/api';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 // ===== 类型定义 =====
 export interface Product {
