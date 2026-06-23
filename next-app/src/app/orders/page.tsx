@@ -33,7 +33,7 @@ interface Order {
   paidAt?: string;
 }
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://100.76.15.64:3010/api';
+const API = process.env.NEXT_PUBLIC_API_URL || "/api";
 const REGION = process.env.NEXT_PUBLIC_REGION || '';
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
@@ -178,7 +178,7 @@ export default function OrdersPage() {
                       <div key={idx} className="py-2 flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-stone-100 flex items-center justify-center overflow-hidden flex-shrink-0">
                           {item.image ? (
-                            <img src={item.image.startsWith('http') ? item.image : `http://100.96.54.109:9000/supply-chain/${item.image}`} alt={item.name} className="w-full h-full object-cover" />
+                            <img src={item.image.startsWith('http') ? item.image : `/minio/supply-chain/${item.image}`} alt={item.name} className="w-full h-full object-cover" />
                           ) : (
                             <span className="text-sm opacity-30">🌿</span>
                           )}

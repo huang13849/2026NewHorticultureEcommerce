@@ -2,7 +2,7 @@
  * 工具函数
  */
 
-const MINIO_ENDPOINT = 'http://100.96.54.109:9000';
+const MINIO_ENDPOINT = '/minio';
 const MINIO_BUCKET = 'supply-chain';
 
 /**
