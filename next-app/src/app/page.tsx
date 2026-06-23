@@ -194,7 +194,7 @@ export default function HomePage() {
       'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
     ];
   const successStories = [0,1,2,3,4,5].map(i => ({
-    img: (products[i] && getImg(products[i])) || ssFallback[i],
+    img: (products[i] && getImg(products[i])) || (IS_CN ? '' : ssFallback[i]),
     title: t(`home.successStories.items.${i}.title`),
     desc: t(`home.successStories.items.${i}.desc`),
     tag: t(`home.successStories.items.${i}.tag`),
@@ -450,7 +450,8 @@ export default function HomePage() {
               {successStories.map((s, i) => (
                 <div key={i} className="group rounded-2xl overflow-hidden border border-stone-200 bg-white hover:shadow-lg transition-all">
                   <div className="relative h-52 overflow-hidden">
-                    <img src={s.img} alt={s.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                    {s.img ? <img src={s.img} alt={s.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                      : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-50 to-stone-100"><span className="text-6xl opacity-30">🌿</span></div>}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                     <div className="absolute bottom-3 left-4 right-4">
                       <span className="inline-block bg-emerald-600/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-full mb-1.5">{s.tag}</span>
