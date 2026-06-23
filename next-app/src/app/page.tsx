@@ -324,13 +324,16 @@ export default function HomePage() {
               )}
             </div>
             <form onSubmit={handleProductSearch} className="flex flex-col md:flex-row gap-3">
-              <input
-                value={searchKeyword}
-                onChange={e => setSearchKeyword(e.target.value)}
-                placeholder={t('home.searchPlaceholder')}
-                className="flex-1 px-4 py-3 rounded-2xl border border-stone-200 bg-white/90 text-sm focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-colors"
-              />
-              <button disabled={searchLoading} className={`${region.accentBg} text-white rounded-2xl px-6 py-3 text-sm font-semibold ${region.accentBgHover} disabled:opacity-60 transition-colors`}>
+              <div className="relative flex-1">
+                <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" /></svg>
+                <input
+                  value={searchKeyword}
+                  onChange={e => setSearchKeyword(e.target.value)}
+                  placeholder={t('home.searchPlaceholder')}
+                  className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-emerald-200 bg-white text-base shadow-[0_8px_30px_rgba(16,185,129,0.12)] focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all"
+                />
+              </div>
+              <button disabled={searchLoading} className={`${region.accentBg} text-white rounded-2xl px-8 py-4 text-base font-bold shadow-lg ${region.accentBgHover} disabled:opacity-60 transition-all hover:scale-[1.02] active:scale-95`}>
                 {searchLoading ? t('home.searching') : t('common.search')}
               </button>
             </form>
