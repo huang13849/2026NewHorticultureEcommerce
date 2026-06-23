@@ -24,7 +24,7 @@ export default function MapPage() {
           点商家标记，然后点 🎬 视频逛店
         </div>
         <iframe
-          src={process.env.NEXT_PUBLIC_REGION === 'cn' ? '/supplier-map/?v=202606150236' : 'http://100.76.15.64:29007/?v=202606150236'}
+          src={process.env.NEXT_PUBLIC_REGION === 'cn' ? '/supplier-map/?v=202606150236' : '/supplier-map/?v=202606150236'}
           className="w-full h-full border-0"
           title="供应商地图"
           allow="geolocation"
