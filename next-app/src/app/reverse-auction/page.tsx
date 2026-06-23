@@ -25,7 +25,7 @@ interface Product {
   tradeType?: string;
 }
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://100.76.15.64:3010/api';
+const API = process.env.NEXT_PUBLIC_API_URL || "/api";
 const DROP_PER_MINUTE = 0.01;
 const TICK_SECONDS = 10;
 const MAGNIFIER = 100;
@@ -47,7 +47,7 @@ function imgOf(p: Product) {
     || '';
   if (!raw) return '';
   if (raw.startsWith('http')) return raw;
-  return `http://100.96.54.109:9000/supply-chain/${raw}`;
+  return `/minio/supply-chain/${raw}`;
 }
 function isFlowerReverseItem(p: Product) {
   const hay = `${p.category || ''} ${p.title || ''} ${p.flowerName || ''} ${p.name || ''}`;

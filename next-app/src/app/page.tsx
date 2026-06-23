@@ -7,7 +7,7 @@ import { useI18n } from '@/lib/i18n/context';
 import { useRegion, type RegionCode } from '@/lib/region-context';
 import TabBar from './TabBar';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://100.76.15.64:3010/api';
+const API = process.env.NEXT_PUBLIC_API_URL || "/api";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://horiculture.space';
 
 function getImg(p: any): string {
@@ -20,7 +20,7 @@ function getImg(p: any): string {
     || '';
   if (!raw) return '';
   if (raw.startsWith('http')) return raw;
-  return `http://100.96.54.109:9000/supply-chain/${raw}`;
+  return `/minio/supply-chain/${raw}`;
 }
 function hasImg(p: any): boolean { return !!getImg(p); }
 

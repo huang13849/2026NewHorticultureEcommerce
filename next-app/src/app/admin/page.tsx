@@ -7,7 +7,7 @@ import TabBar from '../TabBar';
 import { useI18n } from '@/lib/i18n/context';
 import LangSwitch from '@/app/components/LangSwitch';
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://100.76.15.64:3010/api';
+const API = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 type Tab = 'wechat' | 'alipay' | 'overview';
 
