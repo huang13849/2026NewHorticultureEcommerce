@@ -12,7 +12,91 @@ const CF_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID || '';
 const CF_ZONE_ID = process.env.CLOUDFLARE_ZONE_ID || '';
 const CF_ZONE_NAME = process.env.CLOUDFLARE_ZONE_NAME || 'horiculture.space';
 const LOG_FILE = path.join(DATA_DIR, 'pageviews.jsonl');
+const TREND_FILE = path.join(DATA_DIR, 'horticulture-trends.json');
 fs.mkdirSync(DATA_DIR, { recursive: true });
+
+
+
+const TREND_SEED = {
+  updatedAt: '2026-06-22T12:16:00.000Z',
+  nextUpdateHint: '每日建议北京时间 08:30 刷新：国内看百度/小红书/抖音/微信生态，国外看 Google/Bing/Pinterest/TikTok 与园艺媒体。',
+  domestic: [
+    {
+      keyword: '阳台花园', score: 96, momentum: 'high', source: '百度/小红书/家居内容', audience: '城市阳台、租房改造、新手养花人群',
+      summary: '小空间立体种植、模块化花架、栏杆外挂和治愈生活方式内容持续走热。',
+      adTitle: '把 3㎡ 阳台种成一座小花园', adCopy: '从月季、绣球到香草番茄，按朝向和光照一键选苗，让城市阳台也有四季花海。',
+      visualPrompt: '清晨北京公寓阳台，木质花架、月季、绣球、薄荷和小番茄，阳光穿过纱帘，治愈系生活方式广告大片', cta: '生成阳台花园方案', route: '/shop?keyword=阳台花园', tags: ['垂直绿化','小空间','治愈生活'],
+      sources: ['https://home.publicdata.online/articles/2026-balcony-garden-guide.html']
+    },
+    {
+      keyword: '智能花盆', score: 91, momentum: 'high', source: '百度/电商搜索/智能家居', audience: '懒人养花、出差人群、智能家居用户',
+      summary: '自动浇水、湿度监测、手机提醒把“养不活”痛点转成可营销卖点。',
+      adTitle: '出差 7 天，绿植也能自己喝水', adCopy: '智能灌溉 + 新手绿植套餐，帮你把养花从玄学变成数据。',
+      visualPrompt: '现代客厅窗边，智能自浇水花盆、绿萝、龟背竹、手机湿度曲线界面，科技感绿色家居广告', cta: '查看智能养护组合', route: '/shop?keyword=智能花盆', tags: ['懒人养花','自动浇水','智能家居'],
+      sources: ['https://zh.accio.com/business/%E6%9C%80%E8%BF%91%E6%B5%81%E8%A1%8C%E5%85%BB%E8%8A%B1']
+    },
+    {
+      keyword: '蝴蝶兰', score: 89, momentum: 'medium', source: '小红书/电商/节庆礼品', audience: '礼品花、家居摆放、办公室绿植',
+      summary: '长花期、颜值高、适合节庆与办公场景，是室内盆花长期顶流。',
+      adTitle: '一盆能开两三个月的高级感', adCopy: '精选蝴蝶兰礼盒，到家即赏，适合新居、办公室和节日送礼。',
+      visualPrompt: '高级东方客厅，白色和紫色蝴蝶兰盆栽，陶瓷花器，柔和自然光，礼品级花卉广告', cta: '挑选蝴蝶兰', route: '/shop?keyword=蝴蝶兰', tags: ['送礼','长花期','室内盆花'],
+      sources: ['https://zh.accio.com/business/%E5%B0%8F%E7%BA%A2%E4%B9%A6%E6%B5%81%E8%A1%8C%E7%9A%84%E8%8A%B1']
+    },
+    {
+      keyword: '家庭可食花园', score: 86, momentum: 'medium', source: '百度/小红书/生活方式', audience: '亲子家庭、阳台种菜、轻健康人群',
+      summary: '薄荷、罗勒、小番茄、拇指黄瓜等“可看可吃”植物适合内容种草。',
+      adTitle: '今天的沙拉，长在你家阳台上', adCopy: '香草、番茄、可食花卉组合，让孩子每天看见植物生长。',
+      visualPrompt: '亲子在阳台采摘小番茄和罗勒，旁边有可食花卉和种植箱，温暖家庭生活广告', cta: '开始种一桌春天', route: '/shop?keyword=香草 番茄', tags: ['亲子','可食用','从阳台到餐桌'],
+      sources: ['https://blog.sciencenet.cn/blog-38998-1518139.html']
+    },
+    {
+      keyword: '花卉供应链', score: 84, momentum: 'medium', source: '行业协会/百度/采购搜索', audience: '花店、工程采购、批发商、供应商',
+      summary: '鲜花 48 小时达、拍卖价格、产区直连、溯源成为 B 端决策关键词。',
+      adTitle: '从产地到花店，少一层就多一分新鲜', adCopy: '连接云南、青州、漳州等产区，采购、拍卖、地图找货一次完成。',
+      visualPrompt: '中国花卉供应链地图，云南玫瑰、青州盆花、冷链物流车、电子拍卖屏，科技农业广告大片', cta: '进入花卉供应链', route: '/auction', tags: ['产地直采','冷链','批发拍卖'],
+      sources: ['https://www.chinahhxh.com/hhxh/detail.html?contentId=1561&id=46']
+    }
+  ],
+  overseas: [
+    {
+      keyword: 'native plants', score: 98, momentum: 'high', source: 'Google/Bing/PHS/园艺媒体', audience: '北美庭院、生态园艺、传粉者保护人群',
+      summary: '本土植物从趋势变成基线，和生物多样性、传粉者、低维护强绑定。',
+      adTitle: 'Build a Garden That Gives Back', adCopy: 'Native flowers, shrubs, and keystone plants create a living habitat for bees, butterflies, and birds.',
+      visualPrompt: 'North American native plant meadow, milkweed, coneflower, goldenrod, butterflies and bees, premium sustainable garden advertising hero image', cta: 'Explore native plant picks', route: '/shop?keyword=native plants', tags: ['biodiversity','pollinators','rewilding'],
+      sources: ['https://phsonline.org/for-gardeners/gardeners-blog/top-gardening-trends-2026','https://www.gardenalchemist.ca/post/2026-sustainable-garden-trends']
+    },
+    {
+      keyword: 'drought tolerant plants', score: 94, momentum: 'high', source: 'Google/Bing/气候园艺内容', audience: '节水庭院、低维护花园、炎热地区用户',
+      summary: '限水、热浪和低维护需求推动耐旱植物、旱景花园、水智慧景观。',
+      adTitle: 'Less Water. More Bloom.', adCopy: 'Lavender, salvia, sedum and ornamental grasses make heat-ready gardens beautiful and low-care.',
+      visualPrompt: 'water-wise garden in golden hour, lavender, salvia, sedum, ornamental grasses, dry climate modern landscape, elegant ad hero image', cta: 'Shop water-wise plants', route: '/shop?keyword=drought tolerant plants', tags: ['water-wise','low maintenance','climate-ready'],
+      sources: ['https://thedailylane.com/2026/05/22/best-drought-tolerant-plants-complete-guide-to-water-wise-gardening']
+    },
+    {
+      keyword: 'living wall art', score: 90, momentum: 'medium', source: 'Google/Pinterest/室内设计媒体', audience: '室内绿植、软装、办公室植物墙',
+      summary: '墙面绿植和藤蔓造型解决小空间绿化，天然适合视觉广告与社媒传播。',
+      adTitle: 'Turn a Blank Wall Into a Living Jungle', adCopy: 'Vertical houseplants and climbing vines create a lush indoor statement without taking floor space.',
+      visualPrompt: 'modern apartment living wall art, pothos vines, philodendron, modular vertical planters, soft daylight, luxury interior plant ad', cta: 'Design a living wall', route: '/shop?keyword=living wall', tags: ['houseplants','vertical garden','interior design'],
+      sources: ['https://www.homesandgardens.com/gardens/houseplants-trends-2026']
+    },
+    {
+      keyword: 'robotic lawn mower', score: 88, momentum: 'high', source: 'Google/Bing/趋势雷达', audience: '欧美庭院、智能设备、草坪维护用户',
+      summary: '机器人割草机、滴灌系统等自动化园艺设备搜索量增长明显。',
+      adTitle: 'Your Weekend Is Not for Mowing', adCopy: 'Automated garden tools keep lawns neat and irrigation precise while you enjoy the flowers.',
+      visualPrompt: 'robotic lawn mower on clean green lawn beside flower borders, smart irrigation droplets, sunny suburban garden tech advertisement', cta: 'See smart garden tools', route: '/shop?keyword=robotic lawn mower', tags: ['automation','smart garden','tools'],
+      sources: ['https://www.risingtrends.co/trends/gardening-trends-2026']
+    },
+    {
+      keyword: 'pollinator plants', score: 87, momentum: 'medium', source: 'Google/Bing/生态园艺', audience: '家庭花园、社区花园、自然教育用户',
+      summary: '传粉者通道、草甸花园、缩小草坪成为国外生态园艺内容主线。',
+      adTitle: 'Plant a Pathway for Butterflies', adCopy: 'Long-blooming pollinator plants connect your garden to a bigger ecological corridor.',
+      visualPrompt: 'pollinator pathway through neighborhood gardens, blooming native flowers, monarch butterflies, bees, hopeful eco garden campaign', cta: 'Start a pollinator bed', route: '/shop?keyword=pollinator plants', tags: ['butterflies','bees','meadow garden'],
+      sources: ['https://nativefloraseeds.org/blogs/news/2026-native-plants-trend-save-pollinators-with-nativefloraseeds-org-seed']
+    }
+  ]
+};
+function loadTrends() { try { if (fs.existsSync(TREND_FILE)) return JSON.parse(fs.readFileSync(TREND_FILE, 'utf8')); } catch {} return TREND_SEED; }
+function trendsPayload() { const data = loadTrends(); const domestic = Array.isArray(data.domestic) ? data.domestic : TREND_SEED.domestic; const overseas = Array.isArray(data.overseas) ? data.overseas : TREND_SEED.overseas; return { ...data, updatedAt: data.updatedAt || new Date().toISOString(), domestic, overseas, allKeywords: [...domestic, ...overseas].map(x => x.keyword) }; }
 
 const KEYWORDS = ['植物猎人','Plant Hunter','植物猎人 花卉','植物猎人 Plant Hunter','花卉供应链','花卉供应链平台','园艺电商','苗木批发拍卖','flower supply chain','plant hunter horticulture','smart flower supply chain','horticulture ecommerce','garden plant marketplace','map flower shopping','wholesale flower auction','reverse flower auction','green certification carbon credit trees'];
 
@@ -164,6 +248,7 @@ async function handle(req, res) {
     if (url.pathname === '/api/seo/audit') return send(res, 200, await auditOne(safeUrl(url.searchParams.get('url') || SITE_URL)));
     if (url.pathname === '/api/seo/audit-all') return send(res, 200, { primary: SITE_URL, sites: await Promise.all(SITE_URLS.map(auditOne)) });
     if (url.pathname === '/api/seo/rankings') { const keywords=String(url.searchParams.get('keywords') || KEYWORDS.join('\n')).split(/[\n,，]+/).map(s=>s.trim()).filter(Boolean).slice(0,20); const domains=SITE_URLS.map(hostOf); const results=[]; for (const keyword of keywords) { const searchUrl='https://www.bing.com/search?q='+encodeURIComponent(keyword)+'&count=20'; try { const {text}=await fetchText(searchUrl,8000); const urls=[...text.matchAll(/<a href="(https?:\/\/[^"#]+)"/g)].map(m=>m[1]).filter(u=>!u.includes('bing.com')); const matches=domains.map(domain=>{ const pos=urls.findIndex(u=>{ try { return new URL(u).hostname.includes(domain); } catch { return false; } }); return { domain, rank: pos>=0?pos+1:null, found:pos>=0 }; }); results.push({ keyword, engine:'bing', matches, found: matches.some(m=>m.found), checkedAt:new Date().toISOString() }); } catch(e) { results.push({ keyword, engine:'bing', matches: domains.map(domain=>({domain, rank:null, found:false})), found:false, error:e.name==='AbortError'?'timeout':e.message, checkedAt:new Date().toISOString() }); } } return send(res, 200, { site:SITE_URL, domains, results, note:'公开搜索结果会因地区/个性化波动；准确排名建议接入 Google Search Console / Bing Webmaster Tools API。' }); }
+    if (url.pathname === '/api/seo/trends') return send(res, 200, trendsPayload());
     if (url.pathname === '/api/seo/keywords') return send(res, 200, { keywords: KEYWORDS });
     return send(res, 404, { error: 'not found' });
   } catch (e) { return send(res, 500, { error: e.message }); }
