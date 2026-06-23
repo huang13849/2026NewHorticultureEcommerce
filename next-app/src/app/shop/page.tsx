@@ -196,12 +196,15 @@ export default function ShopPage() {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 md:px-10 pt-5">
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder={t('shop.searchPlaceholder')}
-          className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-sm focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200 transition-colors"
-        />
+        <div className="relative">
+          <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" /></svg>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder={t('shop.searchPlaceholder')}
+            className="w-full pl-12 pr-4 py-3.5 rounded-2xl border-2 border-emerald-200 bg-white text-base shadow-[0_8px_30px_rgba(16,185,129,0.12)] focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all"
+          />
+        </div>
         <div className="mt-2 flex items-center justify-between text-[10px] text-stone-400">
           <span>当前地区：{region.flag} {t(`regions.${region.code}.name`)} · 币种 {currency}</span>
           <span>{fxLabel} · 1 CNY ≈ {exchangeRate.toFixed(currency === 'JPY' ? 2 : 4)} {currency}</span>
