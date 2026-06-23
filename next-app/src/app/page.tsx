@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useI18n } from '@/lib/i18n/context';
 import { useRegion, type RegionCode } from '@/lib/region-context';
 import TabBar from './TabBar';
+import { IS_CN } from '@/lib/deploy';
 
 const API = process.env.NEXT_PUBLIC_API_URL || "/api";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://horiculture.space';
@@ -184,15 +185,16 @@ export default function HomePage() {
     { step: 6, title: t('home.greenCert.steps.use.title'), desc: t('home.greenCert.steps.use.desc'), icon: '💰' },
   ];
 
-  const successStories = [0,1,2,3,4,5].map(i => ({
-    img: [
+  const ssFallback = [
       'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80',
       'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&q=80',
       'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80',
       'https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=800&q=80',
       'https://images.unsplash.com/photo-1598902108854-d1446b65d5f0?w=800&q=80',
       'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
-    ][i],
+    ];
+  const successStories = [0,1,2,3,4,5].map(i => ({
+    img: (products[i] && getImg(products[i])) || ssFallback[i],
     title: t(`home.successStories.items.${i}.title`),
     desc: t(`home.successStories.items.${i}.desc`),
     tag: t(`home.successStories.items.${i}.tag`),
@@ -267,10 +269,12 @@ export default function HomePage() {
                 <p className="text-stone-500 leading-relaxed max-w-md text-sm md:text-base mb-8">
                   {t(`regions.${region.code}.desc`)}
                 </p>
+                {!IS_CN && (
                 <div className="flex flex-wrap gap-3">
                   <a href="/auction" className={`${region.accentBg} text-white px-6 py-3 rounded-xl text-sm font-semibold ${region.accentBgHover} transition-colors`}>{t('home.enterAuction')}</a>
                   <a href="/reverse-auction" className={`bg-white ${region.accentText} border ${region.accentBorder} px-6 py-3 rounded-xl text-sm font-semibold transition-colors`}>{t('home.flowerReverse')}</a>
                 </div>
+                )}
                 <div className={`mt-5 inline-flex items-center gap-2 text-xs ${region.accentText} ${region.accentSoft} border ${region.accentBorder} rounded-full px-3 py-1.5`}>
                   <span>{region.heroEmoji}</span><span>{t(`regions.${region.code}.plantLine`)}</span>
                 </div>
@@ -292,7 +296,8 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Quick Entry */}
+        {/* Quick Entry (å½åçéè) */}
+        {!IS_CN && (
         <section className="px-6 pb-16">
           <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
             {quickEntries.map(c => (
@@ -304,6 +309,7 @@ export default function HomePage() {
             ))}
           </div>
         </section>
+        )}
 
         {/* Product Search */}
         <section className="relative z-10 px-6 pb-8">
@@ -337,7 +343,7 @@ export default function HomePage() {
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold text-stone-900">{hasSearched ? t('home.searchProductsTitle') : t('home.recommendTitle')}</h2>
-              <a href="/shop" className={`text-xs ${region.accentText} font-medium transition-colors`}>{t('home.viewMore')}</a>
+              {!IS_CN && <a href="/shop" className={`text-xs ${region.accentText} font-medium transition-colors`}>{t('home.viewMore')}</a>}
             </div>
             {(hasSearched ? searchLoading : loading) ? (
               <div className="flex items-center justify-center py-16"><div className="text-3xl animate-pulse">⏳</div></div>
@@ -349,7 +355,7 @@ export default function HomePage() {
                   const img = getImg(p);
                   const price = p.sellPrice || p.price || p.settlementPrice || 0;
                   return (
-                    <a key={p._id} href={`/shop`} className="group rounded-2xl border border-stone-200 bg-white overflow-hidden hover:border-emerald-300 hover:shadow-md transition-all">
+                    <a key={p._id} href={IS_CN ? undefined : `/shop`} className="group rounded-2xl border border-stone-200 bg-white overflow-hidden hover:border-emerald-300 hover:shadow-md transition-all">
                       <div className="aspect-square bg-stone-100 flex items-center justify-center overflow-hidden">
                         {img ? <img src={img} alt={p.title || p.flowerName || ''} className="w-full h-full object-cover group-hover:scale-105 transition-transform" /> : <span className="text-4xl opacity-20">🌿</span>}
                       </div>
