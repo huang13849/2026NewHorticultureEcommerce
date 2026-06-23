@@ -63,7 +63,7 @@ function PaymentContent() {
   if (authLoading) {
     return (
       <main className="min-h-screen bg-stone-50 flex items-center justify-center">
-        <p className="text-stone-400">加载中…</p>
+        <p className="text-stone-400">{t('common.loading')}</p>
       </main>
     );
   }
@@ -71,7 +71,7 @@ function PaymentContent() {
   if (!user) {
     return (
       <main className="min-h-screen bg-stone-50 flex items-center justify-center">
-        <p className="text-stone-400">请先登录</p>
+        <p className="text-stone-400">{t('payment.pleaseLogin')}</p>
       </main>
     );
   }
@@ -119,7 +119,7 @@ function PaymentContent() {
 
   const handleSaveAddress = async () => {
     if (!isAddressComplete(addressForm)) {
-      setAddressMessage('请把收货人、电话、省市区和详细地址都填完整');
+      setAddressMessage(t('payment.addressRequired'));
       return false;
     }
     try {
@@ -129,10 +129,10 @@ function PaymentContent() {
       setAddressList(list);
       const foundIndex = list.findIndex(a => a.detail === addressForm.detail && a.phone === addressForm.phone);
       setSelectedAddressIndex(foundIndex >= 0 ? foundIndex : 0);
-      setAddressMessage('收货地址已保存');
+      setAddressMessage(t('payment.addressSaved'));
       return true;
     } catch (err: any) {
-      setAddressMessage(err.message || '保存地址失败');
+      setAddressMessage(err.message || t('payment.createOrderFailed'));
       return false;
     } finally {
       setSavingAddress(false);
@@ -200,14 +200,14 @@ function PaymentContent() {
     }
   }, [REGION, paymentConfig]);
 
-  const regionLabel = IS_CN ? '国内版' : IS_GLOBAL ? '国际版' : '';
+  const regionLabel = IS_CN ? t('payment.cnVersion') : IS_GLOBAL ? t('payment.globalVersion') : '';
 
   const handlePay = async () => {
     if (products.length === 0 || totalAmount <= 0) return;
     if (!hasPayableAddress) {
       setPayStatus('failed');
-      setMessage('请先填写完整收货地址，再进行支付。');
-      setAddressMessage('没有完整收货地址，不能支付');
+      setMessage(t('payment.fillAddressFirst'));
+      setAddressMessage(t('payment.addressIncomplete'));
       return;
     }
     if (selectedAddressIndex < 0) {
@@ -232,27 +232,27 @@ function PaymentContent() {
           }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || '创建支付失败');
+        if (!res.ok) throw new Error(data.error || t('payment.createOrderFailed'));
         setOrderId(data.orderId);
         if (data.codeUrl) {
           setWechatCodeUrl(data.codeUrl);
           setPayStatus('success');
-          setMessage('请用微信扫描二维码完成支付');
+          setMessage(t('payment.wechatScanPay'));
         } else if (data.h5Url) {
           setWechatH5Url(data.h5Url);
           setPayStatus('redirecting');
           window.location.href = data.h5Url;
         } else if (data.jsapiParams) {
           setPayStatus('success');
-          setMessage('请在微信内完成支付');
+          setMessage(t('payment.wechatInApp'));
         } else {
           // 模拟模式
           setPayStatus('success');
-          setMessage(data.message || '微信支付订单已创建（模拟模式）');
+          setMessage(data.message || t('payment.mockPayDesc'));
         }
       } catch (err: any) {
         setPayStatus('failed');
-        setMessage(err.message || '创建微信支付失败');
+        setMessage(err.message || t('payment.createOrderFailed'));
       }
       return;
     }
@@ -270,21 +270,21 @@ function PaymentContent() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || '创建支付失败');
+      if (!res.ok) throw new Error(data.error || t('payment.createOrderFailed'));
       setOrderId(data.orderId);
       if (data.checkoutUrl) {
         setPayStatus('redirecting');
         window.location.href = data.checkoutUrl;
       } else if (data.mock) {
         setPayStatus('success');
-        setMessage(data.message || '模拟支付成功：配置 Stripe / PayPal Key 后会跳转真实收银台。');
+        setMessage(data.message || t('payment.mockPayDesc'));
       } else {
         setPayStatus('failed');
-        setMessage('支付通道未返回收银台地址。');
+        setMessage(t('payment.payFailed'));
       }
     } catch (err: any) {
       setPayStatus('failed');
-      setMessage(err.message || '创建支付失败');
+      setMessage(err.message || t('payment.createOrderFailed'));
     }
   };
 
@@ -292,7 +292,7 @@ function PaymentContent() {
     <main className="min-h-screen bg-gradient-to-b from-stone-50 to-white text-stone-900 pb-24">
       <div className="sticky top-0 z-10 bg-white/85 backdrop-blur-xl border-b border-stone-200/60 px-6 py-4">
         <h1 className="text-lg font-bold text-center">
-          聚合支付
+          {t('payment.aggregatePayment')}
           {regionLabel && <span className="ml-2 text-xs font-normal text-stone-400 bg-stone-100 px-2 py-0.5 rounded-full">{regionLabel}</span>}
         </h1>
       </div>
@@ -301,14 +301,17 @@ function PaymentContent() {
         <section className="rounded-3xl border border-stone-200 bg-white p-5 md:p-6 shadow-sm">
           <div className="flex items-start justify-between gap-4 mb-5">
             <div>
-              <h2 className="text-lg font-bold">订单摘要</h2>
+              <h2 className="text-lg font-bold">{t('payment.orderSummary')}</h2>
               <p className="text-xs text-stone-400 mt-1">
-                {totalItems} 件商品
-                {IS_CN ? ' · 支付宝 / 微信支付' : IS_GLOBAL ? ' · Stripe / PayPal' : ' · 支持多种支付方式'}
+                {IS_CN
+                  ? t('payment.goodsCountTipCN', { count: totalItems })
+                  : IS_GLOBAL
+                    ? t('payment.goodsCountTip', { count: totalItems })
+                    : t('payment.goodsCountTipDev', { count: totalItems })}
               </p>
             </div>
             <div className="text-right">
-              <p className="text-xs text-stone-400">合计</p>
+              <p className="text-xs text-stone-400">{t('payment.total')}</p>
               <p className="text-2xl font-black text-emerald-700">¥{totalAmount.toFixed(2)}</p>
             </div>
           </div>
@@ -336,11 +339,11 @@ function PaymentContent() {
         <section className="rounded-3xl border border-stone-200 bg-white p-5 md:p-6 shadow-sm">
           <div className="flex items-start justify-between gap-4 mb-4">
             <div>
-              <h2 className="text-lg font-bold">收货地址</h2>
-              <p className="text-xs text-stone-400 mt-1">支付前必须填写完整地址，订单会同步到购买订单管理</p>
+              <h2 className="text-lg font-bold">{t('payment.shippingAddress')}</h2>
+              <p className="text-xs text-stone-400 mt-1">{t('payment.addressTip')}</p>
             </div>
             <span className={`text-xs px-2 py-1 rounded-full ${hasPayableAddress ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
-              {hasPayableAddress ? '已填写' : '待填写'}
+              {hasPayableAddress ? t('payment.filled') : t('payment.notFilled')}
             </span>
           </div>
 
@@ -355,7 +358,7 @@ function PaymentContent() {
                 >
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-sm font-bold">{addr.name} <span className="ml-2 text-stone-500 font-normal">{addr.phone}</span></p>
-                    {selectedAddressIndex === idx && <span className="text-xs font-bold text-emerald-700">✓ 使用</span>}
+                    {selectedAddressIndex === idx && <span className="text-xs font-bold text-emerald-700">✓ {t('payment.use')}</span>}
                   </div>
                   <p className="text-xs text-stone-500 mt-1">{formatAddress(addr)}</p>
                 </button>
@@ -365,36 +368,36 @@ function PaymentContent() {
                 onClick={() => { setSelectedAddressIndex(-1); setAddressForm({ ...EMPTY_ADDRESS, name: user?.nickname || '', phone: user?.phone || '' }); setAddressMessage(''); }}
                 className="text-xs font-bold text-emerald-700"
               >
-                + 新增/改用其他地址
+                {t('payment.addOrChangeAddress')}
               </button>
             </div>
           )}
 
           {selectedAddressIndex < 0 && (
             <div className="grid md:grid-cols-2 gap-3">
-              <input value={addressForm.name} onChange={e => updateAddressField('name', e.target.value)} placeholder="收货人" className="rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
-              <input value={addressForm.phone} onChange={e => updateAddressField('phone', e.target.value)} placeholder="联系电话" className="rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
-              <input value={addressForm.province} onChange={e => updateAddressField('province', e.target.value)} placeholder="省/直辖市" className="rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
-              <input value={addressForm.city} onChange={e => updateAddressField('city', e.target.value)} placeholder="城市" className="rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
-              <input value={addressForm.district} onChange={e => updateAddressField('district', e.target.value)} placeholder="区/县" className="rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
-              <input value={addressForm.detail} onChange={e => updateAddressField('detail', e.target.value)} placeholder="详细地址：街道、门牌号" className="rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+              <input value={addressForm.name} onChange={e => updateAddressField('name', e.target.value)} placeholder={t('payment.recipient')} className="rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+              <input value={addressForm.phone} onChange={e => updateAddressField('phone', e.target.value)} placeholder={t('payment.phone')} className="rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+              <input value={addressForm.province} onChange={e => updateAddressField('province', e.target.value)} placeholder={t('payment.province')} className="rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+              <input value={addressForm.city} onChange={e => updateAddressField('city', e.target.value)} placeholder={t('payment.city')} className="rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+              <input value={addressForm.district} onChange={e => updateAddressField('district', e.target.value)} placeholder={t('payment.district')} className="rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
+              <input value={addressForm.detail} onChange={e => updateAddressField('detail', e.target.value)} placeholder={t('payment.detailAddress')} className="rounded-xl border border-stone-200 px-3 py-2 text-sm outline-none focus:border-emerald-500" />
               <button
                 type="button"
                 onClick={handleSaveAddress}
                 disabled={savingAddress}
                 className="md:col-span-2 rounded-xl bg-stone-900 text-white py-2.5 text-sm font-bold disabled:bg-stone-300"
               >
-                {savingAddress ? '保存中…' : '保存并用于本次支付'}
+                {savingAddress ? t('payment.saving') : t('payment.saveAndUse')}
               </button>
             </div>
           )}
 
           {addressMessage && <p className={`mt-3 text-xs ${hasPayableAddress ? 'text-emerald-700' : 'text-red-600'}`}>{addressMessage}</p>}
-          {!hasPayableAddress && <p className="mt-3 text-xs text-red-600">没有完整收货地址，支付按钮不可用。</p>}
+          {!hasPayableAddress && <p className="mt-3 text-xs text-red-600">{t('payment.addressIncompleteHint')}</p>}
         </section>
 
         <section className="rounded-3xl border border-stone-200 bg-white p-5 md:p-6 shadow-sm">
-          <h2 className="text-lg font-bold mb-4">选择支付方式</h2>
+          <h2 className="text-lg font-bold mb-4">{t('payment.selectPaymentMethod')}</h2>
           <div className={`grid gap-3 ${paymentMethods.length <= 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'}`}>
             {paymentMethods.map(m => {
               const active = payMethod === m.key;
@@ -413,11 +416,11 @@ function PaymentContent() {
                   <p className="text-[11px] text-stone-500 mt-1 leading-relaxed">{m.desc}</p>
                   {m.key !== 'wechat' && (
                     <p className={`text-[10px] mt-3 ${m.enabled ? 'text-emerald-600' : 'text-amber-600'}`}>
-                      {m.enabled ? '已配置' : '未配置，当前走模拟'}
+                      {m.enabled ? t('payment.configured') : t('payment.notConfigured')}
                     </p>
                   )}
                   {isWechat && (
-                    <p className="text-[10px] mt-3 text-emerald-600">微信扫码 / H5 / JSAPI</p>
+                    <p className="text-[10px] mt-3 text-emerald-600">{t('payment.wechatTagline')}</p>
                   )}
                 </button>
                 {/* 微信支付场景选择 */}
@@ -425,7 +428,7 @@ function PaymentContent() {
                   <div className="mt-2 flex gap-2">
                     {(['native', 'h5'] as WechatPayScene[]).map(scene => (
                       <button key={scene} onClick={() => setWechatScene(scene)} className={`flex-1 text-xs py-1.5 px-2 rounded-lg border transition-colors ${wechatScene === scene ? 'border-green-400 bg-green-50 text-green-700 font-medium' : 'border-stone-200 text-stone-500'}`}>
-                        {scene === 'native' ? '📱 扫码支付' : '🌐 H5 支付'}
+                        {scene === 'native' ? t('payment.wechatScan') : t('payment.wechatH5')}
                       </button>
                     ))}
                   </div>
@@ -439,16 +442,16 @@ function PaymentContent() {
         {payStatus === 'success' && (
           <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-center">
             <div className="text-4xl mb-2">✅</div>
-            <p className="font-bold text-emerald-800">支付流程已创建</p>
-            <p className="text-xs text-emerald-700 mt-1">订单号：{orderId}</p>
-            <p className="text-sm font-bold text-emerald-800 mt-2">应付金额：¥{totalAmount.toFixed(2)}</p>
+            <p className="font-bold text-emerald-800">{t('payment.orderCreated')}</p>
+            <p className="text-xs text-emerald-700 mt-1">{t('payment.orderNumber')}：{orderId}</p>
+            <p className="text-sm font-bold text-emerald-800 mt-2">{t('payment.amountDue')}：¥{totalAmount.toFixed(2)}</p>
             {message && <p className="text-xs text-emerald-700 mt-2">{message}</p>}
-            {wechatCodeUrl && <img src={wechatCodeUrl} alt="微信支付二维码" className="mx-auto mt-3 w-48 h-48 rounded-xl border" />}
+            {wechatCodeUrl && <img src={wechatCodeUrl} alt={t('payment.wechatPay')} className="mx-auto mt-3 w-48 h-48 rounded-xl border" />}
             <button
               onClick={() => window.open('http://100.96.54.109:3008/', '_blank')}
               className="mt-4 px-6 py-2.5 rounded-xl bg-emerald-700 text-white text-sm font-bold hover:bg-emerald-800 transition-colors"
             >
-              📋 查看订单
+              {t('payment.viewOrder')}
             </button>
           </section>
         )}
@@ -456,7 +459,7 @@ function PaymentContent() {
         {payStatus === 'failed' && (
           <section className="rounded-2xl border border-red-200 bg-red-50 p-4 text-center">
             <p className="text-sm font-medium text-red-800">{message || t('payment.payFailed')}</p>
-            <button onClick={() => setPayStatus('idle')} className="mt-2 text-xs text-emerald-700 font-medium">重试</button>
+            <button onClick={() => setPayStatus('idle')} className="mt-2 text-xs text-emerald-700 font-medium">{t('common.retry')}</button>
           </section>
         )}
       </div>
@@ -465,11 +468,11 @@ function PaymentContent() {
         <div className="fixed bottom-14 left-0 right-0 bg-white border-t border-stone-200 z-10">
           <div className="max-w-5xl mx-auto px-6 md:px-10 py-3 flex items-center justify-between">
             <div>
-              <span className="text-xs text-stone-500">合计: </span>
+              <span className="text-xs text-stone-500">{t('payment.total')}: </span>
               <span className="text-xl font-bold text-emerald-700">¥{totalAmount.toFixed(2)}</span>
             </div>
             <button onClick={handlePay} disabled={products.length === 0 || !hasPayableAddress || payStatus === 'creating' || payStatus === 'redirecting'} className={`px-6 md:px-8 py-3 rounded-xl text-sm font-bold transition-colors ${products.length > 0 && hasPayableAddress ? 'bg-emerald-700 text-white hover:bg-emerald-800' : 'bg-stone-200 text-stone-400 cursor-not-allowed'}`}>
-              {!hasPayableAddress ? '请先填写收货地址' : payStatus === 'creating' ? '创建中…' : payStatus === 'redirecting' ? '跳转中…' : `使用 ${paymentMethods.find(x => x.key === payMethod)?.name || '支付'} 支付`}
+              {!hasPayableAddress ? t('payment.fillAddressToPay') : payStatus === 'creating' ? t('payment.creating') : payStatus === 'redirecting' ? t('payment.redirecting') : t('payment.payWith', { method: paymentMethods.find(x => x.key === payMethod)?.name || t('payment.payNow') })}
             </button>
           </div>
         </div>
