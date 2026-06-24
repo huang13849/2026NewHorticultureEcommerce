@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { api, Product } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { useI18n } from '@/lib/i18n/context';
@@ -10,6 +10,7 @@ import { IS_CN } from '@/lib/deploy';
 
 const API = process.env.NEXT_PUBLIC_API_URL || "/api";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://horiculture.space';
+const SUCCESS_STORIES_URL = IS_CN ? '/success-stories' : 'https://horiculture.space/success-stories';
 
 function getImg(p: any): string {
   const raw = (p.images as string[])?.[0]
@@ -70,15 +71,21 @@ export default function HomePage() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [scenes, setScenes] = useState<{ title: string; desc: string; tag: string; imageUrl: string }[]>([]);
+  const [carouselIndex, setCarouselIndex] = useState(0);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   useEffect(() => {
     // 庭院园林·成功案例 场景图 (scene-service, 按区域过滤)
     const loadScenes = async () => {
       try {
         const reg = IS_CN ? 'cn' : 'global';
-        const res = await fetch(`${API}/scenes?region=${reg}&enabled=true&limit=9`);
+        const res = await fetch(`${API}/scenes/catalog?region=${reg}&limit=5`);
         const data = await res.json();
-        if (Array.isArray(data.scenes)) setScenes(data.scenes);
+        const regionData = data.regions?.[reg] || {};
+        const allScenes = [...(regionData.productTags || []), ...(regionData.seoTrends || [])]
+          .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+          .slice(0, 5);
+        if (allScenes.length) setScenes(allScenes);
       } catch { /* empty */ }
     };
     loadScenes();
@@ -199,15 +206,31 @@ export default function HomePage() {
     { step: 6, title: t('home.greenCert.steps.use.title'), desc: t('home.greenCert.steps.use.desc'), icon: '💰' },
   ];
 
-  // 成功案例优先用 scene-service 的场景图; 无数据时回退到 i18n 文案(无图占位)
-  const successStories = scenes.length
+  // 成功案例优先用 scene-service 的场景图; 首页只精选 5 个，完整列表进入 /success-stories
+  const successStories = (scenes.length
     ? scenes.map(s => ({ img: s.imageUrl, title: s.title, desc: s.desc, tag: s.tag }))
-    : [0,1,2,3,4,5].map(i => ({
+    : [0,1,2,3,4].map(i => ({
         img: '',
         title: t(`home.successStories.items.${i}.title`),
         desc: t(`home.successStories.items.${i}.desc`),
         tag: t(`home.successStories.items.${i}.tag`),
-      }));
+      }))).slice(0, 5);
+  const featuredStory = successStories[carouselIndex % Math.max(successStories.length, 1)];
+  const goStory = (dir: number) => setCarouselIndex(prev => {
+    const total = Math.max(successStories.length, 1);
+    return (prev + dir + total) % total;
+  });
+  const onTouchStart = (e: React.TouchEvent) => setTouchStartX(e.touches[0]?.clientX ?? null);
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX == null) return;
+    const dx = (e.changedTouches[0]?.clientX ?? touchStartX) - touchStartX;
+    if (Math.abs(dx) > 40) goStory(dx > 0 ? -1 : 1);
+    setTouchStartX(null);
+  };
+
+  useEffect(() => {
+    if (carouselIndex >= successStories.length) setCarouselIndex(0);
+  }, [carouselIndex, successStories.length]);
 
   const reviews = [0,1,2,3,4,5].map(i => ({
     name: t(`home.reviews.items.${i}.name`),
@@ -452,31 +475,40 @@ export default function HomePage() {
 
         {/* Success Stories */}
         <section className="px-6 pb-16">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-10">
-              <p className="text-xs text-emerald-700 font-semibold tracking-widest uppercase mb-2">{t('home.successStories.subtitle')}</p>
-              <h2 className="text-2xl md:text-3xl font-bold text-stone-900">{t('home.successStories.title')}</h2>
-              <p className="text-sm text-stone-400 mt-2">{t('home.successStories.desc')}</p>
-              <a href="/success-stories" className="inline-flex mt-4 rounded-full bg-emerald-700 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition-colors">查看全部成功案例场景 →</a>
+          <div className="max-w-5xl mx-auto">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+              <div>
+                <p className="text-xs text-emerald-700 font-semibold tracking-widest uppercase mb-2">{t('home.successStories.subtitle')}</p>
+                <h2 className="text-2xl md:text-3xl font-bold text-stone-900">{t('home.successStories.title')}</h2>
+                <p className="text-sm text-stone-400 mt-2">{t('home.successStories.desc')}</p>
+              </div>
+              <a href={SUCCESS_STORIES_URL} className="inline-flex shrink-0 items-center justify-center rounded-full bg-emerald-700 px-5 py-2.5 text-sm font-bold text-white hover:bg-emerald-800 transition-colors shadow-sm">查看更多 →</a>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {successStories.map((s, i) => (
-                <div key={i} className="group rounded-2xl overflow-hidden border border-stone-200 bg-white hover:shadow-lg transition-all">
-                  <div className="relative h-52 overflow-hidden">
-                    {s.img ? <img src={s.img} alt={s.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                      : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-50 to-stone-100"><span className="text-6xl opacity-30">🌿</span></div>}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                    <div className="absolute bottom-3 left-4 right-4">
-                      <span className="inline-block bg-emerald-600/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-full mb-1.5">{s.tag}</span>
-                      <h3 className="text-white font-bold text-sm">{s.title}</h3>
-                    </div>
+            {featuredStory && (
+              <div className="relative overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-xl shadow-emerald-950/10" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+                <div className="grid md:grid-cols-[1.25fr_0.75fr] min-h-[330px]">
+                  <div className="relative h-72 md:h-auto overflow-hidden bg-gradient-to-br from-emerald-50 to-stone-100">
+                    {featuredStory.img ? <img src={featuredStory.img} alt={featuredStory.title} className="w-full h-full object-cover" loading="lazy" />
+                      : <div className="w-full h-full flex items-center justify-center"><span className="text-7xl opacity-30">🌿</span></div>}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+                    <span className="absolute left-5 bottom-5 inline-block bg-emerald-600/95 text-white text-xs font-bold px-3 py-1.5 rounded-full">{featuredStory.tag}</span>
                   </div>
-                  <div className="p-4">
-                    <p className="text-xs text-stone-500 leading-relaxed">{s.desc}</p>
+                  <div className="p-6 md:p-8 flex flex-col justify-center">
+                    <div className="text-xs text-emerald-700 font-black tracking-[0.25em] uppercase mb-3">Featured {carouselIndex + 1}/5</div>
+                    <h3 className="text-2xl font-black text-stone-900 leading-tight">{featuredStory.title}</h3>
+                    <p className="mt-4 text-sm text-stone-500 leading-relaxed">{featuredStory.desc}</p>
+                    <div className="mt-6 flex items-center gap-3">
+                      <button type="button" aria-label="上一个成功案例" onClick={() => goStory(-1)} className="h-10 w-10 rounded-full border border-stone-200 text-stone-700 hover:bg-stone-50">←</button>
+                      <button type="button" aria-label="下一个成功案例" onClick={() => goStory(1)} className="h-10 w-10 rounded-full border border-stone-200 text-stone-700 hover:bg-stone-50">→</button>
+                      <div className="ml-2 flex gap-1.5">
+                        {successStories.slice(0, 5).map((_, i) => <button key={i} type="button" aria-label={`切换到第${i + 1}个成功案例`} onClick={() => setCarouselIndex(i)} className={`h-2 rounded-full transition-all ${i === carouselIndex ? 'w-6 bg-emerald-700' : 'w-2 bg-stone-300'}`} />)}
+                      </div>
+                    </div>
+                    <a href={SUCCESS_STORIES_URL} className="mt-7 inline-flex w-fit rounded-full bg-stone-900 px-5 py-2.5 text-sm font-bold text-white hover:bg-stone-800">查看更多完整案例 →</a>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
         </section>
 

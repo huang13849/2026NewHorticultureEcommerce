@@ -18,22 +18,33 @@ function assert(cond, msg) {
 
 assert(fs.existsSync(pagePath), 'success-stories page exists');
 const page = fs.existsSync(pagePath) ? fs.readFileSync(pagePath, 'utf8') : '';
-assert(page.includes('庭院园林 · 成功案例'), 'page title is present');
-assert(page.includes('商品标签场景') && page.includes('SEO趋势词场景'), 'page has product-tag and SEO-trend sections');
-assert(page.includes("'cn'") && page.includes("'global'"), 'page supports domestic/global region switching');
-assert(page.includes('FormData') && page.includes('type="file"'), 'page can upload/replace cover image');
-assert(page.includes('/scenes/catalog'), 'page loads scene catalog endpoint');
-assert(page.includes('saveCover') || page.includes('handleCover'), 'page has cover save handler');
-
 const route = fs.existsSync(routePath) ? fs.readFileSync(routePath, 'utf8') : '';
+const home = fs.existsSync(homePath) ? fs.readFileSync(homePath, 'utf8') : '';
+
+assert(page.includes('庭院园林 · 成功案例'), 'page title is present');
+assert(page.includes('所有场景'), 'page uses unified all-scenes copy');
+assert(!page.includes('SEO趋势词场景') && !page.includes('商品标签场景'), 'page removes separate SEO/product scene section labels');
+assert(page.includes('const allScenes') && page.includes('seoTrends'), 'page flattens product-tag and SEO trend scenes into allScenes');
+assert(page.includes('useAuth') && page.includes('isAdmin'), 'page reads auth/admin state');
+assert(page.includes('{isAdmin &&') || page.includes('isAdmin ?'), 'page gates edit controls by admin');
+assert(page.includes('Authorization') && page.includes('Bearer'), 'page sends auth token when saving scene changes');
+assert(page.includes('type="file"'), 'admin path can upload/replace cover image');
+assert(page.includes('普通用户仅可浏览') || page.includes('管理员登录后'), 'page explains visitor/admin permission state');
+
 assert(route.includes("router.get('/catalog'") || route.includes('router.get("/catalog"'), 'backend exposes /api/scenes/catalog');
-assert(route.includes("router.post('/'") || route.includes('router.post("/"'), 'backend proxies create scene');
-assert(route.includes("router.put('/:id'") || route.includes('router.put("/:id"'), 'backend proxies update scene/cover');
-assert(route.includes("router.delete('/:id'") || route.includes('router.delete("/:id"'), 'backend proxies delete scene');
+assert(route.includes('authOptional') || route.includes('requireSceneAdmin'), 'backend has scene admin auth helpers');
+assert(route.includes('requireSceneAdmin'), 'backend protects scene mutation endpoints');
+assert(/router\.post\('\/'\s*,\s*requireSceneAdmin/.test(route) || /router\.post\("\/"\s*,\s*requireSceneAdmin/.test(route), 'backend protects create scene');
+assert(/router\.put\('\/:id'\s*,\s*requireSceneAdmin/.test(route) || /router\.put\("\/:id"\s*,\s*requireSceneAdmin/.test(route), 'backend protects update scene/cover');
+assert(/router\.delete\('\/:id'\s*,\s*requireSceneAdmin/.test(route) || /router\.delete\("\/:id"\s*,\s*requireSceneAdmin/.test(route), 'backend protects delete scene');
 assert(route.includes('getProductTags') && route.includes('getSeoTrends'), 'backend catalog combines product tags and SEO trends');
 
-const home = fs.existsSync(homePath) ? fs.readFileSync(homePath, 'utf8') : '';
-assert(home.includes('/success-stories'), 'home page links to standalone success-stories page');
+assert(home.includes('limit=5') || home.includes('slice(0, 5)'), 'home loads/displays only 5 featured success stories');
+assert(home.includes('carouselIndex') && home.includes('onTouchStart') && home.includes('onTouchEnd'), 'home has carousel state and mobile swipe handlers');
+assert(home.includes('aria-label="上一个成功案例"') && home.includes('aria-label="下一个成功案例"'), 'home has PC arrow controls');
+assert(home.includes('查看更多') && home.includes('/success-stories'), 'home has prominent more button to standalone page');
+assert(home.includes('IS_CN ?') && home.includes('horiculture.space/success-stories'), 'home uses region-aware more link for cn/global nodes');
+assert(home.includes('successStories.slice(0, 5)'), 'home carousel uses top five scenes');
 
 if (process.exitCode) process.exit(process.exitCode);
 console.log('success-stories verification passed');
