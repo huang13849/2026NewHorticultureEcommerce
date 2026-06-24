@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { IS_CN } from '@/lib/deploy';
 
 export const metadata: Metadata = {
   title: 'SEO 管理 | 植物猎人 Plant Hunter',
@@ -36,6 +37,9 @@ type CloudflareAnalytics = {
   byDay?: Record<string, { requests: number; pageViews: number; uniques: number }>;
 };
 type Analytics = {
+  pageviews?: number;
+  estimatedVisitors?: number;
+  byDay?: Record<string, number>;
   topPages: {name:string; value:number}[];
   topReferrers: {name:string; value:number}[];
 };
@@ -69,7 +73,7 @@ export default async function SeoDashboardPage() {
   const [auditAll, rankingData, analytics, cloudflare, searchLogsResp, trends] = await Promise.all([
     getJson<{primary: string; sites: Audit[]}>('/api/seo/audit-all', { primary: OVERSEAS_URL, sites: [] }),
     getJson<{results: Ranking[]; note: string}>('/api/seo/rankings', { results: [], note: '' }),
-    getJson<Analytics>('/api/analytics/summary?days=30', { topPages: [], topReferrers: [] }),
+    getJson<Analytics>(`/api/analytics/summary?days=30${IS_CN ? '&host=106.12.91.182' : ''}`, { topPages: [], topReferrers: [] }),
     getJson<CloudflareAnalytics>('/api/analytics/cloudflare?days=30', { configured: false, error: 'Cloudflare Analytics 暂不可用' }),
     getFlowerJson<SearchLogsResp>('/search/logs?limit=200', { logs: [], total: 0 }),
     getJson<TrendsResp>('/api/seo/trends', { domestic: [], overseas: [], allKeywords: [] }),
@@ -81,8 +85,11 @@ export default async function SeoDashboardPage() {
   const primaryAudit = overseasAudit;
   const rankings = (rankingData.results || []).slice(0, 10);
   const rankedCount = rankings.filter(r => (r.matches || []).some(m => m.found) || r.found).length;
-  const days = Object.entries(cloudflare.byDay || {}).sort(([a],[b]) => a.localeCompare(b)).slice(-14);
-  const maxPv = Math.max(1, ...days.map(([,v]) => v.pageViews || v.requests || 0));
+  // 访问趋势：国内看站内埋点(苏州 host)，国际看 Cloudflare
+  const trendDays: { label: string; value: number; sub: string }[] = IS_CN
+    ? Object.entries(analytics.byDay || {}).sort(([a],[b]) => a.localeCompare(b)).slice(-14).map(([d, v]) => ({ label: d.slice(5), value: Number(v) || 0, sub: `${Number(v) || 0} PV` }))
+    : Object.entries(cloudflare.byDay || {}).sort(([a],[b]) => a.localeCompare(b)).slice(-14).map(([d, v]) => ({ label: d.slice(5), value: v.pageViews || v.requests || 0, sub: `${v.pageViews || v.requests || 0} PV · ${v.uniques || 0} 人` }));
+  const maxPv = Math.max(1, ...trendDays.map(d => d.value));
   const searchLogs = searchLogsResp.logs || [];
   const keywordStats = Object.values(searchLogs.reduce((acc, x) => {
     const key = x.normalized_keyword || x.keyword;
@@ -92,69 +99,65 @@ export default async function SeoDashboardPage() {
     if (x.created_at > acc[key].last) acc[key].last = x.created_at;
     return acc;
   }, {} as Record<string, { keyword: string; count: number; results: number; last: string }>)).sort((a,b) => b.count - a.count).slice(0, 12);
-  const primaryOk = primaryAudit.score >= 80 && primaryAudit.robots?.ok && primaryAudit.sitemap?.ok && primaryAudit.hasBrand;
-  const actions = [
-    primaryOk ? '基础 SEO 已达标，下一步重点做内容页和外链。' : '先修主域基础项：robots、sitemap、canonical、品牌词。',
-    rankedCount === 0 ? '优先攻品牌词：植物猎人、Plant Hunter、植物猎人 花卉。' : '继续扩展长尾词，把已进榜关键词做内容加固。',
-    '每周新增 2-3 篇内容页：苗木拍卖、地图购花、花卉供应链、绿植碳汇。',
-    '国外主推广、外链、sitemap 使用 horiculture.space；国内流量入口独立走苏州 nginx。',
-  ];
-
   return (
     <main className="min-h-screen bg-slate-950 text-white px-5 py-8">
       <div className="max-w-5xl mx-auto space-y-5">
         <header className="flex items-start justify-between gap-4">
           <div>
             <a href="/admin" className="text-emerald-300 text-sm">← 返回管理后台</a>
-            <h1 className="text-3xl md:text-4xl font-bold mt-3">SEO 管理</h1>
-            <p className="text-slate-400 mt-2">国外：horiculture.space · 国内：106.12.91.182 · 品牌词：植物猎人 / Plant Hunter</p>
+            <h1 className="text-3xl md:text-4xl font-bold mt-3">SEO 管理{IS_CN ? ' · 国内版' : ' · 国际版'}</h1>
+            <p className="text-slate-400 mt-2">{IS_CN ? '国内：106.12.91.182（苏州） · 品牌词：植物猎人' : '国外：horiculture.space · 品牌词：植物猎人 / Plant Hunter'}</p>
           </div>
-          <a href={OVERSEAS_URL} className="hidden md:inline-flex rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-200">打开国外站</a>
+          <a href={IS_CN ? DOMESTIC_URL : OVERSEAS_URL} className="hidden md:inline-flex rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-200">{IS_CN ? '打开国内站' : '打开国外站'}</a>
         </header>
 
         <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Metric title="国外 SEO" value={`${overseasAudit.score || 0}`} sub="horiculture.space" tone="emerald" />
-          <Metric title="国内 SEO" value={`${domesticAudit.score || 0}`} sub="苏州 nginx" tone="sky" />
-          <Metric title="30天 PV" value={String(cloudflare.pageViews ?? 0)} sub="Cloudflare 国外" tone="violet" />
-          <Metric title="进前20词" value={String(rankedCount)} sub={`${rankings.length} 个跟踪词`} tone="amber" />
+          {IS_CN ? (
+            <>
+              <Metric title="国内 SEO" value={`${domesticAudit.score || 0}`} sub="苏州 nginx" tone="sky" />
+              <Metric title="30天 PV" value={String(analytics.pageviews ?? 0)} sub="站内埋点" tone="violet" />
+              <Metric title="估算访客" value={String(analytics.estimatedVisitors ?? 0)} sub="近30天" tone="emerald" />
+              <Metric title="国内趋势词" value={String((trends.domestic || []).length)} sub="适合中文首页大图" tone="amber" />
+            </>
+          ) : (
+            <>
+              <Metric title="国外 SEO" value={`${overseasAudit.score || 0}`} sub="horiculture.space" tone="emerald" />
+              <Metric title="国内 SEO" value={`${domesticAudit.score || 0}`} sub="苏州 nginx" tone="sky" />
+              <Metric title="30天 PV" value={String(cloudflare.pageViews ?? 0)} sub="Cloudflare 国外" tone="violet" />
+              <Metric title="进前20词" value={String(rankedCount)} sub={`${rankings.length} 个跟踪词`} tone="amber" />
+            </>
+          )}
         </section>
 
-        {cloudflare.error ? (
+        {!IS_CN && cloudflare.error ? (
           <section className="rounded-2xl border border-amber-400/20 bg-amber-400/10 p-4 text-sm text-amber-100">Cloudflare 数据暂不可用：{cloudflare.error}</section>
         ) : null}
 
-        <section className="grid lg:grid-cols-3 gap-5">
-          <Card title="下一步只看这几件事" className="lg:col-span-1">
-            <ul className="space-y-3 text-sm text-slate-300">
-              {actions.map((x, i) => <li key={i} className="flex gap-2"><span className="text-emerald-300">{i + 1}.</span><span>{x}</span></li>)}
-            </ul>
-          </Card>
-
-          <Card title="访问趋势 · 近14天" className="lg:col-span-2">
+        <section className="grid grid-cols-1 gap-5">
+          <Card title={IS_CN ? '国内访问趋势 · 近14天' : '访问趋势 · 近14天'}>
             <div className="space-y-2">
-              {days.length ? days.map(([d, v]) => {
-                const value = v.pageViews || v.requests || 0;
-                return (
-                  <div key={d}>
-                    <div className="flex justify-between text-xs text-slate-400 mb-1"><span>{d.slice(5)}</span><span>{value} PV · {v.uniques || 0} 人</span></div>
-                    <div className="h-2 rounded bg-white/10"><div className="h-2 rounded bg-emerald-400" style={{ width: `${Math.max(4, value / maxPv * 100)}%` }} /></div>
-                  </div>
-                );
-              }) : <p className="text-slate-400 text-sm">暂无 Cloudflare 趋势数据。</p>}
+              {trendDays.length ? trendDays.map((d) => (
+                <div key={d.label}>
+                  <div className="flex justify-between text-xs text-slate-400 mb-1"><span>{d.label}</span><span>{d.sub}</span></div>
+                  <div className="h-2 rounded bg-white/10"><div className="h-2 rounded bg-emerald-400" style={{ width: `${Math.max(4, d.value / maxPv * 100)}%` }} /></div>
+                </div>
+              )) : <p className="text-slate-400 text-sm">{IS_CN ? '暂无站内访问埋点数据。' : '暂无 Cloudflare 趋势数据。'}</p>}
             </div>
           </Card>
         </section>
 
 
 
-        <section className="grid lg:grid-cols-2 gap-5">
-          <TrendColumn title="国内流行趋势 · 适合中文首页大图" subtitle="点击关键词可直接进入广告创意/落地页素材" items={trends.domestic || []} region="domestic" />
-          <TrendColumn title="国外流行趋势 · 适合海外首页大图" subtitle="面向 Google / Bing / Pinterest / TikTok 的英文创意方向" items={trends.overseas || []} region="overseas" />
+        <section className={IS_CN ? 'grid grid-cols-1 gap-5' : 'grid lg:grid-cols-2 gap-5'}>
+          <TrendColumn title={IS_CN ? '国内流行趋势 · 适合中文首页大图' : '国内流行趋势 · 适合中文首页大图'} subtitle="点击关键词可直接进入广告创意/落地页素材" items={trends.domestic || []} region="domestic" updatedAt={trends.updatedAt} />
+          {!IS_CN && (
+            <TrendColumn title="国外流行趋势 · 适合海外首页大图" subtitle="面向 Google / Bing / Pinterest / TikTok 的英文创意方向" items={trends.overseas || []} region="overseas" updatedAt={trends.updatedAt} />
+          )}
         </section>
 
-        <Card title="关键词 → 创意广告 → 首页大图框 工作台">
+        <Card title="创意工作台">
           <div className="grid md:grid-cols-3 gap-4 text-sm">
-            {[...(trends.domestic || []), ...(trends.overseas || [])].slice(0, 6).map((x) => (
+            {(IS_CN ? (trends.domestic || []) : [...(trends.domestic || []), ...(trends.overseas || [])]).slice(0, 6).map((x) => (
               <a key={`${x.keyword}-${x.adTitle}`} href={x.route || `/shop?keyword=${encodeURIComponent(x.keyword)}`} className="group rounded-2xl border border-white/10 bg-slate-900/70 p-4 hover:border-emerald-300/60 transition-colors">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-emerald-300 font-semibold">#{x.keyword}</span>
@@ -170,7 +173,8 @@ export default async function SeoDashboardPage() {
           <p className="text-xs text-slate-500 mt-4">更新时间：{trends.updatedAt ? new Date(trends.updatedAt).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }) : '待更新'} · {trends.nextUpdateHint || '趋势数据每日更新。'}</p>
         </Card>
 
-        <section className="grid lg:grid-cols-2 gap-5">
+        <section className={IS_CN ? 'grid grid-cols-1 gap-5' : 'grid lg:grid-cols-2 gap-5'}>
+          {!IS_CN && (<>
           <Card title="国外关键词排名 · Bing 前20">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -194,6 +198,7 @@ export default async function SeoDashboardPage() {
             </div>
             {overseasAudit.recommendations?.length ? <p className="text-xs text-amber-200 mt-4">待优化：{overseasAudit.recommendations[0]}</p> : <p className="text-xs text-emerald-200 mt-4">国外基础项正常。</p>}
           </Card>
+          </>)}
 
           <Card title="国内苏州站基础状态">
             <div className="grid grid-cols-2 gap-3 text-sm">
@@ -241,10 +246,11 @@ export default async function SeoDashboardPage() {
 }
 
 
-function TrendColumn({ title, subtitle, items, region }: { title: string; subtitle: string; items: TrendItem[]; region: 'domestic'|'overseas' }) {
+function TrendColumn({ title, subtitle, items, region, updatedAt }: { title: string; subtitle: string; items: TrendItem[]; region: 'domestic'|'overseas'; updatedAt?: string }) {
   return (
     <Card title={title}>
-      <p className="text-xs text-slate-500 -mt-2 mb-4">{subtitle}</p>
+      <p className="text-xs text-slate-500 -mt-2 mb-1">{subtitle}</p>
+      <p className="text-[11px] text-slate-500 mb-4">共 {items.length} 条 · 更新日期：{updatedAt ? new Date(updatedAt).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }) : '待更新'}</p>
       <div className="space-y-3">
         {items.length ? items.map((x, i) => (
           <details key={`${region}-${x.keyword}`} className="group rounded-2xl border border-white/10 bg-slate-900/60 p-4 open:border-emerald-300/40">
