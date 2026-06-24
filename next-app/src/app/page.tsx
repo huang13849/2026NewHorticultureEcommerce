@@ -76,7 +76,7 @@ export default function HomePage() {
     const loadScenes = async () => {
       try {
         const reg = IS_CN ? 'cn' : 'global';
-        const res = await fetch(`${API}/scenes?region=${reg}&enabled=true&limit=6`);
+        const res = await fetch(`${API}/scenes?region=${reg}&enabled=true&limit=9`);
         const data = await res.json();
         if (Array.isArray(data.scenes)) setScenes(data.scenes);
       } catch { /* empty */ }
