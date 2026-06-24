@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const SEO_API = process.env.NEXT_PUBLIC_SEO_API_URL || 'http://100.76.15.64:3011';
+const SEO_API = process.env.NEXT_PUBLIC_SEO_API_URL || (IS_CN ? 'http://100.76.15.64:3011' : 'http://106.12.91.182/seo-api');
 const FLOWER_API = process.env.NEXT_PUBLIC_API_URL || "/api";
 const OVERSEAS_DOMAIN = 'horiculture.space';
 const DOMESTIC_DOMAIN = '106.12.91.182';
@@ -148,16 +148,17 @@ export default async function SeoDashboardPage() {
 
 
 
-        <section className={IS_CN ? 'grid grid-cols-1 gap-5' : 'grid lg:grid-cols-2 gap-5'}>
-          <TrendColumn title={IS_CN ? '国内流行趋势 · 适合中文首页大图' : '国内流行趋势 · 适合中文首页大图'} subtitle="点击关键词可直接进入广告创意/落地页素材" items={trends.domestic || []} region="domestic" updatedAt={trends.updatedAt} />
-          {!IS_CN && (
+        <section className="grid grid-cols-1 gap-5">
+          {IS_CN ? (
+            <TrendColumn title="国内流行趋势 · 适合中文首页大图" subtitle="点击关键词可直接进入广告创意/落地页素材" items={trends.domestic || []} region="domestic" updatedAt={trends.updatedAt} />
+          ) : (
             <TrendColumn title="国外流行趋势 · 适合海外首页大图" subtitle="面向 Google / Bing / Pinterest / TikTok 的英文创意方向" items={trends.overseas || []} region="overseas" updatedAt={trends.updatedAt} />
           )}
         </section>
 
         <Card title="创意工作台">
           <div className="grid md:grid-cols-3 gap-4 text-sm">
-            {(IS_CN ? (trends.domestic || []) : [...(trends.domestic || []), ...(trends.overseas || [])]).slice(0, 6).map((x) => (
+            {(IS_CN ? (trends.domestic || []) : (trends.overseas || [])).slice(0, 6).map((x) => (
               <a key={`${x.keyword}-${x.adTitle}`} href={x.route || `/shop?keyword=${encodeURIComponent(x.keyword)}`} className="group rounded-2xl border border-white/10 bg-slate-900/70 p-4 hover:border-emerald-300/60 transition-colors">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-emerald-300 font-semibold">#{x.keyword}</span>
