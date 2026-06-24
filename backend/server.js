@@ -22,6 +22,7 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/wechat-pay', require('./routes/wechat-pay'));
 app.use('/api/auction', require('./routes/auction'));
 app.use('/api/search', require('./routes/search'));
+app.use('/api/scenes', require('./routes/scenes'));
 app.use('/api/currency', require('./routes/currency'));
 
 
