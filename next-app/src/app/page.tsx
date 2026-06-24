@@ -69,6 +69,20 @@ export default function HomePage() {
   const [searchTotal, setSearchTotal] = useState(0);
   const [searchLoading, setSearchLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [scenes, setScenes] = useState<{ title: string; desc: string; tag: string; imageUrl: string }[]>([]);
+
+  useEffect(() => {
+    // 庭院园林·成功案例 场景图 (scene-service, 按区域过滤)
+    const loadScenes = async () => {
+      try {
+        const reg = IS_CN ? 'cn' : 'global';
+        const res = await fetch(`${API}/scenes?region=${reg}&enabled=true&limit=6`);
+        const data = await res.json();
+        if (Array.isArray(data.scenes)) setScenes(data.scenes);
+      } catch { /* empty */ }
+    };
+    loadScenes();
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -185,20 +199,15 @@ export default function HomePage() {
     { step: 6, title: t('home.greenCert.steps.use.title'), desc: t('home.greenCert.steps.use.desc'), icon: '💰' },
   ];
 
-  const ssFallback = [
-      'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80',
-      'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&q=80',
-      'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&q=80',
-      'https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=800&q=80',
-      'https://images.unsplash.com/photo-1598902108854-d1446b65d5f0?w=800&q=80',
-      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
-    ];
-  const successStories = [0,1,2,3,4,5].map(i => ({
-    img: (products[i] && getImg(products[i])) || (IS_CN ? '' : ssFallback[i]),
-    title: t(`home.successStories.items.${i}.title`),
-    desc: t(`home.successStories.items.${i}.desc`),
-    tag: t(`home.successStories.items.${i}.tag`),
-  }));
+  // 成功案例优先用 scene-service 的场景图; 无数据时回退到 i18n 文案(无图占位)
+  const successStories = scenes.length
+    ? scenes.map(s => ({ img: s.imageUrl, title: s.title, desc: s.desc, tag: s.tag }))
+    : [0,1,2,3,4,5].map(i => ({
+        img: '',
+        title: t(`home.successStories.items.${i}.title`),
+        desc: t(`home.successStories.items.${i}.desc`),
+        tag: t(`home.successStories.items.${i}.tag`),
+      }));
 
   const reviews = [0,1,2,3,4,5].map(i => ({
     name: t(`home.reviews.items.${i}.name`),
