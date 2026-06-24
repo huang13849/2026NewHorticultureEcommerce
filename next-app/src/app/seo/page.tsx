@@ -122,9 +122,9 @@ export default async function SeoDashboardPage() {
           ) : (
             <>
               <Metric title="国外 SEO" value={`${overseasAudit.score || 0}`} sub="horiculture.space" tone="emerald" />
-              <Metric title="国内 SEO" value={`${domesticAudit.score || 0}`} sub="苏州 nginx" tone="sky" />
               <Metric title="30天 PV" value={String(cloudflare.pageViews ?? 0)} sub="Cloudflare 国外" tone="violet" />
               <Metric title="进前20词" value={String(rankedCount)} sub={`${rankings.length} 个跟踪词`} tone="amber" />
+              <Metric title="国外趋势词" value={String((trends.overseas || []).length)} sub="适合海外首页大图" tone="sky" />
             </>
           )}
         </section>
@@ -159,7 +159,7 @@ export default async function SeoDashboardPage() {
         <Card title="创意工作台">
           <div className="grid md:grid-cols-3 gap-4 text-sm">
             {(IS_CN ? (trends.domestic || []) : (trends.overseas || [])).slice(0, 6).map((x) => (
-              <a key={`${x.keyword}-${x.adTitle}`} href={x.route || `/shop?keyword=${encodeURIComponent(x.keyword)}`} className="group rounded-2xl border border-white/10 bg-slate-900/70 p-4 hover:border-emerald-300/60 transition-colors">
+              <a key={`${x.keyword}-${x.adTitle}`} href={`http://100.96.54.109:8088/publish?keyword=${encodeURIComponent(x.keyword)}&title=${encodeURIComponent(x.adTitle || '')}&copy=${encodeURIComponent(x.adCopy || '')}`} target="_blank" rel="noopener noreferrer" className="group rounded-2xl border border-white/10 bg-slate-900/70 p-4 hover:border-emerald-300/60 transition-colors">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-emerald-300 font-semibold">#{x.keyword}</span>
                   <span className="text-[10px] rounded-full bg-white/10 px-2 py-0.5 text-slate-300">{x.score}</span>
@@ -167,7 +167,7 @@ export default async function SeoDashboardPage() {
                 <h3 className="mt-3 font-bold text-white leading-snug">{x.adTitle}</h3>
                 <p className="mt-2 text-xs text-slate-400 leading-relaxed">{x.adCopy}</p>
                 <p className="mt-3 text-[11px] text-violet-200 line-clamp-2">🎨 {x.visualPrompt}</p>
-                <span className="mt-4 inline-flex text-xs text-emerald-200 group-hover:text-emerald-100">{x.cta || '生成创意广告'} →</span>
+                <span className="mt-4 inline-flex text-xs text-emerald-200 group-hover:text-emerald-100">去一键铺货 · 编辑并发布（小红书/公众号）→</span>
               </a>
             ))}
           </div>
@@ -201,6 +201,7 @@ export default async function SeoDashboardPage() {
           </Card>
           </>)}
 
+          {IS_CN && (
           <Card title="国内苏州站基础状态">
             <div className="grid grid-cols-2 gap-3 text-sm">
               <Status label="品牌词" ok={!!domesticAudit.hasBrand} />
@@ -211,6 +212,7 @@ export default async function SeoDashboardPage() {
             {domesticAudit.recommendations?.length ? <p className="text-xs text-amber-200 mt-4">待优化：{domesticAudit.recommendations[0]}</p> : <p className="text-xs text-emerald-200 mt-4">国内基础项正常。</p>}
             <a href={DOMESTIC_URL} className="inline-flex mt-4 rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-200">打开国内站</a>
           </Card>
+          )}
         </section>
 
         <section className="grid lg:grid-cols-3 gap-5">
