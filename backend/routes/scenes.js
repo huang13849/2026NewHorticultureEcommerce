@@ -8,6 +8,7 @@ const axios = require('axios');
 const multer = require('multer');
 const FormData = require('form-data');
 const db = require('../lib/db');
+const jwt = require('jsonwebtoken');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } });
@@ -15,6 +16,7 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 
 const SCENE_SERVICE = process.env.SCENE_SERVICE_URL || 'http://100.96.54.109:3012';
 const SEO_SERVICE = process.env.SEO_SERVICE_URL || 'http://127.0.0.1:3011';
 const PROXY_TIMEOUT = 15000;
+const JWT_SECRET = process.env.JWT_SECRET || 'flower-shop-secret-2024';
 
 const REGION_LABELS = {
   cn: { label: '国内版', market: '中文站 / 苏州站' },
@@ -32,6 +34,19 @@ const CATEGORY_EN = {
 function safeInt(v, fallback) {
   const n = parseInt(v, 10);
   return Number.isFinite(n) ? n : fallback;
+}
+function authOptional(req) {
+  const auth = req.headers.authorization || '';
+  if (!auth.startsWith('Bearer ')) return null;
+  try { return jwt.verify(auth.replace('Bearer ', ''), JWT_SECRET); }
+  catch { return null; }
+}
+function requireSceneAdmin(req, res, next) {
+  const decoded = authOptional(req);
+  if (!decoded) return res.status(401).json({ error: '未登录' });
+  if (!['admin', 'super_admin'].includes(decoded.role)) return res.status(403).json({ error: '需要管理员权限' });
+  req.adminUser = decoded;
+  return next();
 }
 function pickImage(p) {
   return (p.images && p.images[0])
@@ -197,7 +212,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', upload.single('image'), async (req, res) => {
+router.post('/', requireSceneAdmin, upload.single('image'), async (req, res) => {
   try {
     const form = forwardBody(req);
     const r = await axios.post(`${SCENE_SERVICE}/api/scenes`, form, { headers: form.getHeaders(), timeout: PROXY_TIMEOUT, maxBodyLength: Infinity });
@@ -216,7 +231,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.put('/:id', upload.single('image'), async (req, res) => {
+router.put('/:id', requireSceneAdmin, upload.single('image'), async (req, res) => {
   try {
     const form = forwardBody(req);
     const r = await axios.put(`${SCENE_SERVICE}/api/scenes/${req.params.id}`, form, { headers: form.getHeaders(), timeout: PROXY_TIMEOUT, maxBodyLength: Infinity });
@@ -226,7 +241,7 @@ router.put('/:id', upload.single('image'), async (req, res) => {
   }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireSceneAdmin, async (req, res) => {
   try {
     const r = await axios.delete(`${SCENE_SERVICE}/api/scenes/${req.params.id}`, { timeout: PROXY_TIMEOUT });
     res.status(r.status).json(r.data);
