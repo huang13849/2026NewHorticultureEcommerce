@@ -457,6 +457,7 @@ export default function HomePage() {
               <p className="text-xs text-emerald-700 font-semibold tracking-widest uppercase mb-2">{t('home.successStories.subtitle')}</p>
               <h2 className="text-2xl md:text-3xl font-bold text-stone-900">{t('home.successStories.title')}</h2>
               <p className="text-sm text-stone-400 mt-2">{t('home.successStories.desc')}</p>
+              <a href="/success-stories" className="inline-flex mt-4 rounded-full bg-emerald-700 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-800 transition-colors">查看全部成功案例场景 →</a>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {successStories.map((s, i) => (
