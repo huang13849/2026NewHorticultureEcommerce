@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/lib/i18n/context';
 import { useRegion, type RegionCode } from '@/lib/region-context';
@@ -100,13 +100,37 @@ export default function ShopPage() {
   const [search, setSearch] = useState('');
   const [rates, setRates] = useState<Record<CurrencyCode, number>>(FALLBACK_RATES);
   const [rateSource, setRateSource] = useState<'live' | 'fallback' | 'loading'>('loading');
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const PAGE_SIZE = 20;
+
+  const loadPage = async (p: number) => {
+    const res = await fetch(`${API}/products?page=${p}&limit=${PAGE_SIZE}`);
+    const data = await res.json();
+    const list: Product[] = data.products || [];
+    const total: number = typeof data.total === 'number' ? data.total : 0;
+    setProducts(prev => {
+      const merged = p === 1 ? list : [...prev, ...list];
+      setHasMore(total ? merged.length < total : list.length === PAGE_SIZE);
+      return merged;
+    });
+    setPage(p);
+  };
+
+  const loadMore = async () => {
+    if (loadingMore || !hasMore || search) return;
+    setLoadingMore(true);
+    try {
+      await loadPage(page + 1);
+    } catch { /* empty */ }
+    setLoadingMore(false);
+  };
 
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch(`${API}/products?limit=80`);
-        const data = await res.json();
-        setProducts(data.products || []);
+        await loadPage(1);
       } catch { /* empty */ }
       setLoading(false);
     };
@@ -145,6 +169,53 @@ export default function ShopPage() {
     loadRates();
     return () => { alive = false; };
   }, []);
+
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (search) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(entries => {
+      if (entries[0]?.isIntersecting) {
+        loadMore();
+      }
+    }, { rootMargin: '300px' });
+    io.observe(el);
+    return () => io.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, hasMore, loadingMore, search]);
+
+  // 搜索时加载全部商品（后端 keyword 只匹配 name/description，商品用 title，故改为前端过滤）
+  useEffect(() => {
+    const kw = search.trim();
+    if (!kw) return;
+    let alive = true;
+    const handle = setTimeout(async () => {
+      try {
+        const res = await fetch(`${API}/products?limit=500`);
+        const data = await res.json();
+        if (!alive) return;
+        setProducts(data.products || []);
+        setHasMore(false);
+      } catch { /* empty */ }
+    }, 300);
+    return () => { alive = false; clearTimeout(handle); };
+  }, [search]);
+
+  // 清空搜索时恢复分页首屏（首次挂载跳过，避免与初始 load 重复）
+  const searchInited = useRef(false);
+  useEffect(() => {
+    if (!searchInited.current) { searchInited.current = true; return; }
+    if (search.trim()) return;
+    let alive = true;
+    (async () => {
+      try {
+        if (alive) await loadPage(1);
+      } catch { /* empty */ }
+    })();
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
 
   const addToCart = (product: Product) => {
     const img = getImg(product);
@@ -258,6 +329,14 @@ export default function ShopPage() {
               );
             })}
           </div>
+        )}
+        {!loading && !search && hasMore && (
+          <div ref={sentinelRef} className="flex items-center justify-center py-8 text-stone-400 text-sm">
+            {loadingMore ? '加载中…' : '下拉加载更多'}
+          </div>
+        )}
+        {!loading && !search && !hasMore && filtered.length > 0 && (
+          <div className="text-center py-8 text-stone-300 text-xs">已经到底啦 · 共 {filtered.length} 件商品</div>
         )}
       </div>
 
