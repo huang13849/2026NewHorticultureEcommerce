@@ -215,10 +215,11 @@ export default function HomePage() {
         desc: t(`home.successStories.items.${i}.desc`),
         tag: t(`home.successStories.items.${i}.tag`),
       }))).slice(0, 5);
-  const featuredStory = successStories[carouselIndex % Math.max(successStories.length, 1)];
+  const visibleStoryCount = 3;
+  const maxStoryIndex = Math.max(successStories.length - visibleStoryCount, 0);
   const goStory = (dir: number) => setCarouselIndex(prev => {
-    const total = Math.max(successStories.length, 1);
-    return (prev + dir + total) % total;
+    if (maxStoryIndex <= 0) return 0;
+    return (prev + dir + maxStoryIndex + 1) % (maxStoryIndex + 1);
   });
   const onTouchStart = (e: React.TouchEvent) => setTouchStartX(e.touches[0]?.clientX ?? null);
   const onTouchEnd = (e: React.TouchEvent) => {
@@ -229,8 +230,13 @@ export default function HomePage() {
   };
 
   useEffect(() => {
-    if (carouselIndex >= successStories.length) setCarouselIndex(0);
-  }, [carouselIndex, successStories.length]);
+    const timer = window.setInterval(() => goStory(1), 5200);
+    return () => window.clearInterval(timer);
+  }, [maxStoryIndex]);
+
+  useEffect(() => {
+    if (carouselIndex > maxStoryIndex) setCarouselIndex(0);
+  }, [carouselIndex, maxStoryIndex]);
 
   const reviews = [0,1,2,3,4,5].map(i => ({
     name: t(`home.reviews.items.${i}.name`),
@@ -475,7 +481,7 @@ export default function HomePage() {
 
         {/* Success Stories */}
         <section className="px-6 pb-16">
-          <div className="max-w-5xl mx-auto">
+          <div className="max-w-6xl mx-auto">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
               <div>
                 <p className="text-xs text-emerald-700 font-semibold tracking-widest uppercase mb-2">{t('home.successStories.subtitle')}</p>
@@ -484,31 +490,34 @@ export default function HomePage() {
               </div>
               <a href={SUCCESS_STORIES_URL} className="inline-flex shrink-0 items-center justify-center rounded-full bg-emerald-700 px-5 py-2.5 text-sm font-bold text-white hover:bg-emerald-800 transition-colors shadow-sm">查看更多 →</a>
             </div>
-            {featuredStory && (
-              <div className="relative overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-xl shadow-emerald-950/10" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-                <div className="grid md:grid-cols-[1.25fr_0.75fr] min-h-[330px]">
-                  <div className="relative h-72 md:h-auto overflow-hidden bg-gradient-to-br from-emerald-50 to-stone-100">
-                    {featuredStory.img ? <img src={featuredStory.img} alt={featuredStory.title} className="w-full h-full object-cover" loading="lazy" />
-                      : <div className="w-full h-full flex items-center justify-center"><span className="text-7xl opacity-30">🌿</span></div>}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
-                    <span className="absolute left-5 bottom-5 inline-block bg-emerald-600/95 text-white text-xs font-bold px-3 py-1.5 rounded-full">{featuredStory.tag}</span>
-                  </div>
-                  <div className="p-6 md:p-8 flex flex-col justify-center">
-                    <div className="text-xs text-emerald-700 font-black tracking-[0.25em] uppercase mb-3">Featured {carouselIndex + 1}/5</div>
-                    <h3 className="text-2xl font-black text-stone-900 leading-tight">{featuredStory.title}</h3>
-                    <p className="mt-4 text-sm text-stone-500 leading-relaxed">{featuredStory.desc}</p>
-                    <div className="mt-6 flex items-center gap-3">
-                      <button type="button" aria-label="上一个成功案例" onClick={() => goStory(-1)} className="h-10 w-10 rounded-full border border-stone-200 text-stone-700 hover:bg-stone-50">←</button>
-                      <button type="button" aria-label="下一个成功案例" onClick={() => goStory(1)} className="h-10 w-10 rounded-full border border-stone-200 text-stone-700 hover:bg-stone-50">→</button>
-                      <div className="ml-2 flex gap-1.5">
-                        {successStories.slice(0, 5).map((_, i) => <button key={i} type="button" aria-label={`切换到第${i + 1}个成功案例`} onClick={() => setCarouselIndex(i)} className={`h-2 rounded-full transition-all ${i === carouselIndex ? 'w-6 bg-emerald-700' : 'w-2 bg-stone-300'}`} />)}
-                      </div>
+            <div className="relative">
+              <button type="button" aria-label="上一个成功案例" onClick={() => goStory(-1)} className="hidden md:flex absolute -left-4 top-1/2 z-10 h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-700 shadow-md hover:bg-stone-50">←</button>
+              <div className="overflow-hidden rounded-[2rem]" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+                <div className="flex transition-transform duration-700 ease-out" style={{ transform: `translateX(-${carouselIndex * (100 / visibleStoryCount)}%)` }}>
+                  {successStories.slice(0, 5).map((s, i) => (
+                    <div key={i} className="min-w-full px-1 md:min-w-[33.333333%] md:px-2">
+                      <article className="group h-full overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-lg shadow-emerald-950/5 hover:shadow-xl transition-shadow">
+                        <div className="relative h-52 w-full overflow-hidden bg-gradient-to-br from-emerald-50 to-stone-100">
+                          {s.img ? <img src={s.img} alt={s.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                            : <div className="flex h-full w-full items-center justify-center"><span className="text-6xl opacity-30">🌿</span></div>}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+                          <span className="absolute bottom-4 left-4 right-4 line-clamp-1 rounded-full bg-emerald-600/95 px-3 py-1.5 text-center text-[11px] font-bold text-white">{s.tag}</span>
+                        </div>
+                        <div className="p-5">
+                          <div className="mb-2 text-[11px] font-black uppercase tracking-[0.22em] text-emerald-700">Featured {i + 1}/5</div>
+                          <h3 className="line-clamp-2 min-h-[3.5rem] text-lg font-black leading-tight text-stone-900">{s.title}</h3>
+                          <p className="mt-3 line-clamp-3 min-h-[4rem] text-sm leading-relaxed text-stone-500">{s.desc}</p>
+                        </div>
+                      </article>
                     </div>
-                    <a href={SUCCESS_STORIES_URL} className="mt-7 inline-flex w-fit rounded-full bg-stone-900 px-5 py-2.5 text-sm font-bold text-white hover:bg-stone-800">查看更多完整案例 →</a>
-                  </div>
+                  ))}
                 </div>
               </div>
-            )}
+              <button type="button" aria-label="下一个成功案例" onClick={() => goStory(1)} className="hidden md:flex absolute -right-4 top-1/2 z-10 h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-700 shadow-md hover:bg-stone-50">→</button>
+            </div>
+            <div className="mt-5 flex justify-center gap-1.5">
+              {Array.from({ length: maxStoryIndex + 1 }).map((_, i) => <button key={i} type="button" aria-label={`切换到第${i + 1}屏成功案例`} onClick={() => setCarouselIndex(i)} className={`h-2 rounded-full transition-all ${i === carouselIndex ? 'w-7 bg-emerald-700' : 'w-2 bg-stone-300'}`} />)}
+            </div>
           </div>
         </section>
 
