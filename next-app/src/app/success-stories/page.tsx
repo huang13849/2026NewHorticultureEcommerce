@@ -32,13 +32,17 @@ type RegionCatalog = { label: string; market: string; productTags: SceneItem[]; 
 type CatalogResp = { regions: Partial<Record<RegionKey, RegionCatalog>>; updatedAt?: string };
 
 const API = process.env.NEXT_PUBLIC_API_URL || '/api';
+function getInitialRegion(): RegionKey {
+  if (typeof window !== 'undefined' && window.location.hostname.includes('horiculture.space')) return 'global';
+  return IS_CN ? 'cn' : 'global';
+}
 const initialRegion: RegionKey = IS_CN ? 'cn' : 'global';
 
 function imageOf(s: SceneItem) {
   return s.imageUrl || s.imageUrlAbsolute || '';
 }
 function regionLabel(r: RegionKey) {
-  return r === 'cn' ? '国内版' : '国外版';
+  return r === 'cn' ? '国内版' : '国际版';
 }
 function authHeaders() {
   const token = getToken();
@@ -46,7 +50,7 @@ function authHeaders() {
 }
 
 export default function SuccessStoriesPage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const isAdmin = !!(user?.isAdmin || user?.isSuperAdmin || user?.role === 'admin' || user?.role === 'super_admin');
   const [region, setRegion] = useState<RegionKey>(initialRegion);
   const [catalog, setCatalog] = useState<CatalogResp>({ regions: {} });
@@ -54,6 +58,7 @@ export default function SuccessStoriesPage() {
   const [savingKey, setSavingKey] = useState('');
   const [msg, setMsg] = useState('');
   const [query, setQuery] = useState('');
+  const loginUrl = `/login?redirect=${encodeURIComponent('/success-stories')}`;
 
   const load = async (nextRegion = region) => {
     setLoading(true);
@@ -70,7 +75,11 @@ export default function SuccessStoriesPage() {
     }
   };
 
-  useEffect(() => { load(initialRegion); }, []);
+  useEffect(() => {
+    const detected = getInitialRegion();
+    setRegion(detected);
+    load(detected);
+  }, []);
 
   const current = catalog.regions?.[region];
   const allScenes = useMemo(() => {
@@ -160,11 +169,24 @@ export default function SuccessStoriesPage() {
                 所有场景统一展示：商品标签与趋势应用全部合并到一个列表，访客只看案例，管理员登录后可修改封面与文字。
               </p>
             </div>
-            <div className="rounded-3xl border border-white/10 bg-white/10 backdrop-blur-xl p-4 min-w-[220px]">
+            <div className="rounded-3xl border border-white/10 bg-white/10 backdrop-blur-xl p-4 min-w-[260px]">
               <div className="text-xs text-white/60">当前页面</div>
               <div className="text-2xl font-bold mt-1">{regionLabel(region)}</div>
               <div className="text-xs text-white/60 mt-1">共 {totalCount} 个场景</div>
-              <div className="text-[11px] text-white/55 mt-2">{isAdmin ? '管理员模式：可编辑封面' : '普通用户仅可浏览，管理员登录后可编辑'}</div>
+              <div className="mt-3 rounded-2xl bg-black/20 p-3 text-xs text-white/75">
+                {user ? (
+                  <div className="space-y-2">
+                    <div>登录状态：{user.phone || user.nickname}</div>
+                    <div>{isAdmin ? '管理员模式：可修改封面' : '普通用户：仅可浏览'}</div>
+                    <button onClick={logout} className="rounded-full border border-white/15 px-3 py-1 text-[11px] text-white/80 hover:bg-white/10">退出登录</button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div>未登录：普通浏览模式</div>
+                    <a href={loginUrl} className="inline-flex rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-stone-950 hover:bg-emerald-50">管理员登录 18511987921</a>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -172,7 +194,7 @@ export default function SuccessStoriesPage() {
             <div className="inline-flex rounded-2xl border border-white/10 bg-black/20 p-1">
               {(['cn', 'global'] as RegionKey[]).map(r => (
                 <button key={r} onClick={() => { setRegion(r); load(r); }} className={`px-5 py-2 rounded-xl text-sm font-bold transition-all ${region === r ? 'bg-white text-stone-950' : 'text-white/70 hover:text-white'}`}>
-                  {r === 'cn' ? '国内版展示' : '国外版展示'}
+                  {r === 'cn' ? '国内版展示' : '国际版展示'}
                 </button>
               ))}
             </div>
