@@ -28,7 +28,7 @@ assert(page.includes('const allScenes') && page.includes('seoTrends'), 'page fla
 assert(page.includes('useAuth') && page.includes('isAdmin'), 'page reads auth/admin state');
 assert(page.includes('{isAdmin &&') || page.includes('isAdmin ?'), 'page gates edit controls by admin');
 assert(page.includes('Authorization') && page.includes('Bearer'), 'page sends auth token when saving scene changes');
-assert(page.includes('type="file"'), 'admin path can upload/replace cover image');
+assert(page.includes('选择商品库图片') && page.includes('coverImageUrl'), 'admin path can choose product-library image as cover');
 assert(page.includes('普通用户仅可浏览') || page.includes('管理员登录后'), 'page explains visitor/admin permission state');
 
 assert(route.includes("router.get('/catalog'") || route.includes('router.get("/catalog"'), 'backend exposes /api/scenes/catalog');

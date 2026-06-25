@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import TabBar from '../TabBar';
+import AuthMenuButton from '../components/AuthMenuButton';
 import { IS_CN } from '@/lib/deploy';
 import { useAuth } from '@/lib/auth-context';
 import { getToken } from '@/lib/api';
@@ -30,6 +31,7 @@ type SceneItem = {
 };
 type RegionCatalog = { label: string; market: string; productTags: SceneItem[]; seoTrends: SceneItem[] };
 type CatalogResp = { regions: Partial<Record<RegionKey, RegionCatalog>>; updatedAt?: string };
+type CoverOption = { url: string; productId?: string; title: string; category?: string };
 
 const API = process.env.NEXT_PUBLIC_API_URL || '/api';
 function getInitialRegion(): RegionKey {
@@ -50,7 +52,7 @@ function authHeaders() {
 }
 
 export default function SuccessStoriesPage() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const isAdmin = !!(user?.isAdmin || user?.isSuperAdmin || user?.role === 'admin' || user?.role === 'super_admin');
   const [region, setRegion] = useState<RegionKey>(initialRegion);
   const [catalog, setCatalog] = useState<CatalogResp>({ regions: {} });
@@ -58,7 +60,6 @@ export default function SuccessStoriesPage() {
   const [savingKey, setSavingKey] = useState('');
   const [msg, setMsg] = useState('');
   const [query, setQuery] = useState('');
-  const loginUrl = `/login?redirect=${encodeURIComponent('/success-stories')}`;
 
   const load = async (nextRegion = region) => {
     setLoading(true);
@@ -91,8 +92,8 @@ export default function SuccessStoriesPage() {
   }, [current, query]);
   const totalCount = (current?.productTags?.length || 0) + (current?.seoTrends?.length || 0);
 
-  async function saveCover(scene: SceneItem, file?: File) {
-    if (!file || !isAdmin) return;
+  async function saveCoverFromLibrary(scene: SceneItem, coverImageUrl: string) {
+    if (!coverImageUrl || !isAdmin) return;
     const key = `${scene.kind}:${scene.region}:${scene.keyword}`;
     setSavingKey(key);
     setMsg('');
@@ -106,13 +107,13 @@ export default function SuccessStoriesPage() {
       fd.append('desc', scene.desc || '');
       fd.append('sortOrder', String(scene.sortOrder || 0));
       fd.append('enabled', String(scene.enabled !== false));
-      fd.append('image', file);
+      fd.append('coverImageUrl', coverImageUrl);
       const url = scene.managedId ? `${API}/scenes/${scene.managedId}` : `${API}/scenes`;
       const method = scene.managedId ? 'PUT' : 'POST';
       const res = await fetch(url, { method, body: fd, headers: authHeaders() });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || data.detail || String(res.status));
-      setMsg(`✅ 已更新「${scene.keyword}」封面`);
+      setMsg(`✅ 已从商品库更新「${scene.keyword}」封面`);
       await load(region);
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e);
@@ -170,22 +171,14 @@ export default function SuccessStoriesPage() {
               </p>
             </div>
             <div className="rounded-3xl border border-white/10 bg-white/10 backdrop-blur-xl p-4 min-w-[260px]">
-              <div className="text-xs text-white/60">当前页面</div>
-              <div className="text-2xl font-bold mt-1">{regionLabel(region)}</div>
-              <div className="text-xs text-white/60 mt-1">共 {totalCount} 个场景</div>
-              <div className="mt-3 rounded-2xl bg-black/20 p-3 text-xs text-white/75">
-                {user ? (
-                  <div className="space-y-2">
-                    <div>登录状态：{user.phone || user.nickname}</div>
-                    <div>{isAdmin ? '管理员模式：可修改封面' : '普通用户：仅可浏览'}</div>
-                    <button onClick={logout} className="rounded-full border border-white/15 px-3 py-1 text-[11px] text-white/80 hover:bg-white/10">退出登录</button>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div>未登录：普通浏览模式</div>
-                    <a href={loginUrl} className="inline-flex rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-stone-950 hover:bg-emerald-50">管理员登录 18511987921</a>
-                  </div>
-                )}
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-xs text-white/60">当前页面</div>
+                  <div className="text-2xl font-bold mt-1">{regionLabel(region)}</div>
+                  <div className="text-xs text-white/60 mt-1">共 {totalCount} 个场景</div>
+                  <div className="text-[11px] text-white/55 mt-2">{isAdmin ? '管理员模式：可修改封面' : '普通用户：仅可浏览'}</div>
+                </div>
+                <AuthMenuButton dark loginRedirect="/success-stories" />
               </div>
             </div>
           </div>
@@ -223,7 +216,7 @@ export default function SuccessStoriesPage() {
             </div>
             {allScenes.length ? (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                {allScenes.map(scene => <SceneCard key={`${scene.kind}-${scene.region}-${scene.keyword}`} scene={scene} savingKey={savingKey} isAdmin={isAdmin} onCover={saveCover} onText={saveText} />)}
+                {allScenes.map(scene => <SceneCard key={`${scene.kind}-${scene.region}-${scene.keyword}`} scene={scene} savingKey={savingKey} isAdmin={isAdmin} onCoverFromLibrary={saveCoverFromLibrary} onText={saveText} />)}
               </div>
             ) : <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-10 text-center text-white/45">暂无匹配场景。</div>}
           </section>
@@ -234,21 +227,39 @@ export default function SuccessStoriesPage() {
   );
 }
 
-function SceneCard({ scene, savingKey, isAdmin, onCover, onText }: {
+function SceneCard({ scene, savingKey, isAdmin, onCoverFromLibrary, onText }: {
   scene: SceneItem;
   savingKey: string;
   isAdmin: boolean;
-  onCover: (scene: SceneItem, file?: File) => void;
+  onCoverFromLibrary: (scene: SceneItem, coverImageUrl: string) => void;
   onText: (scene: SceneItem, patch: Partial<SceneItem>) => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(scene.title);
   const [desc, setDesc] = useState(scene.desc);
   const [tag, setTag] = useState(scene.tag);
+  const [pickingCover, setPickingCover] = useState(false);
+  const [coverOptions, setCoverOptions] = useState<CoverOption[]>([]);
+  const [coverLoading, setCoverLoading] = useState(false);
   useEffect(() => { setTitle(scene.title); setDesc(scene.desc); setTag(scene.tag); }, [scene.title, scene.desc, scene.tag]);
   const key = `${scene.kind}:${scene.region}:${scene.keyword}`;
   const busy = savingKey === key || savingKey === `${key}:text`;
   const img = imageOf(scene);
+  async function loadCoverOptions() {
+    setPickingCover(v => !v);
+    if (coverOptions.length) return;
+    setCoverLoading(true);
+    try {
+      const qs = new URLSearchParams({ keyword: scene.keyword || scene.tag || '', category: scene.kind === 'product' ? scene.keyword : '', limit: '80' });
+      const res = await fetch(`${API}/scenes/cover-images?${qs.toString()}`, { cache: 'no-store' });
+      const data = await res.json();
+      setCoverOptions(Array.isArray(data.images) ? data.images : []);
+    } catch {
+      setCoverOptions([]);
+    } finally {
+      setCoverLoading(false);
+    }
+  }
 
   return (
     <article className="group overflow-hidden rounded-3xl border border-white/10 bg-white/[0.05] shadow-2xl shadow-black/20">
@@ -285,15 +296,31 @@ function SceneCard({ scene, savingKey, isAdmin, onCover, onText }: {
         )}
 
         {isAdmin && (
-          <div className="grid grid-cols-2 gap-2">
-            <label className={`cursor-pointer rounded-2xl px-3 py-2 text-center text-sm font-bold ${busy ? 'bg-white/10 text-white/40' : 'bg-emerald-500 text-white hover:bg-emerald-400'}`}>
-              {busy ? '保存中...' : '修改封面'}
-              <input type="file" accept="image/*" className="hidden" disabled={busy} onChange={e => onCover(scene, e.target.files?.[0])} />
-            </label>
-            <button onClick={() => setEditing(v => !v)} className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-bold text-white hover:bg-white/10">
-              {editing ? '收起编辑' : '编辑文字'}
-            </button>
-          </div>
+          <>
+            <div className="grid grid-cols-2 gap-2">
+              <button disabled={busy} onClick={loadCoverOptions} className={`rounded-2xl px-3 py-2 text-center text-sm font-bold ${busy ? 'bg-white/10 text-white/40' : 'bg-emerald-500 text-white hover:bg-emerald-400'}`}>
+                {busy ? '保存中...' : '选择商品库图片'}
+              </button>
+              <button onClick={() => setEditing(v => !v)} className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-bold text-white hover:bg-white/10">
+                {editing ? '收起编辑' : '编辑文字'}
+              </button>
+            </div>
+            {pickingCover && (
+              <div className="rounded-2xl border border-white/10 bg-black/25 p-3">
+                <div className="mb-2 text-xs font-bold text-white/70">选择商品库图片作为封面</div>
+                {coverLoading ? <div className="py-6 text-center text-xs text-white/45">正在加载商品图片...</div> : (
+                  coverOptions.length ? <div className="grid max-h-72 grid-cols-3 gap-2 overflow-y-auto">
+                    {coverOptions.map((opt, i) => (
+                      <button key={`${opt.url}-${i}`} type="button" disabled={busy} onClick={() => onCoverFromLibrary(scene, opt.url)} className="group overflow-hidden rounded-xl border border-white/10 bg-white/5 text-left hover:border-emerald-300/70">
+                        <img src={opt.url} alt={opt.title} className="h-20 w-full object-cover" loading="lazy" />
+                        <div className="p-1.5 text-[10px] leading-tight text-white/60 line-clamp-2">{opt.title}</div>
+                      </button>
+                    ))}
+                  </div> : <div className="py-6 text-center text-xs text-white/45">商品库暂未找到可用图片。</div>
+                )}
+              </div>
+            )}
+          </>
         )}
         {scene.route && <a href={scene.route} className="block rounded-2xl border border-white/10 px-3 py-2 text-center text-xs font-bold text-emerald-200 hover:bg-white/10">打开关联落地页 →</a>}
       </div>

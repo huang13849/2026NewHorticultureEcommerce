@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useI18n } from '@/lib/i18n/context';
 import { useRegion, type RegionCode } from '@/lib/region-context';
 import TabBar from './TabBar';
+import AuthMenuButton from './components/AuthMenuButton';
 import { IS_CN } from '@/lib/deploy';
 
 const API = process.env.NEXT_PUBLIC_API_URL || "/api";
@@ -278,13 +279,7 @@ export default function HomePage() {
               <a href="/garden" className="hover:text-emerald-700 transition-colors">{t('nav.garden')}</a>
             </div>
             <div className="flex items-center gap-2">
-              {user ? (
-                <a href="/profile" className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 border border-emerald-200 rounded-full px-3 py-1.5 hover:bg-emerald-50 transition-colors">
-                  <span>{user.avatar || '🌸'}</span> {user.nickname}
-                </a>
-              ) : (
-                <a href="/login" className="text-xs font-medium text-emerald-700 hover:text-emerald-900 border border-emerald-200 rounded-full px-4 py-1.5 transition-colors">{t('common.login')}</a>
-              )}
+              <AuthMenuButton />
             </div>
           </div>
         </nav>
@@ -500,8 +495,6 @@ export default function HomePage() {
                         <div className="relative h-52 w-full overflow-hidden bg-gradient-to-br from-emerald-50 to-stone-100">
                           {s.img ? <img src={s.img} alt={s.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                             : <div className="flex h-full w-full items-center justify-center"><span className="text-6xl opacity-30">🌿</span></div>}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
-                          <span className="absolute bottom-4 left-4 right-4 line-clamp-1 rounded-full bg-emerald-600/95 px-3 py-1.5 text-center text-[11px] font-bold text-white">{s.tag}</span>
                         </div>
                         <div className="p-5">
                           <div className="mb-2 text-[11px] font-black uppercase tracking-[0.22em] text-emerald-700">Featured {i + 1}/5</div>
