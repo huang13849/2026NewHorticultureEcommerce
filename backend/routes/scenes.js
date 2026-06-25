@@ -55,6 +55,11 @@ function toCoverUrl(raw) {
   if (s.startsWith('http') || s.startsWith('/')) return s;
   return `/minio/supply-chain/${s.replace(/^\/+/, '')}`;
 }
+function pickSceneImages(p) {
+  const v = p?.scene_images;
+  const vals = Array.isArray(v) ? v : (typeof v === 'string' && v ? [v] : []);
+  return [...new Set(vals.map(toCoverUrl).filter(Boolean))];
+}
 function pickProductImages(p) {
   const vals = [];
   for (const k of ['images', 'scene_images', 'panorama_images', 'detail_images', 'package_images', 'root_soil_images']) {
@@ -197,6 +202,7 @@ function forwardBody(req) {
 
 
 // GET /api/scenes/cover-images?keyword=rose&category=盆花
+// 只返回该品类商品的“场景应用(scene_images)”列图片，避免混入主图/包装图/细节图。
 router.get('/cover-images', async (req, res) => {
   try {
     const { keyword = '', category = '', limit = 60 } = req.query;
@@ -210,20 +216,20 @@ router.get('/cover-images', async (req, res) => {
       filter,
       sort: { salesCount: -1, updatedAt: -1, createdAt: -1 },
       limit: safeInt(limit, 60),
-      fields: 'title,name,flowerName,category,images,scene_images,panorama_images,detail_images,package_images,root_soil_images',
+      fields: 'title,name,flowerName,category,scene_images',
     }).catch(() => []);
     if (!products.length && (keyword || category)) {
       products = await db.find('products', {
         filter: { status: { $ne: 'deleted' } },
         sort: { salesCount: -1, updatedAt: -1, createdAt: -1 },
         limit: safeInt(limit, 60),
-        fields: 'title,name,flowerName,category,images,scene_images,panorama_images,detail_images,package_images,root_soil_images',
+        fields: 'title,name,flowerName,category,scene_images',
       }).catch(() => []);
     }
     const images = [];
     const seen = new Set();
     for (const p of products) {
-      for (const url of pickProductImages(p)) {
+      for (const url of pickSceneImages(p)) {
         if (seen.has(url)) continue;
         seen.add(url);
         images.push({
