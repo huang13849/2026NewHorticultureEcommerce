@@ -20,7 +20,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'flower-shop-secret-2024';
 
 const REGION_LABELS = {
   cn: { label: '国内版', market: '中文站 / 苏州站' },
-  global: { label: '国外版', market: '国际站 / horiculture.space' },
+  global: { label: '国际版', market: '国际站 / horiculture.space' },
 };
 const CATEGORY_EN = {
   '室内绿植': 'Indoor greenery', '鲜花': 'Fresh flowers', '主盆花': 'Potted flowers', '盆器': 'Planters',
@@ -48,13 +48,24 @@ function requireSceneAdmin(req, res, next) {
   req.adminUser = decoded;
   return next();
 }
+function toCoverUrl(raw) {
+  if (!raw) return '';
+  const s = String(raw).trim();
+  if (!s) return '';
+  if (s.startsWith('http') || s.startsWith('/')) return s;
+  return `/minio/supply-chain/${s.replace(/^\/+/, '')}`;
+}
+function pickProductImages(p) {
+  const vals = [];
+  for (const k of ['images', 'scene_images', 'panorama_images', 'detail_images', 'package_images', 'root_soil_images']) {
+    const v = p?.[k];
+    if (Array.isArray(v)) vals.push(...v);
+    else if (typeof v === 'string' && v) vals.push(v);
+  }
+  return [...new Set(vals.map(toCoverUrl).filter(Boolean))];
+}
 function pickImage(p) {
-  return (p.images && p.images[0])
-    || (p.scene_images && p.scene_images[0])
-    || (p.panorama_images && p.panorama_images[0])
-    || (p.detail_images && p.detail_images[0])
-    || (p.package_images && p.package_images[0])
-    || '';
+  return pickProductImages(p)[0] || '';
 }
 function escRegex(s) { return String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 function titleForTag(tag, region) {
@@ -175,10 +186,60 @@ function attachManaged(base, managed) {
 }
 function forwardBody(req) {
   const form = new FormData();
-  Object.entries(req.body || {}).forEach(([k, v]) => form.append(k, v == null ? '' : String(v)));
+  Object.entries(req.body || {}).forEach(([k, v]) => {
+    if (k === 'coverImageUrl') return;
+    form.append(k, v == null ? '' : String(v));
+  });
+  if (req.body?.coverImageUrl && !req.body?.imageUrl) form.append('imageUrl', String(req.body.coverImageUrl));
   if (req.file) form.append('image', req.file.buffer, { filename: req.file.originalname || 'cover.jpg', contentType: req.file.mimetype || 'image/jpeg' });
   return form;
 }
+
+
+// GET /api/scenes/cover-images?keyword=rose&category=盆花
+router.get('/cover-images', async (req, res) => {
+  try {
+    const { keyword = '', category = '', limit = 60 } = req.query;
+    const filter = { status: { $ne: 'deleted' } };
+    if (category) filter.category = category;
+    if (keyword) {
+      const rx = { $regex: escRegex(keyword), $options: 'i' };
+      filter.$or = [{ title: rx }, { name: rx }, { flowerName: rx }, { category: rx }, { description: rx }];
+    }
+    let products = await db.find('products', {
+      filter,
+      sort: { salesCount: -1, updatedAt: -1, createdAt: -1 },
+      limit: safeInt(limit, 60),
+      fields: 'title,name,flowerName,category,images,scene_images,panorama_images,detail_images,package_images,root_soil_images',
+    }).catch(() => []);
+    if (!products.length && (keyword || category)) {
+      products = await db.find('products', {
+        filter: { status: { $ne: 'deleted' } },
+        sort: { salesCount: -1, updatedAt: -1, createdAt: -1 },
+        limit: safeInt(limit, 60),
+        fields: 'title,name,flowerName,category,images,scene_images,panorama_images,detail_images,package_images,root_soil_images',
+      }).catch(() => []);
+    }
+    const images = [];
+    const seen = new Set();
+    for (const p of products) {
+      for (const url of pickProductImages(p)) {
+        if (seen.has(url)) continue;
+        seen.add(url);
+        images.push({
+          url,
+          productId: p._id,
+          title: p.title || p.name || p.flowerName || '商品图片',
+          category: p.category || '',
+        });
+      }
+    }
+    res.json({ images, total: images.length });
+  } catch (e) {
+    console.error('[scenes/cover-images]', e.message);
+    res.status(500).json({ error: 'cover image list failed', detail: e.message });
+  }
+});
 
 // GET /api/scenes/catalog?region=cn|global|all
 router.get('/catalog', async (req, res) => {
