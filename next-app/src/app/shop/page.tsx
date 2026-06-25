@@ -183,7 +183,7 @@ export default function ShopPage() {
     io.observe(el);
     return () => io.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, hasMore, loadingMore, search]);
+  }, [page, hasMore, loadingMore, search, loading]);
 
   // 搜索时加载全部商品（后端 keyword 只匹配 name/description，商品用 title，故改为前端过滤）
   useEffect(() => {
