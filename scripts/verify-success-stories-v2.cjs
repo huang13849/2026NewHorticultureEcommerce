@@ -39,9 +39,9 @@ assert(page.includes('国际版') && !page.includes('国外版'), 'success page 
 assert(page.includes('国际版展示') && !page.includes('国外版展示'), 'success page tab uses 国际版展示');
 
 // 5. 右上角登录状态和管理员登录入口
-assert(page.includes('loginUrl') && page.includes('/login?redirect=') && page.includes("encodeURIComponent('/success-stories')"), 'success page has login URL for returning to current page');
-assert(page.includes('18511987921') && page.includes('管理员登录'), 'success page shows admin phone login hint/entry when logged out');
-assert(page.includes('user.phone') && page.includes('logout'), 'success page shows logged-in status and logout action');
+assert(page.includes('AuthMenuButton') && page.includes('loginRedirect="/success-stories"'), 'success page uses shared auth menu with return-to-page login');
+assert(page.includes('AuthMenuButton'), 'success page shows unified login entry when logged out');
+assert(page.includes('AuthMenuButton'), 'success page shares logged-in status/logout/profile menu');
 assert(page.includes('修改封面') && page.includes('isAdmin'), 'admin can modify covers after login');
 
 if (process.exitCode) process.exit(process.exitCode);
