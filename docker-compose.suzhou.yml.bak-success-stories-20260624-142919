@@ -1,0 +1,49 @@
+services:
+  flower-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: flower-api
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3010:3010"
+    environment:
+      - NODE_ENV=production
+      - PORT=3010
+      - JWT_SECRET=flower-shop-jwt-secret-2024-prod
+      - API_GATEWAY_URL=http://100.96.54.109:3007
+      # 苏州专用：把数据库里写死的内网 MinIO 地址重写成苏州本地可访问的对象存储入口
+      # 临时用 nginx 公网子路径，后续切到 https://img.horiculture.club 只改 TO 即可
+      - MINIO_REWRITE_FROM=http://100.96.54.109:9000
+      - MINIO_REWRITE_TO=http://106.12.91.182/minio
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  flower-next:
+    build:
+      context: ./next-app
+      dockerfile: Dockerfile.suzhou
+    container_name: flower-next
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - flower-api
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  seo-service:
+    build:
+      context: ./seo-service
+      dockerfile: Dockerfile
+    container_name: seo-service
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3011:3011"
+    env_file:
+      - ./seo-service/.env
+    environment:
+      - NODE_ENV=production
+      - PORT=3011
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
