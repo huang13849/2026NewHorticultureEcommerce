@@ -42,7 +42,7 @@
     "home": "首页",
     "map": "地图",
     "auction": "苗木拍卖",
-    "reverseAuction": "鲜花倒拍",
+    "reverseAuction": "鲜花拍卖",
     "shop": "商店",
     "garden": "花园",
     "profile": "我的",
@@ -51,17 +51,17 @@
   "home": {
     "title": "植物收藏家",
     "subtitle": "供应链新体验",
-    "desc": "从产地到庭院，智能撮合交易。苗木拍卖、鲜花倒拍、地图购花、花园种植——植物收藏家，你的花卉供应链新体验。",
+    "desc": "从产地到庭院，智能撮合交易。苗木拍卖、鲜花拍卖、地图购花、花园种植——植物收藏家，你的花卉供应链新体验。",
     "enterAuction": "进入拍卖",
-    "flowerReverse": "鲜花倒拍",
+    "flowerReverse": "鲜花拍卖",
     "quickEntry": {
       "auction": {
         "title": "苗木拍卖",
         "desc": "批发乔灌木竞价拍卖"
       },
       "reverse": {
-        "title": "鲜花倒拍",
-        "desc": "百合鲜花越等越便宜"
+        "title": "鲜花拍卖",
+        "desc": "鲜花竞拍越快越新鲜"
       },
       "map": {
         "title": "地图购花",
@@ -296,8 +296,8 @@
     "countdownEnd": "{sec}秒后结束"
   },
   "reverseAuction": {
-    "title": "鲜花倒拍",
-    "subtitle": "百合鲜花越等越便宜",
+    "title": "鲜花拍卖",
+    "subtitle": "鲜花竞拍越快越新鲜",
     "live": "倒拍 LIVE",
     "currentPrice": "当前价",
     "nextDrop": "下次降",
@@ -309,7 +309,7 @@
     "priceHistory": "价格历史",
     "auctionRules": "倒拍规则",
     "rulesDesc": "价格每隔几分钟自动下降，越等越便宜！但别人可能随时买走，果断出手！",
-    "lilyAuction": "🌷 鲜花倒拍",
+    "lilyAuction": "🌷 鲜花拍卖",
     "countdown": "倒计时",
     "freeClaim": "免费领取",
     "dropDiscount": "降价优惠",
@@ -664,7 +664,7 @@
     "collector": "收藏家",
     "map": "地图",
     "seedlingAuction": "苗木拍卖",
-    "reverseFlowerAuction": "鲜花倒拍",
+    "reverseFlowerAuction": "鲜花拍卖",
     "shop": "商店",
     "mine": "我的"
   }
