@@ -1,0 +1,9 @@
+node_modules
+out
+npm-debug.log
+.git
+._*
+.DS_Store
+**/._*
+.next/cache
+src
