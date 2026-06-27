@@ -106,7 +106,7 @@ export default function AuctionPage() {
               <PlantHunterLogo />
               <span className="font-semibold tracking-tight text-sm">{t('auction.subtitle')}</span>
             </div>
-            <Link href="/reverse-auction" className="text-xs text-emerald-700 font-medium hover:text-emerald-900 transition-colors">鲜花倒拍 →</Link>
+            <Link href="/reverse-auction" className="text-xs text-emerald-700 font-medium hover:text-emerald-900 transition-colors">鲜花拍卖 →</Link>
           </div>
         </nav>
 
