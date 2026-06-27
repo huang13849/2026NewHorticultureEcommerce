@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import TabBar from '../TabBar';
 import { useI18n } from '@/lib/i18n/context';
-import LangSwitch from '@/app/components/LangSwitch';
 import PlantHunterLogo from '@/app/components/PlantHunterLogo';
 
 interface Product {
@@ -26,6 +25,7 @@ interface Product {
 }
 
 const API = process.env.NEXT_PUBLIC_API_URL || "/api";
+const FLOWER_API_FALLBACK = "http://100.96.54.109:8088/api";
 const DROP_PER_MINUTE = 0.01;
 const TICK_SECONDS = 10;
 const MAGNIFIER = 100;
@@ -49,9 +49,8 @@ function imgOf(p: Product) {
   if (raw.startsWith('http')) return raw;
   return `/minio/supply-chain/${raw}`;
 }
-function isFlowerReverseItem(p: Product) {
-  const hay = `${p.category || ''} ${p.title || ''} ${p.flowerName || ''} ${p.name || ''}`;
-  return /鲜花|百合|切花|玫瑰|绣球|康乃馨|洋桔梗/.test(hay);
+function isFreshFlowerItem(p: Product) {
+  return String(p.category || '').trim() === '鲜花';
 }
 function computeReversePrice(p: Product, now: number) {
   const start = basePrice(p);
@@ -82,18 +81,51 @@ export default function ReverseAuctionPage() {
   const { t } = useI18n();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(() => Date.now());
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    fetch(`${API}/products?limit=120`)
-      .then(r => r.json())
-      .then(data => {
-        const list = (data.products || []).filter(isFlowerReverseItem).filter((p: Product) => basePrice(p) > 0);
+    let alive = true;
+    const loadFreshFlowers = async () => {
+      try {
+        const limit = 200;
+        let page = 1;
+        let total = Infinity;
+        const all: Product[] = [];
+
+        const fetchPage = async (baseUrl: string, pageNo: number) => {
+          const res = await fetch(`${baseUrl}/products?category=${encodeURIComponent('鲜花')}&page=${pageNo}&limit=${limit}&includeOutOfStock=true`);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        };
+
+        while (all.length < total) {
+          let data;
+          try {
+            data = await fetchPage(API, page);
+          } catch (err) {
+            if (API === FLOWER_API_FALLBACK) throw err;
+            data = await fetchPage(FLOWER_API_FALLBACK, page);
+          }
+          const batch: Product[] = data.products || [];
+          total = typeof data.total === 'number' ? data.total : all.length + batch.length;
+          all.push(...batch);
+          if (batch.length < limit) break;
+          page += 1;
+        }
+
+        if (!alive) return;
+        const list = all.filter(isFreshFlowerItem).filter((p: Product) => basePrice(p) > 0);
         setProducts(list);
-      })
-      .catch(() => setMessage('鲜花倒拍加载失败，请稍后刷新'))
-      .finally(() => setLoading(false));
+      } catch {
+        if (alive) setMessage('鲜花拍卖加载失败，请稍后刷新');
+      } finally {
+        if (alive) setLoading(false);
+      }
+    };
+
+    loadFreshFlowers();
+    return () => { alive = false; };
   }, []);
 
   useEffect(() => {
@@ -101,7 +133,7 @@ export default function ReverseAuctionPage() {
     return () => clearInterval(id);
   }, []);
 
-  const hot = useMemo(() => products.slice(0, 8), [products]);
+  const freshFlowers = useMemo(() => products, [products]);
 
   return (
     <>
@@ -122,10 +154,10 @@ export default function ReverseAuctionPage() {
               <PlantHunterLogo size="md" />
               <p className="text-xs text-emerald-700 font-semibold tracking-widest uppercase">Reverse Auction · Flower Clock</p>
             </div>
-            <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-stone-900 mb-4">百合 / 鲜花倒拍</h1>
+            <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-stone-900 mb-4">鲜花拍卖</h1>
             <p className="text-stone-500 leading-relaxed max-w-2xl text-sm md:text-base">
               鲜花越快成交越新鲜。当前盘面每 <b className="text-stone-800">10 秒</b> 刷新一次倒计时，
-              每 <b className="text-emerald-700">1 分钟自动降价 ¥0.01</b>。降价优惠把"分"的变化放大展示，采购商能直观看到降价时钟在动。
+              每 <b className="text-emerald-700">1 分钟自动降价 ¥0.01</b>。降价优惠把“分”的变化放大展示，采购商能直观看到降价时钟在动。
             </p>
             <div className="mt-6 flex flex-wrap gap-4">
               <div className="bg-white rounded-xl border border-stone-200 px-5 py-4 text-center shadow-sm">
@@ -146,11 +178,11 @@ export default function ReverseAuctionPage() {
 
         {loading ? (
           <div className="flex items-center justify-center py-20"><div className="text-3xl animate-pulse">⏳</div></div>
-        ) : hot.length === 0 ? (
-          <div className="text-center py-20 text-stone-400">暂无百合/鲜花倒拍拍品</div>
+        ) : freshFlowers.length === 0 ? (
+          <div className="text-center py-20 text-stone-400">暂无鲜花拍卖商品</div>
         ) : (
           <section className="max-w-6xl mx-auto px-6 pb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {hot.map(p => {
+            {freshFlowers.map(p => {
               const price = computeReversePrice(p, now);
               const img = imgOf(p);
               return (
