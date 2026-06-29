@@ -53,21 +53,22 @@ function valid(s){ const lng=Number(s.longitude), lat=Number(s.latitude); return
 function nameOf(s){ return s.shop_name || s.name || '未命名商户'; }
 function addrOf(s){ return (s.company_info&&s.company_info.address) || s.address || ((s.business_items||[]).find(x=>x.address)||{}).address || ''; }
 function bizOf(s){ return (s.company_info&&s.company_info.main_business) || (s.business_items||[]).map(x=>x.main_business).filter(Boolean).slice(0,2).join('；') || ''; }
+var API_BASE = "";
 function esc(s){ return String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function idOf(s){ return s._id || s.id || s.supplierId || ''; }
-function videoUrl(s){ return 'http://100.76.15.64:3000/supplier-videos?supplierId='+encodeURIComponent(idOf(s))+'&name='+encodeURIComponent(nameOf(s)); }
+function videoUrl(s){ return '/supplier-videos?supplierId='+encodeURIComponent(idOf(s))+'&name='+encodeURIComponent(nameOf(s)); }
 function setCurrentSupplier(s){ currentSupplier=s; const b=document.getElementById('videoShopBtn'); if(b) b.textContent='🎬 视频逛店：'+nameOf(s).slice(0,8); }
 function openCurrentVideo(){ if(!currentSupplier){ alert('请先点击地图上的商家，或等待供应商加载完成'); return; } window.top.location.href = videoUrl(currentSupplier); }
 function switchToDealer(){
   if (window.top !== window) { window.top.location.href = '/map?type=dealer'; }
-  else { window.location.href = '/dealer-map/?v=20260628'; }
+  else { window.location.href = '/dealer-map/index.html?v=2026062904'; }
 }
 function fitAll(){ if(bounds && bounds.isValid()) map.fitBounds(bounds.pad(0.18)); }
 async function reloadData(){
   try{
     statusEl.textContent = '正在加载供应商坐标…';
     markersLayer.clearLayers(); listEl.innerHTML=''; bounds = L.latLngBounds([]);
-    const r = await fetch('/api/mongo/supplier?limit=500&sort='+encodeURIComponent(JSON.stringify({updatedAt:-1})));
+    const r = await fetch(API_BASE + '/api/mongo/supplier?limit=500&sort='+encodeURIComponent(JSON.stringify({updatedAt:-1})), { headers: { 'x-api-key': 'flower-app-key-2024' } });
     const d = await r.json(); if(!r.ok) throw new Error(d.error||'加载失败');
     const all = d.data || []; const suppliers = all.filter(valid);
     document.getElementById('total').textContent = `供应商 ${all.length} 家`;

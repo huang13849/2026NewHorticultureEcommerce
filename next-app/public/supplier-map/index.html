@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Supplier Map · HuaBan</title>
+  <title>供应商地图 · 花伴</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     html,body,#map{width:100%;height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;background:#eef5ee}
@@ -22,15 +22,15 @@
 <body>
   <div id="map"></div>
   <div class="panel">
-    <div class="title">🗺️ Supplier Map</div>
-    <div class="sub">OpenStreetMap base + supplier coordinates from API Gateway.</div>
-    <div class="stat"><span class="pill" id="total">Loading…</span><span class="pill" id="shown">—</span></div>
+    <div class="title">🗺️ 供应商地图</div>
+    <div class="sub">高德瓦片底图 + API Gateway / MongoDB supplier 集合。无需浏览器端高德 JS Key。</div>
+    <div class="stat"><span class="pill" id="total">加载中…</span><span class="pill" id="shown">—</span></div>
     <div class="switchBar">
-      <button class="switchBtn active">🗺️ Supplier Map</button>
-      <button class="switchBtn" onclick="switchToDealer()">🏪 Dealer Map</button>
+      <button class="switchBtn active">🗺️ 供应商地图</button>
+      <button class="switchBtn" onclick="switchToDealer()">🏪 经销商地图</button>
     </div>
-    <div class="toolbar"><button class="btn" onclick="fitAll()">Fit all</button><button class="btn" onclick="reloadData()">Reload</button><button class="btn" id="videoShopBtn" onclick="openCurrentVideo()" style="background:#111827;color:#fff;border-color:#111827">🎬 Video tour</button></div>
-    <div class="loading" id="status">Loading supplier coordinates…</div>
+    <div class="toolbar"><button class="btn" onclick="fitAll()">显示全部</button><button class="btn" onclick="reloadData()">刷新数据</button><button class="btn" id="videoShopBtn" onclick="openCurrentVideo()" style="background:#111827;color:#fff;border-color:#111827">🎬 视频逛店</button></div>
+    <div class="loading" id="status">正在加载供应商坐标…</div>
     <div class="list" id="list"></div>
   </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -40,51 +40,52 @@ const statusEl = document.getElementById('status');
 const listEl = document.getElementById('list');
 
 function initMap(){
-  map = L.map('map', { center:[34.0,108.0], zoom:4, zoomControl:true });
-  // OpenStreetMap tiles: globally accessible (overseas friendly)
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    subdomains: ['a','b','c'],
-    maxZoom: 19,
-    attribution: '© OpenStreetMap contributors'
+  map = L.map('map', { center:[39.90923,116.397428], zoom:5, zoomControl:true });
+  // 高德矢量瓦片：x/y/z 标准切片，不需要 JS API key
+  L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+    subdomains: ['1','2','3','4'],
+    maxZoom: 18,
+    attribution: '© 高德地图'
   }).addTo(map);
   markersLayer = L.layerGroup().addTo(map);
 }
 function valid(s){ const lng=Number(s.longitude), lat=Number(s.latitude); return Number.isFinite(lng)&&Number.isFinite(lat)&&lng!==0&&lat!==0; }
-function nameOf(s){ return s.shop_name || s.name || 'Unnamed supplier'; }
+function nameOf(s){ return s.shop_name || s.name || '未命名商户'; }
 function addrOf(s){ return (s.company_info&&s.company_info.address) || s.address || ((s.business_items||[]).find(x=>x.address)||{}).address || ''; }
-function bizOf(s){ return (s.company_info&&s.company_info.main_business) || (s.business_items||[]).map(x=>x.main_business).filter(Boolean).slice(0,2).join('; ') || ''; }
+function bizOf(s){ return (s.company_info&&s.company_info.main_business) || (s.business_items||[]).map(x=>x.main_business).filter(Boolean).slice(0,2).join('；') || ''; }
+var API_BASE = "";
 function esc(s){ return String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function idOf(s){ return s._id || s.id || s.supplierId || ''; }
 function videoUrl(s){ return '/supplier-videos?supplierId='+encodeURIComponent(idOf(s))+'&name='+encodeURIComponent(nameOf(s)); }
-function setCurrentSupplier(s){ currentSupplier=s; const b=document.getElementById('videoShopBtn'); if(b) b.textContent='🎬 '+nameOf(s).slice(0,12); }
-function openCurrentVideo(){ if(!currentSupplier){ alert('Click a supplier marker first, or wait for suppliers to load'); return; } window.top.location.href = videoUrl(currentSupplier); }
+function setCurrentSupplier(s){ currentSupplier=s; const b=document.getElementById('videoShopBtn'); if(b) b.textContent='🎬 视频逛店：'+nameOf(s).slice(0,8); }
+function openCurrentVideo(){ if(!currentSupplier){ alert('请先点击地图上的商家，或等待供应商加载完成'); return; } window.top.location.href = videoUrl(currentSupplier); }
 function switchToDealer(){
   if (window.top !== window) { window.top.location.href = '/map?type=dealer'; }
-  else { window.location.href = '/dealer-map/?v=20260628'; }
+  else { window.location.href = '/dealer-map/index.html?v=2026062904'; }
 }
 function fitAll(){ if(bounds && bounds.isValid()) map.fitBounds(bounds.pad(0.18)); }
 async function reloadData(){
   try{
-    statusEl.textContent = 'Loading supplier coordinates…';
+    statusEl.textContent = '正在加载供应商坐标…';
     markersLayer.clearLayers(); listEl.innerHTML=''; bounds = L.latLngBounds([]);
-    const r = await fetch('/api/mongo/supplier?limit=500&sort='+encodeURIComponent(JSON.stringify({updatedAt:-1})));
-    const d = await r.json(); if(!r.ok) throw new Error(d.error||'load failed');
+    const r = await fetch(API_BASE + '/api/mongo/supplier?limit=500&sort='+encodeURIComponent(JSON.stringify({updatedAt:-1})), { headers: { 'x-api-key': 'flower-app-key-2024' } });
+    const d = await r.json(); if(!r.ok) throw new Error(d.error||'加载失败');
     const all = d.data || []; const suppliers = all.filter(valid);
-    document.getElementById('total').textContent = `${all.length} suppliers`;
-    document.getElementById('shown').textContent = `${suppliers.length} geocoded`;
-    statusEl.textContent = suppliers.length ? 'Click a marker for details, or use 🎬 Video tour above' : 'No suppliers with coordinates';
+    document.getElementById('total').textContent = `供应商 ${all.length} 家`;
+    document.getElementById('shown').textContent = `有坐标 ${suppliers.length} 家`;
+    statusEl.textContent = suppliers.length ? '点击标记查看商户信息，或点上方 🎬 视频逛店' : '暂无带经纬度的供应商';
     if(suppliers.length) setCurrentSupplier(suppliers[0]);
     suppliers.forEach((s,i)=>{
       const lat=Number(s.latitude), lng=Number(s.longitude), name=nameOf(s), addr=addrOf(s), biz=bizOf(s);
-      const marker = L.marker([lat,lng], { title:name }).on('click',()=>setCurrentSupplier(s)).bindPopup(`<div class="shop">${esc(name)}</div><div class="addr">${esc(addr)||'No address'}</div><div class="biz">${esc(biz)}</div><div style="color:#999;margin-top:4px">${lng.toFixed(6)}, ${lat.toFixed(6)}</div><a class="videoBtn" target="_top" href="${videoUrl(s)}">🎬 Video tour</a>`);
+      const marker = L.marker([lat,lng], { title:name }).on('click',()=>setCurrentSupplier(s)).bindPopup(`<div class="shop">${esc(name)}</div><div class="addr">${esc(addr)||'无地址'}</div><div class="biz">${esc(biz)}</div><div style="color:#999;margin-top:4px">${lng.toFixed(6)}, ${lat.toFixed(6)}</div><a class="videoBtn" target="_top" href="${videoUrl(s)}">🎬 视频逛店 · 上下刷</a>`);
       marker.addTo(markersLayer); bounds.extend([lat,lng]);
       const item = document.createElement('div'); item.className='item';
-      item.innerHTML = `${i+1}. ${esc(name)}<br/><span style="color:#999">${esc(addr)||'No address'} · ${lng.toFixed(4)}, ${lat.toFixed(4)}</span><br/><a class="miniVideo" target="_top" href="${videoUrl(s)}" onclick="event.stopPropagation()">🎬 Video tour</a>`;
+      item.innerHTML = `${i+1}. ${esc(name)}<br/><span style="color:#999">${esc(addr)||'无地址'} · ${lng.toFixed(4)}, ${lat.toFixed(4)}</span><br/><a class="miniVideo" target="_top" href="${videoUrl(s)}" onclick="event.stopPropagation()">🎬 视频逛店</a>`;
       item.onclick = () => { setCurrentSupplier(s); map.setView([lat,lng], 12); marker.openPopup(); };
       listEl.appendChild(item);
     });
     fitAll();
-  }catch(e){ statusEl.innerHTML = '<span class="err">Load failed: '+esc(e.message)+'</span>'; }
+  }catch(e){ statusEl.innerHTML = '<span class="err">加载失败：'+esc(e.message)+'</span>'; }
 }
 initMap(); reloadData();
 </script>

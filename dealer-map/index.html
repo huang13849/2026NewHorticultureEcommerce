@@ -50,6 +50,7 @@
   </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+var API_BASE = '';
 let map, markersLayer, bounds;
 const statusEl = document.getElementById('status');
 const listEl = document.getElementById('list');
@@ -72,36 +73,38 @@ function contactOf(s){ return s.contactName || ''; }
 function esc(s){ return String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function switchToSupplier(){
   if (window.top !== window) { window.top.location.href = '/map?type=supplier'; }
-  else { window.location.href = '/supplier-map/?v=20260628'; }
+  else { window.location.href = '/supplier-map/index.html?v=2026062904'; }
 }
 function fitAll(){ if(bounds && bounds.isValid()) map.fitBounds(bounds.pad(0.18)); }
 async function reloadData(){
   try{
     statusEl.textContent = '正在加载经销商坐标…';
     markersLayer.clearLayers(); listEl.innerHTML=''; bounds = L.latLngBounds([]);
-    const r = await fetch('/api/mongo/shops?limit=500&sort='+encodeURIComponent(JSON.stringify({updatedAt:-1})));
-    const d = await r.json(); if(!r.ok) throw new Error(d.error||'加载失败');
-    const all = d.data || []; const dealers = all.filter(valid);
+    var url = API_BASE + '/api/mongo/shops?limit=500&sort='+encodeURIComponent(JSON.stringify({updatedAt:-1}));
+    var r = await fetch(url, { headers: { 'x-api-key': 'flower-app-key-2024' } });
+    var d = await r.json(); if(!r.ok) throw new Error(d.error||'加载失败');
+    var all = d.data || []; var dealers = all.filter(valid);
     document.getElementById('total').textContent = '经销商 ' + all.length + ' 家';
     document.getElementById('shown').textContent = '有坐标 ' + dealers.length + ' 家';
     statusEl.textContent = dealers.length ? '点击标记查看经销商信息' : '暂无带经纬度的经销商';
-    dealers.forEach((s,i)=>{
-      const lat=Number(s.latitude), lng=Number(s.longitude), name=nameOf(s), addr=addrOf(s), biz=bizOf(s), phone=phoneOf(s), contact=contactOf(s);
-      let popupHtml = '<div class="shop">'+esc(name)+'</div>';
+    dealers.forEach(function(s,i){
+      var lat=Number(s.latitude), lng=Number(s.longitude), name=nameOf(s), addr=addrOf(s), biz=bizOf(s), phone=phoneOf(s), contact=contactOf(s);
+      var popupHtml = '<div class="shop">'+esc(name)+'</div>';
       if (contact) popupHtml += '<div style="color:#555">联系人: '+esc(contact)+'</div>';
       if (phone) popupHtml += '<div style="color:#555">电话: '+esc(phone)+'</div>';
       if (addr) popupHtml += '<div class="addr">'+esc(addr)+'</div>';
       if (biz) popupHtml += '<div class="biz">经营类目: '+esc(biz)+'</div>';
       popupHtml += '<div style="color:#999;margin-top:4px">'+lng.toFixed(6)+', '+lat.toFixed(6)+'</div>';
-      const marker = L.marker([lat,lng], { title:name }).bindPopup(popupHtml);
+      var marker = L.marker([lat,lng], { title:name }).bindPopup(popupHtml);
       marker.addTo(markersLayer); bounds.extend([lat,lng]);
-      const item = document.createElement('div'); item.className='item';
-      let itemHtml = (i+1)+'. '+esc(name);
+      var item = document.createElement('div');
+      item.className='item';
+      var itemHtml = (i+1)+'. '+esc(name);
       if (contact) itemHtml += ' ('+esc(contact)+')';
       itemHtml += '<br/><span style="color:#999">'+esc(addr||'无地址')+' · '+lng.toFixed(4)+', '+lat.toFixed(4)+'</span>';
       if (biz) itemHtml += '<br/><span style="color:#7c5cfc">'+esc(biz)+'</span>';
       item.innerHTML = itemHtml;
-      item.onclick = () => { map.setView([lat,lng], 12); marker.openPopup(); };
+      item.onclick = function(){ map.setView([lat,lng], 12); marker.openPopup(); };
       listEl.appendChild(item);
     });
     fitAll();
