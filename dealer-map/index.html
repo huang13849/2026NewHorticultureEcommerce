@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>经销商地图 · 花伴</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    html,body,#map{width:100%;height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;background:#f3f0ff}
+    .panel{position:absolute;top:16px;left:16px;z-index:1000;background:rgba(255,255,255,.95);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.15);padding:14px 16px;min-width:280px;max-width:390px;backdrop-filter:blur(8px)}
+    .title{font-size:18px;font-weight:800;color:#5b21b6;margin-bottom:6px}
+    .sub{font-size:12px;color:#667;margin-bottom:10px;line-height:1.45}
+    .stat{display:flex;gap:8px;flex-wrap:wrap}
+    .pill{font-size:12px;background:#ede9fe;color:#6d28d9;border-radius:999px;padding:4px 10px}
+    .err{color:#b00020;font-size:12px;margin-top:8px}
+    .loading{color:#666;font-size:12px;margin-top:8px}
+    .list{max-height:300px;overflow:auto;margin-top:10px;border-top:1px solid #eee;padding-top:8px}
+    .item{font-size:12px;padding:7px 0;border-bottom:1px dashed #eee;cursor:pointer;line-height:1.4}
+    .item:hover{color:#6d28d9;background:#faf5ff}
+    .leaflet-popup-content{font-size:13px;line-height:1.55}
+    .shop{font-weight:800;color:#5b21b6;font-size:15px}
+    .addr{color:#555}
+    .biz{color:#777;max-width:260px}
+    .toolbar{display:flex;gap:8px;margin-top:10px}
+    .btn{border:1px solid #ddd6fe;background:#fff;color:#6d28d9;border-radius:9px;padding:6px 10px;font-size:12px;cursor:pointer}
+    .btn:hover{background:#ede9fe}
+    .switchBar{display:flex;gap:0;margin-top:8px;border-radius:8px;overflow:hidden;border:1px solid #ddd6fe}
+    .switchBtn{flex:1;padding:6px 10px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all .15s}
+    .switchBtn.active{background:#7c5cfc;color:#fff}
+    .switchBtn:not(.active){background:#fff;color:#6d28d9}
+    .switchBtn:not(.active):hover{background:#f5f3ff}
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div class="panel">
+    <div class="title">🏪 经销商地图</div>
+    <div class="sub">高德瓦片底图 + API Gateway / MongoDB shops 集合。展示有经纬度的经销商。</div>
+    <div class="stat"><span class="pill" id="total">加载中…</span><span class="pill" id="shown">—</span></div>
+    <div class="switchBar">
+      <button class="switchBtn" onclick="switchToSupplier()">🗺️ 供应商地图</button>
+      <button class="switchBtn active">🏪 经销商地图</button>
+    </div>
+    <div class="toolbar">
+      <button class="btn" onclick="fitAll()">显示全部</button>
+      <button class="btn" onclick="reloadData()">刷新数据</button>
+    </div>
+    <div class="loading" id="status">正在加载经销商坐标…</div>
+    <div class="list" id="list"></div>
+  </div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+let map, markersLayer, bounds;
+const statusEl = document.getElementById('status');
+const listEl = document.getElementById('list');
+
+function initMap(){
+  map = L.map('map', { center:[39.90923,116.397428], zoom:5, zoomControl:true });
+  L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+    subdomains: ['1','2','3','4'],
+    maxZoom: 18,
+    attribution: '© 高德地图'
+  }).addTo(map);
+  markersLayer = L.layerGroup().addTo(map);
+}
+function valid(s){ const lng=Number(s.longitude), lat=Number(s.latitude); return Number.isFinite(lng)&&Number.isFinite(lat)&&lng!==0&&lat!==0; }
+function nameOf(s){ return s.shopName || '未命名经销商'; }
+function addrOf(s){ return s.address || ''; }
+function bizOf(s){ return s.businessCategory || ''; }
+function phoneOf(s){ return s.phone || ''; }
+function contactOf(s){ return s.contactName || ''; }
+function esc(s){ return String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function switchToSupplier(){
+  if (window.top !== window) { window.top.location.href = '/map?type=supplier'; }
+  else { window.location.href = '/supplier-map/?v=20260628'; }
+}
+function fitAll(){ if(bounds && bounds.isValid()) map.fitBounds(bounds.pad(0.18)); }
+async function reloadData(){
+  try{
+    statusEl.textContent = '正在加载经销商坐标…';
+    markersLayer.clearLayers(); listEl.innerHTML=''; bounds = L.latLngBounds([]);
+    const r = await fetch('/api/mongo/shops?limit=500&sort='+encodeURIComponent(JSON.stringify({updatedAt:-1})));
+    const d = await r.json(); if(!r.ok) throw new Error(d.error||'加载失败');
+    const all = d.data || []; const dealers = all.filter(valid);
+    document.getElementById('total').textContent = '经销商 ' + all.length + ' 家';
+    document.getElementById('shown').textContent = '有坐标 ' + dealers.length + ' 家';
+    statusEl.textContent = dealers.length ? '点击标记查看经销商信息' : '暂无带经纬度的经销商';
+    dealers.forEach((s,i)=>{
+      const lat=Number(s.latitude), lng=Number(s.longitude), name=nameOf(s), addr=addrOf(s), biz=bizOf(s), phone=phoneOf(s), contact=contactOf(s);
+      let popupHtml = '<div class="shop">'+esc(name)+'</div>';
+      if (contact) popupHtml += '<div style="color:#555">联系人: '+esc(contact)+'</div>';
+      if (phone) popupHtml += '<div style="color:#555">电话: '+esc(phone)+'</div>';
+      if (addr) popupHtml += '<div class="addr">'+esc(addr)+'</div>';
+      if (biz) popupHtml += '<div class="biz">经营类目: '+esc(biz)+'</div>';
+      popupHtml += '<div style="color:#999;margin-top:4px">'+lng.toFixed(6)+', '+lat.toFixed(6)+'</div>';
+      const marker = L.marker([lat,lng], { title:name }).bindPopup(popupHtml);
+      marker.addTo(markersLayer); bounds.extend([lat,lng]);
+      const item = document.createElement('div'); item.className='item';
+      let itemHtml = (i+1)+'. '+esc(name);
+      if (contact) itemHtml += ' ('+esc(contact)+')';
+      itemHtml += '<br/><span style="color:#999">'+esc(addr||'无地址')+' · '+lng.toFixed(4)+', '+lat.toFixed(4)+'</span>';
+      if (biz) itemHtml += '<br/><span style="color:#7c5cfc">'+esc(biz)+'</span>';
+      item.innerHTML = itemHtml;
+      item.onclick = () => { map.setView([lat,lng], 12); marker.openPopup(); };
+      listEl.appendChild(item);
+    });
+    fitAll();
+  }catch(e){ statusEl.innerHTML = '<span class="err">加载失败：'+esc(e.message)+'</span>'; }
+}
+initMap(); reloadData();
+</script>
+</body>
+</html>
