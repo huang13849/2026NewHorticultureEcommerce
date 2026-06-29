@@ -8,8 +8,14 @@ export const viewport = { width: 'device-width', initialScale: 1, maximumScale: 
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://horiculture.space';
 
+// "品"字 icon SVG favicon
+const FAVICON_SVG = `data:image/svg+xml,${encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect width="48" height="48" rx="8" fill="#1a1a2e"/><text x="24" y="34" text-anchor="middle" font-size="28" font-weight="bold" fill="#52c41a" font-family="serif">品</text></svg>'
+)}`;
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  icons: { icon: FAVICON_SVG },
   title: {
     default: 'Plant Collector · A New Supply Chain Experience',
     template: '%s | Plant Collector',
