@@ -396,9 +396,12 @@ export default function HomePage() {
                         {img ? <img src={img} alt={p.title || p.flowerName || ''} className="w-full h-full object-cover group-hover:scale-105 transition-transform" /> : <span className="text-4xl opacity-20">🌿</span>}
                       </div>
                       <div className="p-3">
-                        <h4 className="text-xs font-medium text-stone-900 truncate">{p.title || p.flowerName || t('home.unnamed')}</h4>
+                        <h4 className="text-xs font-medium text-stone-900 truncate">{IS_CN ? (p.title || p.flowerName || t('home.unnamed')) : (p.englishTitle || p.title || p.flowerName || t('home.unnamed'))}</h4>
                         <div className="flex items-center justify-between mt-1.5">
-                          <span className="text-sm font-bold text-emerald-700">¥{Number(price).toFixed(2)}</span>
+                          {IS_CN
+                            ? <span className="text-sm font-bold text-emerald-700">{p.englishTitle || '—'}</span>
+                            : <span className="text-sm font-bold text-emerald-700">¥{Number(price).toFixed(2)}</span>
+                          }
                           {p.category && <span className="text-[10px] text-stone-400 bg-stone-50 px-1.5 py-0.5 rounded">{p.category}</span>}
                         </div>
                       </div>
