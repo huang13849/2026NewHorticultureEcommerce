@@ -50,6 +50,7 @@
   </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+var API_BASE = '';
 let map, markersLayer, bounds;
 const statusEl = document.getElementById('status');
 const listEl = document.getElementById('list');
@@ -70,20 +71,17 @@ function bizOf(s){ return s.businessCategory || ''; }
 function phoneOf(s){ return s.phone || ''; }
 function contactOf(s){ return s.contactName || ''; }
 function esc(s){ return String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-function fitAll(){ if(bounds && bounds.isValid()) map.fitBounds(bounds.pad(0.18)); }
 function switchToSupplier(){
-  var url = '/supplier-map/?v=20260628';
-  if (window.top !== window) {
-    window.top.location.href = '/map?type=supplier';
-  } else {
-    window.location.href = '/supplier-map/?v=20260628';
-  }
+  if (window.top !== window) { window.top.location.href = '/map?type=supplier'; }
+  else { window.location.href = '/supplier-map/index.html?v=2026062904'; }
 }
+function fitAll(){ if(bounds && bounds.isValid()) map.fitBounds(bounds.pad(0.18)); }
 async function reloadData(){
   try{
     statusEl.textContent = '正在加载经销商坐标…';
     markersLayer.clearLayers(); listEl.innerHTML=''; bounds = L.latLngBounds([]);
-    var r = await fetch('/api/mongo/shops?limit=500&sort='+encodeURIComponent(JSON.stringify({updatedAt:-1})));
+    var url = API_BASE + '/api/mongo/shops?limit=500&sort='+encodeURIComponent(JSON.stringify({updatedAt:-1}));
+    var r = await fetch(url, { headers: { 'x-api-key': '***REMOVED_API_KEY***' } });
     var d = await r.json(); if(!r.ok) throw new Error(d.error||'加载失败');
     var all = d.data || []; var dealers = all.filter(valid);
     document.getElementById('total').textContent = '经销商 ' + all.length + ' 家';

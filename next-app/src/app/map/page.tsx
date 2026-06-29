@@ -1,4 +1,5 @@
 'use client';
+import Head from 'next/head';
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useI18n } from '@/lib/i18n/context';
@@ -11,12 +12,24 @@ function MapContent() {
   const [mapType, setMapType] = useState<'supplier' | 'dealer'>(initialType);
 
   useEffect(() => {
+    document.title = IS_CN ? '地图 · 花伴' : 'Map · HuaBan';
+    document
+      .querySelectorAll("link[rel='icon'], link[rel='shortcut icon'], link[rel='apple-touch-icon']")
+      .forEach((el) => el.remove());
+    const icon = document.createElement('link');
+    icon.rel = 'icon';
+    icon.href = '/map-icon.svg?v=2026062902';
+    icon.type = 'image/svg+xml';
+    document.head.appendChild(icon);
+  }, []);
+
+  useEffect(() => {
     const tp = searchParams.get('type');
     if (tp === 'dealer' || tp === 'supplier') setMapType(tp);
   }, [searchParams]);
 
-  const supplierSrc = '/supplier-map/?v=20260628';
-  const dealerSrc = '/dealer-map/?v=20260628';
+  const supplierSrc = '/supplier-map/index.html?v=2026062904';
+  const dealerSrc = '/dealer-map/index.html?v=2026062904';
 
   const tabBtn = (active: boolean) => ({
     padding: '6px 16px',
@@ -31,7 +44,12 @@ function MapContent() {
   });
 
   return (
-    <main className="min-h-screen bg-white text-stone-900 pb-16">
+    <>
+      <Head>
+        <title>{IS_CN ? '地图 · 花伴' : 'Map · HuaBan'}</title>
+        <link rel="icon" href="/map-icon.svg" type="image/svg+xml" />
+      </Head>
+      <main className="min-h-screen bg-white text-stone-900 pb-16">
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-stone-200/60">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -70,7 +88,8 @@ function MapContent() {
           allow="geolocation"
         />
       </div>
-    </main>
+      </main>
+    </>
   );
 }
 
