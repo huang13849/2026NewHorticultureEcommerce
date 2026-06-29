@@ -45,6 +45,18 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
+  # ===== 经销商地图 =====
+  dealer-map:
+    build:
+      context: ./dealer-map
+      dockerfile: Dockerfile
+    container_name: dealer-map
+    restart: unless-stopped
+    ports:
+      - "29008:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
   # ===== SEO / 访问统计微服务 =====
   seo-service:
     build:

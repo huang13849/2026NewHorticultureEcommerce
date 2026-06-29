@@ -1,35 +1,83 @@
 'use client';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useI18n } from '@/lib/i18n/context';
-import LangSwitch from '@/app/components/LangSwitch';
+import { IS_CN } from '@/lib/deploy';
 
-export default function MapPage() {
+function MapContent() {
   const { t } = useI18n();
+  const searchParams = useSearchParams();
+  const initialType = searchParams.get('type') === 'dealer' ? 'dealer' : 'supplier';
+  const [mapType, setMapType] = useState<'supplier' | 'dealer'>(initialType);
+
+  useEffect(() => {
+    const tp = searchParams.get('type');
+    if (tp === 'dealer' || tp === 'supplier') setMapType(tp);
+  }, [searchParams]);
+
+  const supplierSrc = '/supplier-map/?v=20260628';
+  const dealerSrc = '/dealer-map/?v=20260628';
+
+  const tabBtn = (active: boolean) => ({
+    padding: '6px 16px',
+    borderRadius: 999,
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: 'pointer',
+    border: 'none',
+    transition: 'all .15s',
+    background: active ? '#1a1a2e' : 'transparent',
+    color: active ? '#fff' : '#999',
+  });
+
   return (
     <main className="min-h-screen bg-white text-stone-900 pb-16">
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-stone-200/60">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-lg">🗺</span>
-            <span className="font-semibold tracking-tight text-sm text-stone-900">供应商地图</span>
+            <span className="font-semibold tracking-tight text-sm text-stone-900">
+              {mapType === 'supplier' ? (IS_CN ? '供应商地图' : 'Supplier Map') : (IS_CN ? '经销商地图' : 'Dealer Map')}
+            </span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="hidden sm:inline text-[11px] text-stone-400">点击地图商家 → 🎬 视频逛店</span>
-            <a href="/supplier-videos?supplierId=6a11b8c84d0e2ad6e9a2b142&name=漳州圆山水仙花发展有限公司" className="text-xs bg-stone-900 text-white px-3 py-1.5 rounded-full font-bold hover:bg-emerald-800 transition-colors">🎬 视频逛店</a>
-            <a href="/" className="text-xs text-emerald-700 font-medium hover:text-emerald-900 transition-colors">← 首页</a>
+            <div className="flex items-center gap-1 bg-stone-100 rounded-full p-1">
+              <button
+                style={tabBtn(mapType === 'supplier')}
+                onClick={() => setMapType('supplier')}
+              >
+                {IS_CN ? '🗺️ 供应商' : '🗺️ Supplier'}
+              </button>
+              <button
+                style={tabBtn(mapType === 'dealer')}
+                onClick={() => setMapType('dealer')}
+              >
+                {IS_CN ? '🏪 经销商' : '🏪 Dealer'}
+              </button>
+            </div>
+            <a href="/" className="text-xs text-emerald-700 font-medium hover:text-emerald-900 transition-colors">
+              {IS_CN ? '← 首页' : '← Home'}
+            </a>
           </div>
         </div>
       </nav>
       <div className="relative w-full" style={{ height: 'calc(100vh - 56px)' }}>
-        <div className="absolute left-4 top-4 z-10 bg-white/90 backdrop-blur rounded-xl shadow-md border border-stone-200 px-3 py-2 text-xs text-stone-600 sm:hidden">
-          点商家标记，然后点 🎬 视频逛店
-        </div>
         <iframe
-          src={process.env.NEXT_PUBLIC_REGION === 'cn' ? '/supplier-map/?v=202606150236' : '/supplier-map/?v=202606150236'}
+          key={mapType}
+          src={mapType === 'supplier' ? supplierSrc : dealerSrc}
           className="w-full h-full border-0"
-          title="供应商地图"
+          title={mapType === 'supplier' ? (IS_CN ? '供应商地图' : 'Supplier Map') : (IS_CN ? '经销商地图' : 'Dealer Map')}
           allow="geolocation"
         />
       </div>
     </main>
+  );
+}
+
+export default function MapPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-stone-400">Loading...</div>}>
+      <MapContent />
+    </Suspense>
   );
 }

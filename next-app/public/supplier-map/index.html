@@ -12,6 +12,11 @@
     .stat{display:flex;gap:8px;flex-wrap:wrap}.pill{font-size:12px;background:#e8f5e9;color:#2e7d32;border-radius:999px;padding:4px 10px}.err{color:#b00020;font-size:12px;margin-top:8px}.loading{color:#666;font-size:12px;margin-top:8px}
     .list{max-height:300px;overflow:auto;margin-top:10px;border-top:1px solid #eee;padding-top:8px}.item{font-size:12px;padding:7px 0;border-bottom:1px dashed #eee;cursor:pointer;line-height:1.4}.item:hover{color:#2e7d32;background:#fafafa}
     .leaflet-popup-content{font-size:13px;line-height:1.55}.shop{font-weight:800;color:#255b3b;font-size:15px}.addr{color:#555}.biz{color:#777;max-width:260px}.toolbar{display:flex;gap:8px;margin-top:10px}.btn{border:1px solid #c8e6c9;background:#fff;color:#2e7d32;border-radius:9px;padding:6px 10px;font-size:12px;cursor:pointer}.btn:hover{background:#e8f5e9}.videoBtn{display:inline-block;margin-top:8px;background:#111827;color:#fff;border-radius:999px;padding:7px 12px;text-decoration:none;font-size:12px;font-weight:700}.videoBtn:hover{background:#064e3b;color:#fff}.miniVideo{display:inline-block;margin-top:4px;color:#047857;font-weight:700;font-size:11px}
+    .switchBar{display:flex;gap:0;margin-top:8px;border-radius:8px;overflow:hidden;border:1px solid #c8e6c9}
+    .switchBtn{flex:1;padding:6px 10px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all .15s}
+    .switchBtn.active{background:#2e7d32;color:#fff}
+    .switchBtn:not(.active){background:#fff;color:#2e7d32}
+    .switchBtn:not(.active):hover{background:#f1f8e9}
   </style>
 </head>
 <body>
@@ -20,6 +25,10 @@
     <div class="title">🗺️ Supplier Map</div>
     <div class="sub">OpenStreetMap base + supplier coordinates from API Gateway.</div>
     <div class="stat"><span class="pill" id="total">Loading…</span><span class="pill" id="shown">—</span></div>
+    <div class="switchBar">
+      <button class="switchBtn active">🗺️ Supplier Map</button>
+      <button class="switchBtn" onclick="switchToDealer()">🏪 Dealer Map</button>
+    </div>
     <div class="toolbar"><button class="btn" onclick="fitAll()">Fit all</button><button class="btn" onclick="reloadData()">Reload</button><button class="btn" id="videoShopBtn" onclick="openCurrentVideo()" style="background:#111827;color:#fff;border-color:#111827">🎬 Video tour</button></div>
     <div class="loading" id="status">Loading supplier coordinates…</div>
     <div class="list" id="list"></div>
@@ -49,6 +58,10 @@ function idOf(s){ return s._id || s.id || s.supplierId || ''; }
 function videoUrl(s){ return '/supplier-videos?supplierId='+encodeURIComponent(idOf(s))+'&name='+encodeURIComponent(nameOf(s)); }
 function setCurrentSupplier(s){ currentSupplier=s; const b=document.getElementById('videoShopBtn'); if(b) b.textContent='🎬 '+nameOf(s).slice(0,12); }
 function openCurrentVideo(){ if(!currentSupplier){ alert('Click a supplier marker first, or wait for suppliers to load'); return; } window.top.location.href = videoUrl(currentSupplier); }
+function switchToDealer(){
+  if (window.top !== window) { window.top.location.href = '/map?type=dealer'; }
+  else { window.location.href = '/dealer-map/?v=20260628'; }
+}
 function fitAll(){ if(bounds && bounds.isValid()) map.fitBounds(bounds.pad(0.18)); }
 async function reloadData(){
   try{
