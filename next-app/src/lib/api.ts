@@ -11,6 +11,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
 export interface Product {
   _id: string;
   title: string;
+  englishTitle?: string;
   name?: string;
   price?: number;
   sellPrice?: number;
