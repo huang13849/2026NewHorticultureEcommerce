@@ -17,7 +17,7 @@ spec:
         app: seo-service
     spec:
       nodeSelector:
-        kubernetes.io/hostname: ubuntu-master
+        kubernetes.io/hostname: huangfra-ubun-master-ms-7e11
       containers:
       - name: seo-service
         image: 100.76.15.64:5001/seo-service:latest
