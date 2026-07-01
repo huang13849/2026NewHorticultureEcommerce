@@ -1,20 +1,24 @@
-FROM node:20-alpine AS runner
+# Multi-stage: build + runtime  
+FROM node:20-alpine AS builder
 WORKDIR /app
-
-ENV NODE_ENV=production
+COPY package.json package-lock.json* ./
+RUN npm ci
+COPY . .
+RUN if [ -f "next.config.docker.ts" ]; then cp next.config.docker.ts next.config.ts; fi
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_PUBLIC_API_URL=http://100.76.15.64:3010/api
+RUN npm run build
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
-
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-# Build locally first with: cd next-app && cp next.config.docker.ts next.config.ts && npm run build
-# Then: docker compose build flower-next
-COPY --chown=nextjs:nodejs .next/standalone ./
-COPY --chown=nextjs:nodejs .next/static ./.next/static
-COPY --chown=nextjs:nodejs public ./public
-
+RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 USER nextjs
 EXPOSE 3000
 CMD ["node", "server.js"]
+
