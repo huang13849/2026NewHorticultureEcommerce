@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seo-service
+  namespace: new-ecommerce
+  labels:
+    app: seo-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seo-service
+  template:
+    metadata:
+      labels:
+        app: seo-service
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: ubuntu-master
+      containers:
+      - name: seo-service
+        image: 100.76.15.64:5001/seo-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3011
+        env:
+        - name: NODE_ENV
+          value: production
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: seo-service
+  namespace: new-ecommerce
+spec:
+  type: NodePort
+  selector:
+    app: seo-service
+  ports:
+  - port: 3011
+    targetPort: 3011
+    nodePort: 31011
+
