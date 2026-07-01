@@ -17,7 +17,7 @@ spec:
         app: dealer-map
     spec:
       nodeSelector:
-        kubernetes.io/hostname: ubuntu-master
+        kubernetes.io/hostname: huangfra-ubun-master-ms-7e11
       containers:
       - name: dealer-map
         image: 100.76.15.64:5001/dealer-map:latest
