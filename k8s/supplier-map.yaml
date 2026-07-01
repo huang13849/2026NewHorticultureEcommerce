@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supplier-map
+  namespace: new-ecommerce
+  labels:
+    app: supplier-map
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: supplier-map
+  template:
+    metadata:
+      labels:
+        app: supplier-map
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: ubuntu-master
+      containers:
+      - name: supplier-map
+        image: 100.76.15.64:5001/supplier-map:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+        env:
+        - name: NODE_ENV
+          value: production
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: supplier-map
+  namespace: new-ecommerce
+spec:
+  type: NodePort
+  selector:
+    app: supplier-map
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 31307
+
