@@ -1,6 +1,23 @@
 import type { NextConfig } from 'next';
 
-const isCFPages = process.env.CF_PAGES === '1';
+// Cloudflare Pages build env currently provides NEXT_PUBLIC_REGION=global,
+// but not always CF_PAGES=1. Treat the global Pages build as static export
+// so npm run build regenerates out/ for horiculture.space.
+const isCFPages = process.env.CF_PAGES === '1' || process.env.NEXT_PUBLIC_REGION === 'global';
+
+// k3s / Docker (server-side) 部署时，需要把前端里同源发出的 /api/mongo/* 和
+// /supplier-map/*、/dealer-map/* 反代到集群内对应服务。CF Pages 静态导出没有 server，
+// 直接跳过 rewrites（那边由外层 nginx / CF Workers 处理路由）。
+const API_GATEWAY_URL =
+  process.env.API_GATEWAY_URL || 'http://api-gateway-origin.new-ecommerce.svc.cluster.local:3007';
+const SUPPLIER_MAP_URL =
+  process.env.SUPPLIER_MAP_URL || 'http://supplier-map.new-ecommerce.svc.cluster.local:80';
+const DEALER_MAP_URL =
+  process.env.DEALER_MAP_URL || 'http://dealer-map.new-ecommerce.svc.cluster.local:80';
+const SEO_SERVICE_URL =
+  process.env.SEO_SERVICE_URL || 'http://seo-service.new-ecommerce.svc.cluster.local:3011';
+const FLOWER_API_URL =
+  process.env.FLOWER_API_URL || 'http://flower-api.new-ecommerce.svc.cluster.local:3010';
 
 const nextConfig: NextConfig = {
   output: isCFPages ? 'export' : 'standalone',
@@ -19,6 +36,24 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+  ...(isCFPages
+    ? {}
+    : {
+        async rewrites() {
+          return [
+            // API Gateway (直连 MongoDB 网关)
+            { source: '/api/mongo/:path*', destination: `${API_GATEWAY_URL}/api/mongo/:path*` },
+            // 独立地图 iframe 站
+            { source: '/supplier-map/:path*', destination: `${SUPPLIER_MAP_URL}/:path*` },
+            { source: '/dealer-map/:path*', destination: `${DEALER_MAP_URL}/:path*` },
+            // SEO 微服务 API (/api/seo/*, /api/analytics/*)
+            { source: '/api/seo/:path*', destination: `${SEO_SERVICE_URL}/api/seo/:path*` },
+            { source: '/api/analytics/:path*', destination: `${SEO_SERVICE_URL}/api/analytics/:path*` },
+            // 其余 /api/* 走 flower-api (payment, auth, products, wechat-pay, ...)
+            { source: '/api/:path*', destination: `${FLOWER_API_URL}/api/:path*` },
+          ];
+        },
+      }),
 };
 
 export default nextConfig;
