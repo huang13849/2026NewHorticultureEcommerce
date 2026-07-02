@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const SEO_API = process.env.NEXT_PUBLIC_SEO_API_URL || (IS_CN ? 'http://100.76.15.64:3011' : 'http://106.12.91.182/seo-api');
+const SEO_API = process.env.NEXT_PUBLIC_SEO_API_URL || (IS_CN ? '/seo-api' : 'http://106.12.91.182/seo-api');
 const FLOWER_API = process.env.NEXT_PUBLIC_API_URL || "/api";
 const OVERSEAS_DOMAIN = 'horiculture.space';
 const DOMESTIC_DOMAIN = '106.12.91.182';
@@ -159,7 +159,7 @@ export default async function SeoDashboardPage() {
         <Card title="创意工作台">
           <div className="grid md:grid-cols-3 gap-4 text-sm">
             {(IS_CN ? (trends.domestic || []) : (trends.overseas || [])).slice(0, 6).map((x) => (
-              <a key={`${x.keyword}-${x.adTitle}`} href={`http://100.96.54.109:8088/publish?keyword=${encodeURIComponent(x.keyword)}&title=${encodeURIComponent(x.adTitle || '')}&copy=${encodeURIComponent(x.adCopy || '')}`} target="_blank" rel="noopener noreferrer" className="group rounded-2xl border border-white/10 bg-slate-900/70 p-4 hover:border-emerald-300/60 transition-colors">
+              <a key={`${x.keyword}-${x.adTitle}`} href={`/publish?keyword=${encodeURIComponent(x.keyword)}&title=${encodeURIComponent(x.adTitle || '')}&copy=${encodeURIComponent(x.adCopy || '')}`} target="_blank" rel="noopener noreferrer" className="group rounded-2xl border border-white/10 bg-slate-900/70 p-4 hover:border-emerald-300/60 transition-colors">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-emerald-300 font-semibold">#{x.keyword}</span>
                   <span className="text-[10px] rounded-full bg-white/10 px-2 py-0.5 text-slate-300">{x.score}</span>

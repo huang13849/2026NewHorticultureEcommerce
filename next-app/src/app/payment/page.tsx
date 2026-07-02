@@ -448,7 +448,7 @@ function PaymentContent() {
             {message && <p className="text-xs text-emerald-700 mt-2">{message}</p>}
             {wechatCodeUrl && <img src={wechatCodeUrl} alt={t('payment.wechatPay')} className="mx-auto mt-3 w-48 h-48 rounded-xl border" />}
             <button
-              onClick={() => window.open('http://100.96.54.109:3008/', '_blank')}
+              onClick={() => window.open('/order/', '_blank')}
               className="mt-4 px-6 py-2.5 rounded-xl bg-emerald-700 text-white text-sm font-bold hover:bg-emerald-800 transition-colors"
             >
               {t('payment.viewOrder')}

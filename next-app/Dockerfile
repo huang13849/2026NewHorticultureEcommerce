@@ -6,7 +6,7 @@ RUN npm ci
 COPY . .
 RUN if [ -f "next.config.docker.ts" ]; then cp next.config.docker.ts next.config.ts; fi
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NEXT_PUBLIC_API_URL=http://100.76.15.64:3010/api
+ENV NEXT_PUBLIC_API_URL=/api
 RUN npm run build
 
 FROM node:20-alpine AS runner

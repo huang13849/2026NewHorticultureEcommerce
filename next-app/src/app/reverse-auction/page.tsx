@@ -25,7 +25,7 @@ interface Product {
 }
 
 const API = process.env.NEXT_PUBLIC_API_URL || "/api";
-const FLOWER_API_FALLBACK = "http://100.96.54.109:8088/api";
+const FLOWER_API_FALLBACK = "/api";
 const DROP_PER_MINUTE = 0.01;
 const TICK_SECONDS = 10;
 const MAGNIFIER = 100;
