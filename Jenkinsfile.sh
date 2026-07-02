@@ -60,7 +60,7 @@ done
 echo "======= [5.5/5] image chain smoke test ======="
 # 5.5.1: 首页 HTML 里不能含内网 tailscale IP
 HTML=$(curl -sS -m 15 http://100.96.54.109:31000/ 2>/dev/null | head -c 500000)
-BAD=$(echo "$HTML" | grep -oE "100\.(76|96)\.(15|54)\.[0-9]+" | sort -u | tr '\n' ' ')
+BAD=$(echo "$HTML" | grep -oE "100\.(76|96)\.(15|54)\.[0-9]+" | sort -u | tr '\n' ' ' || true)
 if [ -n "$BAD" ]; then
   echo "  FAIL: home HTML contains intranet IPs: $BAD"
   exit 1
