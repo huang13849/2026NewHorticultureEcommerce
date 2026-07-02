@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 
-const SEO_API = process.env.NEXT_PUBLIC_SEO_API_URL || (process.env.NEXT_PUBLIC_REGION === "global" ? "" : "http://100.76.15.64:3011");
+const SEO_API = process.env.NEXT_PUBLIC_SEO_API_URL || (process.env.NEXT_PUBLIC_REGION === "global" ? "" : "/seo-api");
 
 export default function SeoTracker() {
   useEffect(() => {
