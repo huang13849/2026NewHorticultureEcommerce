@@ -1,6 +1,10 @@
 import type { Metadata } from 'next';
 import { IS_CN } from '@/lib/deploy';
 
+// 禁止静态生成:构建期 fetch /seo-api 相对路径会失败,改为运行时按需渲染
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: 'SEO 管理 | 植物猎人 Plant Hunter',
   description: 'Simple SEO dashboard for traffic, keyword ranking, and next actions.',
