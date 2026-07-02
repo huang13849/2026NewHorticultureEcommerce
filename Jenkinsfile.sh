@@ -100,7 +100,7 @@ else
       FAIL=1
     fi
   done
-  [ "$FAIL" = "1" ] && exit 1
+  if [ "$FAIL" = "1" ]; then exit 1; fi
 fi
 
 echo "======= DEPLOY SUCCESS: $COMMIT_SHA ======="
