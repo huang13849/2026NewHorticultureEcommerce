@@ -34,18 +34,33 @@ export default function AuthMenuButton({ className = '', dark = false, loginRedi
     );
   }
 
+  const isAdmin = !!(user.isAdmin || user.isSuperAdmin);
+  const isSuper = !!user.isSuperAdmin;
+
   return (
     <div className={`relative ${className}`}>
       <button type="button" onClick={() => setOpen(v => !v)} className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition-colors ${shell}`}>
         <span>{user.avatar || '🌸'}</span><span className="max-w-[8rem] truncate">{label}</span><span className="text-[10px] opacity-70">▾</span>
       </button>
       {open && (
-        <div className={`absolute right-0 top-[calc(100%+0.5rem)] z-50 w-48 overflow-hidden rounded-2xl border py-2 text-xs shadow-2xl ${menu}`}>
+        <div className={`absolute right-0 top-[calc(100%+0.5rem)] z-50 w-56 overflow-hidden rounded-2xl border py-2 text-xs shadow-2xl ${menu}`}>
           <div className="px-3 pb-2 pt-1 opacity-70">
             <div className="truncate">{user.phone}</div>
-            {(user.isAdmin || user.isSuperAdmin) && <div className="mt-1 font-bold text-emerald-400">管理员</div>}
+            {isAdmin && <div className="mt-1 font-bold text-emerald-400">{isSuper ? '👑 超级管理员' : '管理员'}</div>}
           </div>
-          <a href="/profile" className="block px-3 py-2 hover:bg-emerald-500/10">个人中心 / Profile</a>
+          <a href="/profile" className="block px-3 py-2 hover:bg-emerald-500/10">🌸 个人中心 / Profile</a>
+          {isAdmin && (
+            <>
+              <div className="my-1 border-t border-white/10 opacity-40" />
+              <div className="px-3 py-1 text-[10px] uppercase tracking-wider opacity-50">管理后台</div>
+              <a href="/admin" className="block px-3 py-2 hover:bg-emerald-500/10">🎛 管理后台</a>
+              <a href="/seo" className="block px-3 py-2 hover:bg-emerald-500/10">🔍 SEO 管理</a>
+              {isSuper && (
+                <a href="http://100.96.54.109:8088/" target="_blank" rel="noreferrer" className="block px-3 py-2 hover:bg-emerald-500/10">🌺 供应链平台 ↗</a>
+              )}
+            </>
+          )}
+          <div className="my-1 border-t border-white/10 opacity-40" />
           <button type="button" onClick={() => { logout(); setOpen(false); }} className="block w-full px-3 py-2 text-left text-rose-400 hover:bg-rose-500/10">退出登录</button>
         </div>
       )}
