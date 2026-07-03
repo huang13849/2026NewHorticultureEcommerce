@@ -90,9 +90,10 @@ if [ -z "$IMG_URLS" ]; then
 else
   FAIL=0
   for URL in $IMG_URLS; do
-    URL_FIX=$(echo "$URL" | sed 's|http://100\.96\.54\.109:9000|http://106.12.91.182/minio|' | sed 's|http://100\.76\.15\.64:9000|http://106.12.91.182/minio|')
-    case "$URL_FIX" in http*) TEST_URL="$URL_FIX" ;; *) TEST_URL="http://106.12.91.182/minio/supply-chain/$URL_FIX" ;; esac
-    code=$(curl -sS -o /dev/null -w "%{http_code}" -m 10 -I "$TEST_URL" 2>/dev/null || echo 0)
+    URL_FIX=$(echo "$URL" | sed 's|http://100\.96\.54\.109:9000|https://horiculture.club/minio|' | sed 's|http://100\.76\.15\.64:9000|https://horiculture.club/minio|' | sed 's|http://106\.12\.91\.182/minio|https://horiculture.club/minio|')
+    case "$URL_FIX" in http*) TEST_URL="$URL_FIX" ;; *) TEST_URL="https://horiculture.club/minio/supply-chain/$URL_FIX" ;; esac
+    # -L 跟随 301/302,-k 允许自签(HTTP→HTTPS 兜底)
+    code=$(curl -sSL -k -o /dev/null -w "%{http_code}" -m 15 "$TEST_URL" 2>/dev/null || echo 0)
     if [ "$code" = "200" ]; then
       echo "  OK  image $TEST_URL -> 200"
     else
