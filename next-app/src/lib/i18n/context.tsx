@@ -60,19 +60,21 @@ function resolve(obj: unknown, key: string): string | undefined {
   return typeof val === 'string' ? val : undefined;
 }
 
-export function I18nProvider({ children }: { children: ReactNode }) {
+export function I18nProvider({ children, initialLang }: { children: ReactNode; initialLang?: Lang }) {
+  const effectiveDefault: Lang = initialLang || DEFAULT_LANG;
+  const storageKey = `lang:${effectiveDefault}`;
   const [lang, setLangState] = useState<Lang>(() => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(LANG_STORAGE_KEY) as Lang | null;
+      const stored = localStorage.getItem(storageKey) as Lang | null;
       if (stored && ['zh', 'en', 'de', 'ja', 'fr', 'ar', 'ru'].includes(stored)) return stored;
     }
-    return DEFAULT_LANG;
+    return effectiveDefault;
   });
 
   const setLang = useCallback((l: Lang) => {
     setLangState(l);
-    if (typeof window !== 'undefined') localStorage.setItem(LANG_STORAGE_KEY, l);
-  }, []);
+    if (typeof window !== 'undefined') localStorage.setItem(storageKey, l);
+  }, [storageKey]);
 
   const t = useCallback((key: string, params?: Record<string, string | number>): string => {
     const val = resolve(dictionaries[lang], key)

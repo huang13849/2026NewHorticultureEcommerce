@@ -1,13 +1,19 @@
 'use client';
 
-import { I18nProvider } from '@/lib/i18n/context';
+import { I18nProvider, type Lang } from '@/lib/i18n/context';
 import { AuthProvider } from '@/lib/auth-context';
-import { RegionProvider } from '@/lib/region-context';
+import { RegionProvider, type RegionCode } from '@/lib/region-context';
 
-export function Providers({ children }: { children: React.ReactNode }) {
+interface ProvidersProps {
+  children: React.ReactNode;
+  initialLang?: Lang;
+  initialRegion?: RegionCode;
+}
+
+export function Providers({ children, initialLang, initialRegion }: ProvidersProps) {
   return (
-    <I18nProvider>
-      <RegionProvider><AuthProvider>{children}</AuthProvider></RegionProvider>
+    <I18nProvider initialLang={initialLang}>
+      <RegionProvider initialCode={initialRegion}><AuthProvider>{children}</AuthProvider></RegionProvider>
     </I18nProvider>
   );
 }

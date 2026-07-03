@@ -174,19 +174,20 @@ const RegionContext = createContext<RegionContextValue>({
   detectFromBrowser: () => {},
 });
 
-export function RegionProvider({ children }: { children: ReactNode }) {
-  const [code, setCode] = useState<RegionCode>(DEFAULT_REGION);
+export function RegionProvider({ children, initialCode }: { children: ReactNode; initialCode?: RegionCode }) {
+  const [code, setCode] = useState<RegionCode>(initialCode || DEFAULT_REGION);
   const [locating, setLocating] = useState(false);
   const [locateError, setLocateError] = useState('');
 
+  const storageKey = `plantHunterRegion:${initialCode || DEFAULT_REGION}`;
   useEffect(() => {
-    const stored = localStorage.getItem(REGION_STORAGE_KEY) as RegionCode | null;
+    const stored = localStorage.getItem(storageKey) as RegionCode | null;
     if (stored && REGION_MAP[stored]) setCode(stored);
-  }, []);
+  }, [storageKey]);
 
   const setRegionCode = (next: RegionCode) => {
     setCode(next);
-    localStorage.setItem(REGION_STORAGE_KEY, next);
+    localStorage.setItem(storageKey, next);
     setLocateError('');
   };
 
