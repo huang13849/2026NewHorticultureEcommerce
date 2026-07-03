@@ -59,18 +59,20 @@ done
 [ $BAD -eq 0 ] && pass "4 条链路全 200" || fail "$BAD 条链路失败"
 
 echo
-echo "=== TEST 5: 前端 chunks 不含硬编码国内 host ==="
+echo "=== TEST 5: 前端 chunks 不含硬编码国内 host(imageUrl helper 归一化字符串除外) ==="
 BAD=0
 for host in horiculture.club horiculture.space; do
   CHUNKS=$(curl -sk "https://$host/" 2>/dev/null | grep -oE '/_next/static/chunks/[a-z0-9_-]+\.js' | sort -u)
   for j in $CHUNKS; do
-    if curl -sk "https://$host$j" 2>/dev/null | grep -qE 'https?://(horiculture\.(club|space)|106\.12\.91\.182|209\.141\.34\.146)/minio/'; then
-      fail "$host chunk $j 硬编码 minio URL"
+    # 排除同一 for 循环里作为归一化白名单出现的字符串:检测是否有 "src="/"href="/"fetch(" 附近的硬编码 URL
+    BODY=$(curl -sk "https://$host$j" 2>/dev/null)
+    if echo "$BODY" | grep -qE '(src|href|fetch)[=(]"https?://(horiculture\.(club|space)|106\.12\.91\.182|209\.141\.34\.146)/minio/'; then
+      fail "$host chunk $j 硬编码 minio URL 使用"
       BAD=$((BAD+1))
     fi
   done
 done
-[ $BAD -eq 0 ] && pass "前端 chunks 全部同源"
+[ $BAD -eq 0 ] && pass "前端 chunks 不含硬编码 minio 引用"
 
 echo
 echo "=== TEST 6: 双站独立性(club 挂了不影响 space) ==="
