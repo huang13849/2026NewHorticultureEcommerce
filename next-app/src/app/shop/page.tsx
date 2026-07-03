@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { resolveMinioUrl } from '@/lib/imageUrl';
 import { useRouter } from 'next/navigation';
 import { useI18n } from '@/lib/i18n/context';
 import { useRegion, type RegionCode } from '@/lib/region-context';
@@ -75,8 +76,7 @@ function getImg(p: Product): string {
     || (p.detail_images as string[])?.[0]
     || '';
   if (!raw) return '';
-  if (raw.startsWith('http')) return raw;
-  return `/minio/supply-chain/${raw}`;
+  return resolveMinioUrl(raw);
 }
 
 function getShippingText(p: Product): string {
