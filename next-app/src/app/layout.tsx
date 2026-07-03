@@ -1,8 +1,16 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import './globals.css';
 import { Providers } from './providers';
 import GlobalLangSwitch from './components/GlobalLangSwitch';
 import SeoTracker from './components/SeoTracker';
+
+// 按 hostname 选默认语言/区域: horiculture.club → zh/cn, 其它(含 space) → en/us
+function pickDefaultsFromHost(host: string | null): { lang: 'zh' | 'en'; region: 'cn' | 'us' } {
+  const h = (host || '').toLowerCase();
+  if (h.includes('horiculture.club') || h.includes('106.12.91.182')) return { lang: 'zh', region: 'cn' };
+  return { lang: 'en', region: 'us' };
+}
 
 export const viewport = { width: 'device-width', initialScale: 1, maximumScale: 1 };
 
@@ -38,11 +46,13 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const h = await headers();
+  const { lang, region } = pickDefaultsFromHost(h.get('host'));
   return (
-    <html lang="en">
+    <html lang={lang === 'zh' ? 'zh-CN' : 'en'}>
       <body className="bg-white text-stone-900 min-h-screen antialiased">
-        <Providers>
+        <Providers initialLang={lang} initialRegion={region}>
           <SeoTracker />
           <GlobalLangSwitch />
           {children}
