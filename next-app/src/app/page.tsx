@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { resolveMinioUrl } from '@/lib/imageUrl';
 import { api, Product } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { useI18n } from '@/lib/i18n/context';
@@ -22,8 +23,7 @@ function getImg(p: any): string {
     || (p.root_soil_images as string[])?.[0]
     || '';
   if (!raw) return '';
-  if (raw.startsWith('http')) return raw;
-  return `/minio/supply-chain/${raw}`;
+  return resolveMinioUrl(raw);
 }
 function hasImg(p: any): boolean { return !!getImg(p); }
 
