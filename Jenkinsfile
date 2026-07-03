@@ -104,6 +104,8 @@ pipeline {
           curl -sf http://100.96.54.109:31307/ | head -c 100 || echo "supplier-map not ready"
           curl -sf http://100.96.54.109:31308/ | head -c 100 || echo "dealer-map not ready"
           curl -sf http://100.96.54.109:31011/ || echo "seo-service not ready"
+          echo "--- image isolation test ---"
+          bash system-test/image-isolation.sh
           echo "System test OK"
         """
       }
