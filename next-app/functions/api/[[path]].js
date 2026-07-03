@@ -1,4 +1,4 @@
-const API_ORIGIN = 'http://106-12-91-182.sslip.io';
+const API_ORIGIN = 'http://209-141-34-146.sslip.io:31030';  // LA flower-api-la NodePort — space 独立走美国出口
 const OVERSEAS_ORIGIN = 'https://horiculture.space';
 
 function rewriteMinioUrls(value) {
