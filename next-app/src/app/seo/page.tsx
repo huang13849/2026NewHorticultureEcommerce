@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { IS_CN } from '@/lib/deploy';
 
 // 禁止静态生成:构建期 fetch /seo-api 相对路径会失败,改为运行时按需渲染
-export const dynamic = 'force-dynamic';
+export const dynamic = process.env.NEXT_PUBLIC_REGION === 'global' ? 'auto' : 'force-dynamic';
 export const revalidate = 0;
 
 export const metadata: Metadata = {
