@@ -13,12 +13,19 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const SEO_API = process.env.NEXT_PUBLIC_SEO_API_URL || (IS_CN ? '/seo-api' : 'http://106.12.91.182/seo-api');
-const FLOWER_API = process.env.NEXT_PUBLIC_API_URL || '/api';
+const SEO_API = process.env.NEXT_PUBLIC_SEO_API_URL
+  // SSR 环境(k3s 里):seo-service ClusterDNS
+  || (typeof window === 'undefined'
+      ? (process.env.SEO_SERVICE_URL || 'http://seo-service:3011')
+      : (IS_CN ? '/seo-api' : 'http://106.12.91.182/seo-api'));
+const FLOWER_API = process.env.NEXT_PUBLIC_API_URL
+  || (typeof window === 'undefined'
+      ? (process.env.API_GATEWAY_URL || 'http://api-gateway-origin.new-ecommerce.svc.cluster.local:3007')
+      : '/api');
 
 async function getJson<T>(path: string, fallback: T): Promise<T> {
   try {
-    const res = await fetch(`${SEO_API}${path}`, { next: { revalidate: 300 } });
+    const res = await fetch(`${SEO_API}${path}`, { next: { revalidate: 300 }, signal: AbortSignal.timeout(5000) });
     if (!res.ok) return fallback;
     return (await res.json()) as T;
   } catch { return fallback; }
@@ -26,7 +33,7 @@ async function getJson<T>(path: string, fallback: T): Promise<T> {
 
 async function getFlowerJson<T>(path: string, fallback: T): Promise<T> {
   try {
-    const res = await fetch(`${FLOWER_API}${path}`, { next: { revalidate: 60 } });
+    const res = await fetch(`${FLOWER_API}${path}`, { next: { revalidate: 60 }, signal: AbortSignal.timeout(5000) });
     if (!res.ok) return fallback;
     return (await res.json()) as T;
   } catch { return fallback; }
