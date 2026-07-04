@@ -8,10 +8,14 @@ const FLOWER_API = process.env.FLOWER_API_INTERNAL || "http://flower-api:3010";
 const SSO_SECRET = process.env.SSO_INTERNAL_SECRET || "zitadel-sso-2026";
 
 export async function POST(req: NextRequest) {
+  const cookie = req.headers.get("cookie") || "";
+  console.log("[sso-restore] CALLED cookie-len:", cookie.length, "has-zsession:", cookie.includes("zitadel.session"));
   try {
-    const cookie = req.headers.get("cookie") || "";
     const m = cookie.match(/(?:^|;\s*)zitadel\.session=([^;]+)/);
-    if (!m) return NextResponse.json({ error: "no_zitadel_cookie" }, { status: 401 });
+    if (!m) {
+      console.log("[sso-restore] NO zitadel.session cookie found. cookies:", cookie.substring(0, 200));
+      return NextResponse.json({ error: "no_zitadel_cookie" }, { status: 401 });
+    }
     const raw = decodeURIComponent(m[1]);
     const [sessionId, sessionToken] = raw.split(":");
     if (!sessionId || !sessionToken) return NextResponse.json({ error: "bad_cookie" }, { status: 401 });
@@ -34,6 +38,7 @@ export async function POST(req: NextRequest) {
     const fj = await fr.json();
     if (!fr.ok) return NextResponse.json({ error: "flower_sso_failed", detail: fj }, { status: 500 });
 
+    console.log("[sso-restore] SUCCESS phone:", phone, "user:", fj.user?.nickname);
     const res = NextResponse.json({ token: fj.token, user: fj.user });
     res.cookies.set("flower_token", fj.token, {
       path: "/",
