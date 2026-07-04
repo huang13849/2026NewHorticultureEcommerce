@@ -16,6 +16,18 @@ stringData:
   SPACE_CLIENT_ID: "380222566284984529"
   SPACE_CLIENT_SECRET: "***REMOVED_SPACE_CLIENT_SECRET***"
 ---
+# Zitadel Service User PAT (方案 Z: 后端调 v2 Session API)
+# 由 jenkins-pat.sh 从 ~/.zitadel-svc-pat 生成后 apply, 不直接写在 repo
+# 为避免 CI 侧手动干预, 这里嵌入当前 pat base64 (轮换请 kubectl edit secret zitadel-svc)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: zitadel-svc
+  namespace: new-ecommerce
+type: Opaque
+data:
+  pat: ZXlKaGJHY2lPaUpCTWpVMlIwTk5TMWNpTENKbGJtTWlPaUpCTWpVMlIwTk5JaXdpYVhZaU9pSnZSRGxYZURoTldVdGZiRk53Uld4S0lpd2lhMmxrSWpvaWIybGtZMHRsZVNJc0luUmhaeUk2SWxKVWFHTndNa281U0V0RVlVbzNWMFpIUlhadlpVRWlmUS53dzVJb1Z3X0Y5UnZaNEZIT3ZfTW1RMC1yMFdGaXR2YjhoRzA1ZUVKT2dJLlRaX1dydTNUX2MtSkk5Z0ouYXVESnFYMFlGT09lZFphT0NPSlZTYXYtWkpScGkybHRWbkltNzMtQUR0eDgxempXNlEuY1NzWXNqb1Z6eXprMkxkX0JTb2kwQQ==
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -35,6 +47,11 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/hostname: huangfra-ubun-master-ms-7e11
+      # 让 pod 内 id.horiculture.club 解析到集群内 zitadel svc, 绕过 Zitadel ExternalDomain 校验
+      hostAliases:
+      - ip: "10.43.154.1"
+        hostnames:
+        - "id.horiculture.club"
       containers:
       - name: flower-next
         image: 100.76.15.64:5001/flower-next:latest
@@ -44,11 +61,27 @@ spec:
         env:
         - name: NODE_ENV
           value: production
-        # Zitadel OIDC
+        # 方案 Z: Zitadel v2 Session API (后端 side)
+        - name: ZITADEL_BASE_URL
+          value: "http://id.horiculture.club:8080"
+        - name: ZITADEL_EXTERNAL_HOST
+          value: "id.horiculture.club"
+        - name: ZITADEL_ORG_ID
+          value: "380209872962126024"
+        - name: ZITADEL_LOGIN_DOMAIN
+          value: "horiculture.local"
+        - name: ZITADEL_SVC_PAT
+          valueFrom:
+            secretKeyRef:
+              name: zitadel-svc
+              key: pat
+        # 前端 next-auth OIDC (保留, 供 space/CF Pages 触发)
         - name: ZITADEL_ISSUER
           value: "http://100.96.54.109:31111"
         - name: NEXTAUTH_URL
           value: "http://100.96.54.109:31000"
+        - name: API_GATEWAY_URL
+          value: "http://api-gateway-origin.new-ecommerce.svc.cluster.local:3007"
         envFrom:
         - secretRef:
             name: flower-next-zitadel
