@@ -24,7 +24,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const token = getToken();
     if (!token) {
-      setLoading(false);
+      // 尝试 SSO 恢复: 若有 zitadel.session cookie, 换 flower JWT
+      const hasZCookie = typeof document !== "undefined" && document.cookie.split(";").some(c => c.trim().startsWith("zitadel.session="));
+      if (!hasZCookie) { setLoading(false); return; }
+      (async () => {
+        try {
+          const r = await fetch("/api/auth/sso-restore", { method: "POST", credentials: "include" });
+          if (!r.ok) { setLoading(false); return; }
+          const j = await r.json();
+          if (j.token) {
+            setToken(j.token);
+            if (typeof window !== "undefined") localStorage.setItem("flower_token", j.token);
+            try { const u = await api.getMe(); setUser(u); } catch {}
+          }
+        } catch (e) { console.warn("[SSO restore] failed:", e); }
+        finally { setLoading(false); }
+      })();
       return;
     }
 

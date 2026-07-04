@@ -229,4 +229,57 @@ router.put('/address', async (req, res) => {
   }
 });
 
+
+// ===== SSO Issue (仅内网, 接受 phone -> 签 JWT, 不做密码校验) =====
+// 前置: 调用方已用 Zitadel 校验过身份 (next-app /api/auth/sso-restore)
+router.post('/sso-issue', async (req, res) => {
+  try {
+    // 简单内网 secret 校验, 避免公网被滥用
+    const secret = req.headers['x-sso-secret'];
+    if (secret !== (process.env.SSO_INTERNAL_SECRET || 'zitadel-sso-2026')) {
+      return res.status(403).json({ error: 'forbidden' });
+    }
+    const { phone } = req.body || {};
+    if (!/^1[3-9]\d{9}$/.test(phone || '')) return res.status(400).json({ error: 'invalid_phone' });
+
+    // 查 / 建 mongo user
+    let users = await db.find('users', { filter: { phone } });
+    let user = users[0];
+    if (!user) {
+      const ins = await db.insert('users', {
+        phone,
+        nickname: `花友${phone.slice(-4)}`,
+        role: 'user',
+        createdAt: new Date(),
+        source: 'zitadel_sso',
+      });
+      user = { _id: ins.insertedId || ins._id, phone, role: 'user', nickname: `花友${phone.slice(-4)}` };
+    }
+
+    const role = user.role || (phone === SUPER_ADMIN_PHONE ? 'super_admin' : 'user');
+    const isSuperAdmin = role === 'super_admin';
+    const token = jwt.sign(
+      { userId: user._id, phone: user.phone, role },
+      JWT_SECRET,
+      { expiresIn: '30d' }
+    );
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        phone: user.phone,
+        nickname: isSuperAdmin ? '超级管理员' : (user.nickname || `花友${phone.slice(-4)}`),
+        avatar: isSuperAdmin ? '👑' : (user.avatar || ''),
+        address: user.address || [],
+        role,
+        isAdmin: role === 'admin' || isSuperAdmin,
+        isSuperAdmin,
+      },
+    });
+  } catch (e) {
+    console.error('[sso-issue]', e);
+    res.status(500).json({ error: 'sso_failed', detail: e.message });
+  }
+});
+
 module.exports = router;
