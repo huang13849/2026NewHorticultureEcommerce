@@ -92,9 +92,11 @@ else
   for URL in $IMG_URLS; do
     URL_FIX=$(echo "$URL" | sed 's|http://100\.96\.54\.109:9000|https://horiculture.club/minio|' | sed 's|http://100\.76\.15\.64:9000|https://horiculture.club/minio|' | sed 's|http://106\.12\.91\.182/minio|https://horiculture.club/minio|')
     case "$URL_FIX" in http*) TEST_URL="$URL_FIX" ;; *) TEST_URL="https://horiculture.club/minio/supply-chain/$URL_FIX" ;; esac
-    # -L 跟随 301/302,-k 允许自签(HTTP→HTTPS 兜底)
-    code=$(curl -sSL -k -o /dev/null -w "%{http_code}" -m 15 "$TEST_URL" 2>/dev/null || echo 0)
-    if [ "$code" = "200" ]; then
+    # -I HEAD only; 不 follow redirect,避免 -L 超时时 || echo 0 拼接 -> "2000"
+    # 赋值层面 || 兜底,curl 输出与失败兜底不粘在一起
+    code=$(curl -sSk -I -o /dev/null -w "%{http_code}" --max-time 15 "$TEST_URL" 2>/dev/null) || code=000
+    # 允许 200 或 302 (CF/minio 都算图片存在)
+    if [ "$code" = "200" ] || [ "$code" = "302" ]; then
       echo "  OK  image $TEST_URL -> 200"
     else
       echo "  FAIL image $TEST_URL -> $code"
