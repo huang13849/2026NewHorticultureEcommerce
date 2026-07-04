@@ -40,18 +40,27 @@ const nextConfig: NextConfig = {
     ? {}
     : {
         async rewrites() {
-          return [
-            // API Gateway (直连 MongoDB 网关)
-            { source: '/api/mongo/:path*', destination: `${API_GATEWAY_URL}/api/mongo/:path*` },
-            // 独立地图 iframe 站
-            { source: '/supplier-map/:path*', destination: `${SUPPLIER_MAP_URL}/:path*` },
-            { source: '/dealer-map/:path*', destination: `${DEALER_MAP_URL}/:path*` },
-            // SEO 微服务 API (/api/seo/*, /api/analytics/*)
-            { source: '/api/seo/:path*', destination: `${SEO_SERVICE_URL}/api/seo/:path*` },
-            { source: '/api/analytics/:path*', destination: `${SEO_SERVICE_URL}/api/analytics/:path*` },
-            // 其余 /api/* 走 flower-api (payment, auth, products, wechat-pay, ...)
-            { source: '/api/:path*', destination: `${FLOWER_API_URL}/api/:path*` },
-          ];
+          // 使用 {beforeFiles, afterFiles, fallback} 三段式，因为 default (afterFiles)
+          // 在 dynamic filesystem routes 之前触发，会截胡 /api/auth/[...nextauth]。
+          // - beforeFiles: 精确的第三方微服务路径 (SEO/mongo/map)
+          // - afterFiles : 空
+          // - fallback   : 通配 /api/:path* → flower-api，只在 next.js 找不到对应 route 时才生效，
+          //                所以 NextAuth 的 /api/auth/[...nextauth] 会走本地 handler。
+          return {
+            beforeFiles: [
+              { source: '/supplier-map/:path*', destination: `${SUPPLIER_MAP_URL}/:path*` },
+              { source: '/dealer-map/:path*', destination: `${DEALER_MAP_URL}/:path*` },
+              { source: '/api/mongo/:path*', destination: `${API_GATEWAY_URL}/api/mongo/:path*` },
+              { source: '/api/seo/:path*', destination: `${SEO_SERVICE_URL}/api/seo/:path*` },
+              { source: '/api/analytics/:path*', destination: `${SEO_SERVICE_URL}/api/analytics/:path*` },
+            ],
+            afterFiles: [],
+            fallback: [
+              // 其余 /api/* 走 flower-api (payment, products, wechat-pay, ...)
+              // NextAuth 的 /api/auth/[...nextauth] 是 filesystem route，会先命中，不会走这里。
+              { source: '/api/:path*', destination: `${FLOWER_API_URL}/api/:path*` },
+            ],
+          };
         },
       }),
 };
