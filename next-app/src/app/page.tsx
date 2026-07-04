@@ -282,7 +282,7 @@ export default function HomePage() {
             </div>
             <div className="flex items-center gap-2">
               <RegionSwitch />
-              <ZitadelAuthBar />
+              <AuthMenuButton />
             </div>
           </div>
         </nav>
