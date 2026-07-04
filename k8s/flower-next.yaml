@@ -61,6 +61,8 @@ spec:
         env:
         - name: NODE_ENV
           value: production
+        - name: ZITADEL_LOGIN_V2_URL
+          value: "http://100.96.54.109:31112"
         # 方案 Z: Zitadel v2 Session API (后端 side)
         - name: ZITADEL_BASE_URL
           value: "http://id.horiculture.club:8080"
