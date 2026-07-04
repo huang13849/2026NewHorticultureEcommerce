@@ -33,7 +33,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (j.token) {
             setToken(j.token);
             if (typeof window !== "undefined") localStorage.setItem("flower_token", j.token);
-            try { const u = await api.getMe(); setUser(u); } catch {}
+            // sso-restore 已返回完整 user, 直接用 (不调 getMe, 因 /api/auth/me 被 NextAuth 拦截)
+            if (j.user) setUser(j.user);
           }
         } catch (e) { console.warn("[SSO restore] failed:", e); }
         finally { setLoading(false); }
@@ -58,28 +59,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch { /* ignore optimistic decode errors */ }
 
-    api.getMe()
-      .then(u => {
-        setUser(u);
-      })
-      .catch(async err => {
-        console.warn('[Auth] getMe failed, trying SSO restore:', err.message);
-        setToken(null);
-        // 旧 token 失效 -> 试 zitadel.session cookie SSO 恢复
-        try {
-          const r = await fetch("/api/auth/sso-restore", { method: "POST", credentials: "include" });
-          if (r.ok) {
-            const j = await r.json();
-            if (j.token) {
-              setToken(j.token);
-              if (typeof window !== "undefined") localStorage.setItem("flower_token", j.token);
-              try { const u = await api.getMe(); setUser(u); } catch {}
-            }
+    // getMe 走 /api/auth/me 可能被 NextAuth 拦截, 先试 sso-restore 刷新
+    (async () => {
+      try {
+        const r = await fetch("/api/auth/sso-restore", { method: "POST", credentials: "include" });
+        if (r.ok) {
+          const j = await r.json();
+          if (j.token) {
+            setToken(j.token);
+            if (typeof window !== "undefined") localStorage.setItem("flower_token", j.token);
+            if (j.user) setUser(j.user);
           }
-        } catch (e) { console.warn("[SSO restore fallback] failed:", e); }
-        setUser(null);
-      })
-      .finally(() => setLoading(false));
+        } else {
+          // sso-restore 也失败 -> 清 token
+          setToken(null);
+          setUser(null);
+        }
+      } catch (e) {
+        console.warn('[Auth] sso-restore failed:', e);
+      }
+      setLoading(false);
+    })();
   }, []);
 
   // 跨标签登出联动: 页面重新可见时检查 SSO cookie 是否还在
@@ -100,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (j.token && !getToken()) {
             setToken(j.token);
             if (typeof window !== "undefined") localStorage.setItem("flower_token", j.token);
-            try { const u = await api.getMe(); setUser(u); } catch {}
+            if (j.user) setUser(j.user);
           }
         }
       } catch {}
