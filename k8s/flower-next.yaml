@@ -1,4 +1,21 @@
 ---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: flower-next-zitadel
+  namespace: new-ecommerce
+type: Opaque
+stringData:
+  # NextAuth session secret (32-byte hex). 生产上请轮换。
+  NEXTAUTH_SECRET: "5a93a5ef0c11dbfa29f2fc16ad406f748feff1e3751d626c419e7441134fa499"
+  AUTH_SECRET: "5a93a5ef0c11dbfa29f2fc16ad406f748feff1e3751d626c419e7441134fa499"
+  # club-web (horiculture.club, 中文)
+  CLUB_CLIENT_ID: "380222397556523217"
+  CLUB_CLIENT_SECRET: "0xbEz7VNIqLndmsXF2CNUbyByY4JGcgEE0E0BzyXeNYr7gEGmc6chenldTxrmChv"
+  # space-web (horiculture.space, 英文)
+  SPACE_CLIENT_ID: "380222566284984529"
+  SPACE_CLIENT_SECRET: "ZkRQPNUkxJYDHQ0cKogyvF1lvLGCjJwiULX8JpohzhD0pjwFTpJbg7CrHYWP64rh"
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -27,6 +44,14 @@ spec:
         env:
         - name: NODE_ENV
           value: production
+        # Zitadel OIDC
+        - name: ZITADEL_ISSUER
+          value: "http://100.96.54.109:31111"
+        - name: NEXTAUTH_URL
+          value: "http://100.96.54.109:31000"
+        envFrom:
+        - secretRef:
+            name: flower-next-zitadel
 ---
 apiVersion: v1
 kind: Service
@@ -41,4 +66,3 @@ spec:
   - port: 3000
     targetPort: 3000
     nodePort: 31000
-
