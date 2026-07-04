@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Providers } from './providers';
-import GlobalLangSwitch from './components/GlobalLangSwitch';
 import SeoTracker from './components/SeoTracker';
 
 // 按 hostname 选默认语言/区域: horiculture.club → zh/cn, 其它(含 space) → en/us
@@ -53,7 +52,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-white text-stone-900 min-h-screen antialiased">
         <Providers initialLang={lang} initialRegion={region}>
           <SeoTracker />
-          <GlobalLangSwitch />
           {children}
         </Providers>
       </body>
