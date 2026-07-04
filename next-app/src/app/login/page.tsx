@@ -56,12 +56,6 @@ function LoginContent() {
   }
 
   const handleLogin = async () => {
-    // 国际版兜底: 就算表单泄漏出来, 提交也强制走 Zitadel。
-    if (isInternationalHost()) {
-      setSsoRedirecting(true);
-      await startSSO(redirectTo);
-      return;
-    }
     if (!phone || phone.length < 11) {
       setError('请输入正确的手机号');
       return;
@@ -94,7 +88,22 @@ function LoginContent() {
     <main className="min-h-screen bg-white text-stone-900 flex flex-col items-center justify-center px-8">
       <p className="text-6xl mb-4">🌿</p>
       <h1 className="text-3xl font-bold text-emerald-700">植物收藏家</h1>
-      <p className="text-sm text-stone-400 mt-2 mb-8">探索绿植花卉 · 供应链新体验</p>
+      <p className="text-sm text-stone-400 mt-2 mb-6">探索绿植花卉 · 供应链新体验</p>
+
+      {/* Zitadel SSO 优先入口 (α 双通道: 老手机验证码流程保留在下方) */}
+      <button
+        onClick={() => { setError(''); setSsoRedirecting(true); void startSSO(redirectTo); }}
+        disabled={ssoRedirecting}
+        className="w-full flex items-center justify-center gap-2 bg-white border-2 border-emerald-600 text-emerald-700 py-3 rounded-xl text-base font-bold mb-4 hover:bg-emerald-50 transition-colors disabled:opacity-60"
+      >
+        <span>🔐</span><span>{ssoRedirecting ? '跳转中...' : '使用 Zitadel 登录 / 注册'}</span>
+      </button>
+
+      <div className="w-full flex items-center gap-3 my-2 mb-6">
+        <div className="flex-1 h-px bg-stone-200" />
+        <span className="text-xs text-stone-400">或使用手机号</span>
+        <div className="flex-1 h-px bg-stone-200" />
+      </div>
 
       {error && (
         <div className="w-full bg-red-50 text-red-600 text-sm p-3 rounded-xl mb-4 border border-red-200">
