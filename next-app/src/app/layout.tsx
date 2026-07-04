@@ -3,7 +3,6 @@ import './globals.css';
 import { Providers } from './providers';
 import GlobalLangSwitch from './components/GlobalLangSwitch';
 import SeoTracker from './components/SeoTracker';
-import ZitadelAuthBar from './components/ZitadelAuthBar';
 
 // 按 hostname 选默认语言/区域: horiculture.club → zh/cn, 其它(含 space) → en/us
 // 静态导出 (CF Pages) 时没有 request headers,靠 build-time env 决定默认区域。
@@ -55,9 +54,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers initialLang={lang} initialRegion={region}>
           <SeoTracker />
           <GlobalLangSwitch />
-          <div className="fixed right-3 top-3 z-50">
-            <ZitadelAuthBar />
-          </div>
           {children}
         </Providers>
       </body>
