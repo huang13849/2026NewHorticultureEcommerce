@@ -67,7 +67,6 @@ export default function AuthMenuButton({ className = '', dark = false, loginRedi
               <div className="my-1 border-t border-white/10 opacity-40" />
               <div className="px-3 py-1 text-[10px] uppercase tracking-wider opacity-50">管理后台</div>
               <a href="/admin" className="block px-3 py-2 hover:bg-emerald-500/10">🎛 管理后台</a>
-              <a href="/seo" className="block px-3 py-2 hover:bg-emerald-500/10">🔍 SEO 管理</a>
               {isSuper && (
                 <a href="http://100.96.54.109:8088/" target="_blank" rel="noreferrer" className="block px-3 py-2 hover:bg-emerald-500/10">🌺 供应链平台 ↗</a>
               )}
