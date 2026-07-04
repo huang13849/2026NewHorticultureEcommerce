@@ -60,6 +60,7 @@ const authConfig = async (): Promise<NextAuthConfig> => {
         authorization: {
           params: {
             scope: 'openid profile email offline_access',
+            ui_locales: 'zh-CN',
           },
         },
         wellKnown: `${ZITADEL_ISSUER}/.well-known/openid-configuration`,
