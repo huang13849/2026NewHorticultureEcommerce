@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { startSSO, isInternationalHost } from '@/lib/sso';
 
 type Props = {
   className?: string;
@@ -27,6 +28,18 @@ export default function AuthMenuButton({ className = '', dark = false, loginRedi
   }, [user]);
 
   if (!user) {
+    // 国际版：点"登录"直接触发 Zitadel SSO，不落到本地 phone+code 页面。
+    if (isInternationalHost()) {
+      return (
+        <button
+          type="button"
+          onClick={() => { void startSSO(redirect); }}
+          className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-xs font-bold transition-colors ${shell} ${className}`}
+        >
+          <span>🔐</span><span>Sign in</span>
+        </button>
+      );
+    }
     return (
       <a href={loginHref} className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-xs font-bold transition-colors ${shell} ${className}`}>
         <span>👤</span><span>登录</span>

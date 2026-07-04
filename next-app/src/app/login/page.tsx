@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
+import { startSSO, isInternationalHost } from '@/lib/sso';
 
 type LoginMode = 'code' | 'password';
 
@@ -12,6 +13,28 @@ function LoginContent() {
   const redirectTo = searchParams.get('redirect') || '/';
   const { login, user } = useAuth();
   const [mode, setMode] = useState<LoginMode>('code');
+  const [ssoRedirecting, setSsoRedirecting] = useState(false);
+
+  // 国际版 (horiculture.space): 不显示本地 phone+code, 立即跳 Zitadel
+  useEffect(() => {
+    if (isInternationalHost() && !user) {
+      setSsoRedirecting(true);
+      void startSSO(redirectTo);
+    }
+  }, [user, redirectTo]);
+
+  if (ssoRedirecting) {
+    return (
+      <main className="min-h-screen bg-white text-stone-900 flex items-center justify-center px-8">
+        <div className="text-center">
+          <p className="text-5xl mb-4">🔐</p>
+          <h1 className="text-2xl font-bold text-emerald-700">Redirecting to Sign in</h1>
+          <p className="text-sm text-stone-500 mt-2">You will be authenticated via Zitadel SSO...</p>
+        </div>
+      </main>
+    );
+  }
+
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('123456');
   const [password, setPassword] = useState('');
@@ -33,6 +56,12 @@ function LoginContent() {
   }
 
   const handleLogin = async () => {
+    // 国际版兜底: 就算表单泄漏出来, 提交也强制走 Zitadel。
+    if (isInternationalHost()) {
+      setSsoRedirecting(true);
+      await startSSO(redirectTo);
+      return;
+    }
     if (!phone || phone.length < 11) {
       setError('请输入正确的手机号');
       return;
