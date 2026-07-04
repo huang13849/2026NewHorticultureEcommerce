@@ -36,7 +36,7 @@ export default function AuthMenuButton({ className = '', dark = false, loginRedi
           onClick={() => { void startSSO(redirect); }}
           className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-xs font-bold transition-colors ${shell} ${className}`}
         >
-          <span>🔐</span><span>Sign in</span>
+          <span>🔐</span><span>Zitadel 登录</span>
         </button>
       );
     }
