@@ -1,11 +1,7 @@
 "use client";
-// /login - 自建植物风单页登录 (方案 X)
-// 特性:
-// - 左上角 logo "植物收藏家"
-// - 单页表单: 手机号 + 密码/验证码切换
-// - 微信登录占位按钮 (未来接 wx-open)
-// - 注册 = 手机号 + 验证码, 后端 auto-create user
-// - 登录后写 localStorage.flower_token, 触发 AuthContext 恢复登录态
+// /login - 自建植物风单页登录 + Zitadel SSO 挂钩 (方案 Z)
+// - 双写: flower-api login (老用户体系) + Zitadel v2 sessions (SSO)
+// - 支持 OIDC 流程: URL 有 ?authRequest=xxx 时, 登录完直接 302 回原 app
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -16,6 +12,7 @@ function LoginInner() {
   const sp = useSearchParams();
   const { user, login } = useAuth();
   const redirect = sp?.get("redirect") || "/";
+  const authRequestId = sp?.get("authRequest") || null;
 
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -28,8 +25,8 @@ function LoginInner() {
   const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
-    if (user) router.replace(redirect);
-  }, [user, redirect, router]);
+    if (user && !authRequestId) router.replace(redirect);
+  }, [user, redirect, router, authRequestId]);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -64,6 +61,10 @@ function LoginInner() {
     if (!/^1[3-9]\d{9}$/.test(phone)) { setErr("请输入正确的手机号"); return; }
     setLoading(true);
     try {
+      // 用户输入的密码 (code 模式下用固定值同步到 Zitadel)
+      const effectivePassword = mode === "password" ? password : `oob_${code}`;
+
+      // 1) flower-api login (保持原用户体系)
       if (mode === "password") {
         if (!password) throw new Error("请输入密码");
         await login(phone, undefined, password);
@@ -71,6 +72,28 @@ function LoginInner() {
         if (!code) throw new Error("请输入验证码");
         await login(phone, code);
       }
+
+      // 2) Zitadel session (最佳努力, 失败不阻塞老登录)
+      try {
+        const zr = await fetch("/api/auth/zsession", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            phone,
+            password: effectivePassword,
+            authRequestId,
+          }),
+        });
+        if (zr.ok && authRequestId) {
+          const zj = (await zr.json()) as { callbackUrl?: string };
+          if (zj.callbackUrl) {
+            window.location.href = zj.callbackUrl;
+            return;
+          }
+        }
+      } catch { /* ignore, flower-api login 已成功 */ }
+
+      // 3) 直登跳回首页 / redirect
       router.replace(redirect);
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : "登录失败");
@@ -87,29 +110,27 @@ function LoginInner() {
     <div style={{
       minHeight: "100vh",
       background: "linear-gradient(135deg, #ecfdf5 0%, #ffffff 40%, #f0fdf4 100%)",
-      display: "flex",
-      flexDirection: "column",
+      display: "flex", flexDirection: "column",
     }}>
-      {/* 左上角 logo */}
       <header style={{ padding: "18px 28px", display: "flex", alignItems: "center", gap: 10 }}>
         <span style={{ fontSize: 28 }}>🌿</span>
         <div>
           <div style={{ fontWeight: 800, color: "#047857", fontSize: 17, lineHeight: 1.1 }}>植物收藏家</div>
           <div style={{ fontSize: 10, color: "#065f46", opacity: 0.75 }}>Plant Collector · 林草二十年</div>
         </div>
+        {authRequestId && (
+          <span style={{ marginLeft: "auto", fontSize: 11, color: "#059669", background: "#ecfdf5", padding: "4px 10px", borderRadius: 12, border: "1px solid #a7f3d0" }}>
+            🔗 应用登录
+          </span>
+        )}
       </header>
 
-      {/* 花草点缀背景 */}
       <div style={{ position: "absolute", top: 60, right: -40, fontSize: 200, opacity: 0.08, pointerEvents: "none" }}>🌸</div>
       <div style={{ position: "absolute", bottom: -20, left: -30, fontSize: 180, opacity: 0.08, pointerEvents: "none" }}>🌱</div>
 
-      {/* 主内容 */}
       <main style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", position: "relative", zIndex: 1 }}>
         <div style={{
-          width: "100%",
-          maxWidth: 400,
-          background: "#ffffff",
-          borderRadius: 20,
+          width: "100%", maxWidth: 400, background: "#ffffff", borderRadius: 20,
           padding: "32px 28px",
           boxShadow: "0 10px 40px rgba(4, 120, 87, 0.08), 0 2px 8px rgba(0,0,0,0.03)",
           border: "1px solid #d1fae5",
@@ -120,7 +141,6 @@ function LoginInner() {
           </p>
 
           <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {/* phone */}
             <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               <span style={{ fontSize: 12, color: "#374151", fontWeight: 600 }}>手机号</span>
               <input
@@ -132,7 +152,6 @@ function LoginInner() {
               />
             </label>
 
-            {/* password or code */}
             {mode === "password" ? (
               <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                 <span style={{ fontSize: 12, color: "#374151", fontWeight: 600 }}>密码</span>
@@ -189,7 +208,6 @@ function LoginInner() {
               {loading ? "登录中..." : (mode === "code" ? "登录 / 注册" : "登录")}
             </button>
 
-            {/* 切换 mode */}
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginTop: 4 }}>
               <button
                 type="button" onClick={() => { setMode(mode === "code" ? "password" : "code"); setErr(""); }}
@@ -205,14 +223,12 @@ function LoginInner() {
             </div>
           </form>
 
-          {/* divider */}
           <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "22px 0 16px" }}>
             <div style={{ flex: 1, height: 1, background: "#e5e7eb" }}></div>
             <span style={{ fontSize: 11, color: "#9ca3af" }}>其他登录方式</span>
             <div style={{ flex: 1, height: 1, background: "#e5e7eb" }}></div>
           </div>
 
-          {/* 第三方 */}
           <button
             type="button" onClick={wxLogin}
             style={{
