@@ -62,12 +62,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .then(u => {
         setUser(u);
       })
-      .catch(err => {
-        console.warn('[Auth] getMe failed, clearing token:', err.message);
+      .catch(async err => {
+        console.warn('[Auth] getMe failed, trying SSO restore:', err.message);
         setToken(null);
+        // 旧 token 失效 -> 试 zitadel.session cookie SSO 恢复
+        try {
+          const r = await fetch("/api/auth/sso-restore", { method: "POST", credentials: "include" });
+          if (r.ok) {
+            const j = await r.json();
+            if (j.token) {
+              setToken(j.token);
+              if (typeof window !== "undefined") localStorage.setItem("flower_token", j.token);
+              try { const u = await api.getMe(); setUser(u); } catch {}
+            }
+          }
+        } catch (e) { console.warn("[SSO restore fallback] failed:", e); }
         setUser(null);
       })
       .finally(() => setLoading(false));
+  }, []);
+
+  // 跨标签登出联动: 页面重新可见时检查 SSO cookie 是否还在
+  useEffect(() => {
+    const onVisible = async () => {
+      if (document.visibilityState !== "visible") return;
+      // 检查 SSO 是否还有效 (调 sso-restore, 401 说明已登出)
+      try {
+        const r = await fetch("/api/auth/sso-restore", { method: "POST", credentials: "include" });
+        if (r.status === 401) {
+          // SSO 已失效 -> 清本地登录态
+          setToken(null);
+          setUser(null);
+          if (typeof window !== "undefined") localStorage.removeItem("flower_token");
+        } else if (r.ok) {
+          // SSO 仍有效 -> 确保本地 token 在
+          const j = await r.json();
+          if (j.token && !getToken()) {
+            setToken(j.token);
+            if (typeof window !== "undefined") localStorage.setItem("flower_token", j.token);
+            try { const u = await api.getMe(); setUser(u); } catch {}
+          }
+        }
+      } catch {}
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
   }, []);
 
   const login = useCallback(async (phone: string, code?: string, password?: string) => {
