@@ -25,7 +25,18 @@ function LoginInner() {
   const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
-    if (user && !authRequestId) router.replace(redirect);
+    if (user && !authRequestId) {
+      if (/^https?:\/\//i.test(redirect)) {
+        try {
+          const u = new URL(redirect);
+          if (/(^|\.)horiculture\.(club|space)$/i.test(u.hostname)) {
+            window.location.href = redirect;
+            return;
+          }
+        } catch {}
+      }
+      router.replace(redirect);
+    }
   }, [user, redirect, router, authRequestId]);
 
   useEffect(() => {
@@ -94,6 +105,16 @@ function LoginInner() {
       } catch { /* ignore, flower-api login 已成功 */ }
 
       // 3) 直登跳回首页 / redirect
+      // 支持 external redirect (仅 .horiculture.club 子域, 用于 peony/tropical SSO 回跳)
+      if (/^https?:\/\//i.test(redirect)) {
+        try {
+          const u = new URL(redirect);
+          if (/(^|\.)horiculture\.(club|space)$/i.test(u.hostname)) {
+            window.location.href = redirect;
+            return;
+          }
+        } catch { /* invalid url, fall through */ }
+      }
       router.replace(redirect);
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : "登录失败");
