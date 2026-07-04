@@ -9,7 +9,7 @@ WEBROOT=/root/docker-nginx/acme-challenge
 NGINX_CONF=/root/docker-nginx/nginx.conf
 
 # 前置: DNS 已解析到 106.12.91.182
-IP=$(getent ahostsv4 "$DOMAIN" | head -1 | awk '"'"'{print $1}'"'"')
+IP=$(dig +short "$DOMAIN" @8.8.8.8 | head -1)
 if [ "$IP" != "106.12.91.182" ]; then
   echo "!!! $DOMAIN 未解析到 106.12.91.182 (当前=$IP), 请先加 DNS A 记录"
   exit 1
