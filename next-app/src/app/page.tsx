@@ -8,6 +8,7 @@ import { useI18n } from '@/lib/i18n/context';
 import { useRegion, type RegionCode } from '@/lib/region-context';
 import TabBar from './TabBar';
 import AuthMenuButton from './components/AuthMenuButton';
+import ZitadelAuthBar from './components/ZitadelAuthBar';
 import RegionSwitch from './components/RegionSwitch';
 import { IS_CN } from '@/lib/deploy';
 
@@ -281,7 +282,7 @@ export default function HomePage() {
             </div>
             <div className="flex items-center gap-2">
               <RegionSwitch />
-              <AuthMenuButton />
+              <ZitadelAuthBar />
             </div>
           </div>
         </nav>
