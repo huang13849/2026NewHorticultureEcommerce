@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import TabBar from '../TabBar';
 import AuthMenuButton from '../components/AuthMenuButton';
+import RegionSwitch from '../components/RegionSwitch';
 import { IS_CN } from '@/lib/deploy';
 import { useAuth } from '@/lib/auth-context';
 import { getToken } from '@/lib/api';
@@ -292,6 +293,7 @@ export default function SuccessStoriesPage() {
                   <div className="text-xs text-white/60 mt-1">{t('sceneCount', { count: totalCount })}</div>
                   <div className="text-[11px] text-white/55 mt-2">{isAdmin ? t('adminMode') : t('visitorMode')}</div>
                 </div>
+                <RegionSwitch />
                 <AuthMenuButton dark loginRedirect="/success-stories" />
               </div>
             </div>

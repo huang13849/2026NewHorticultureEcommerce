@@ -8,6 +8,7 @@ import { useI18n } from '@/lib/i18n/context';
 import { useRegion, type RegionCode } from '@/lib/region-context';
 import TabBar from './TabBar';
 import AuthMenuButton from './components/AuthMenuButton';
+import RegionSwitch from './components/RegionSwitch';
 import { IS_CN } from '@/lib/deploy';
 
 const API = process.env.NEXT_PUBLIC_API_URL || "/api";
@@ -279,6 +280,7 @@ export default function HomePage() {
               <a href="/garden" className="hover:text-emerald-700 transition-colors">{t('nav.garden')}</a>
             </div>
             <div className="flex items-center gap-2">
+              <RegionSwitch />
               <AuthMenuButton />
             </div>
           </div>
