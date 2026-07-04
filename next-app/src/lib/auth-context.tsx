@@ -24,9 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const token = getToken();
     if (!token) {
-      // 尝试 SSO 恢复: 若有 zitadel.session cookie, 换 flower JWT
-      const hasZCookie = typeof document !== "undefined" && document.cookie.split(";").some(c => c.trim().startsWith("zitadel.session="));
-      if (!hasZCookie) { setLoading(false); return; }
+      // 尝试 SSO 恢复: HttpOnly cookie JS 读不到, 无脑试, 让后端判
       (async () => {
         try {
           const r = await fetch("/api/auth/sso-restore", { method: "POST", credentials: "include" });
@@ -88,6 +86,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     if (typeof window !== 'undefined') {
       localStorage.removeItem('flower_token');
+      // 广播: 清 zitadel.session cookie, tropical/peony 刷新即被登出
+      fetch('/api/auth/sso-logout', { method: 'POST', credentials: 'include' }).catch(() => {});
     }
   }, []);
 
