@@ -1,0 +1,39 @@
+# 国际版 (LA / horiculture.space) 构建
+# 与 CF Pages 版本区别: 走 standalone (k3s SSR), 不做 static export
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci
+COPY . .
+# 用 docker 版配置, 但强制关闭 CF-Pages 判定,让 output=standalone (国际版 SSR)
+RUN cp next.config.docker.ts next.config.ts && \
+    sed -i "s|process.env.NEXT_PUBLIC_REGION === 'global'|false|g" next.config.ts
+ENV NEXT_TELEMETRY_DISABLED=1
+# rewrites 的 upstream(编译期常量): LA pod 通过 Tailscale NodePort 打 master 上的微服务
+ENV FLOWER_API_URL=http://100.79.211.107:31030
+ENV API_GATEWAY_URL=http://100.79.211.107:31030
+ENV SUPPLIER_MAP_URL=http://100.96.54.109:31307
+ENV DEALER_MAP_URL=http://100.96.54.109:31308
+ENV SEO_SERVICE_URL=http://100.96.54.109:31011
+# 前端浏览器侧同源
+ENV NEXT_PUBLIC_API_URL=/api
+ENV NEXT_PUBLIC_SITE_URL=https://horiculture.space
+ENV NEXT_PUBLIC_SEO_API_URL=https://horiculture.space/seo-api
+# 国际版业务开关(deploy.ts 依赖 NEXT_PUBLIC_REGION): 英文, Stripe+PayPal
+ENV NEXT_PUBLIC_DEFAULT_LANG=en
+ENV NEXT_PUBLIC_DEFAULT_REGION=global
+ENV NEXT_PUBLIC_REGION=global
+RUN npm run build
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+USER nextjs
+EXPOSE 3000
+CMD ["node", "server.js"]
