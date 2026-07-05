@@ -58,14 +58,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
 
     async function boot() {
-      // 1. localStorage 有 flower_token 就用 (乐观还原)
-      const local = getToken();
-      if (local) {
-        const optimistic = decodeFlowerToken(local);
-        if (optimistic) setUser(optimistic);
-      }
-
-      // 2. 拉 NextAuth session (若已通过 Zitadel 登录, 里面会有 flowerToken)
+      // Zitadel OIDC-only: NextAuth session 是唯一真理.
+      // 不再用旧 localStorage flower_token 乐观还原 (会导致"看似已登录"死循环).
       const sess = await fetchSession();
       if (cancelled) return;
 
@@ -75,21 +69,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const u = sess.flowerUser as User | undefined;
         if (u) setUser(u);
         else setUser(decodeFlowerToken(sess.flowerToken));
-      } else if (!local) {
-        // 无 session 也无本地 -> 尝试 /auth/me (可能 flower_token 还在但 session 过期)
-        setUser(null);
       } else {
-        // 有本地 token 但 session 没了 -> 让 /auth/me 判
-        try {
-          const u = await api.getMe();
-          if (!cancelled) setUser(u);
-        } catch {
-          if (!cancelled) {
-            setToken(null);
-            setUser(null);
-            try { localStorage.removeItem('flower_token'); } catch {}
-          }
-        }
+        // 无 NextAuth session -> 视为未登录, 清掉可能残留的旧 token
+        setUser(null);
+        setToken(null);
+        try { localStorage.removeItem('flower_token'); } catch {}
       }
       if (!cancelled) setLoading(false);
     }
