@@ -27,19 +27,30 @@ for svc in "${!SVC_CTX[@]}"; do
   docker push "$IMG_LATEST"
 done
 
+echo "-- Building flower-next-la (Dockerfile.la, 国际版 LA/horiculture.space) --"
+IMG_LA="100.76.15.64:5001/flower-next:la-$COMMIT_SHA"
+IMG_LA_LATEST="100.76.15.64:5001/flower-next:la-latest"
+docker build -t "$IMG_LA" -t "$IMG_LA_LATEST" -f next-app/Dockerfile.la next-app
+docker push "$IMG_LA"
+docker push "$IMG_LA_LATEST"
+
 echo "======= [3/5] 部署到 k3s ======="
 kubectl apply -f k8s/
 for svc in "${!SVC_CTX[@]}"; do
   kubectl -n new-ecommerce set image deployment/$svc $svc=100.76.15.64:5001/$svc:$COMMIT_SHA
 done
+kubectl -n new-ecommerce set image deployment/flower-next-la flower-next=100.76.15.64:5001/flower-next:la-$COMMIT_SHA
+# Recreate 策略下老 pod 释放 hostPort 后新 pod 才能起, 显式 delete pod 加速
+kubectl -n new-ecommerce delete pod -l app=flower-next-la --ignore-not-found
 
 echo "======= [4/5] 等 rollout ======="
 for svc in "${!SVC_CTX[@]}"; do
   kubectl -n new-ecommerce rollout status deployment/$svc --timeout=180s
 done
+kubectl -n new-ecommerce rollout status deployment/flower-next-la --timeout=180s
 
 echo "======= [5/5] system-test (retry 5x) ======="
-for check in "31010:404" "31000:200" "31011:200" "31307:200" "31308:200"; do
+for check in "31010:404" "31000:200" "31011:200" "31307:200" "31308:200" "32000:200"; do
   port="${check%:*}"
   expected="${check#*:}"
   code="0"
@@ -104,6 +115,14 @@ else
     fi
   done
   if [ "$FAIL" = "1" ]; then exit 1; fi
+fi
+
+echo "======= [6/5] Push to GitHub (trigger Cloudflare Pages) ======="
+# host 上 ~/.ssh/id_ed25519 已加到 GitHub, ssh -T git@github.com 已通
+if git push origin main 2>&1; then
+  echo "  OK  pushed main -> origin (GitHub); CF Pages should auto-build"
+else
+  echo "  WARN github push failed (deploy still counts as success — CI can retry later)"
 fi
 
 echo "======= DEPLOY SUCCESS: $COMMIT_SHA ======="

@@ -1,0 +1,77 @@
+---
+# LA-node-hosted flower-next (国际版, horiculture.space)
+# 同节点跟 flower-api-la (k8s.node1 = VPS-209 in LA)
+# Service = ClusterIP (让 master 的 32000 端口空闲, master 上另起 socat 反向转发)
+# 用 hostPort=32000, 让 LA 节点直接 bind 32000 (209.141.34.146:32000 / 100.79.211.107:32000)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flower-next-la
+  namespace: new-ecommerce
+  labels:
+    app: flower-next-la
+    zone: us
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flower-next-la
+  template:
+    metadata:
+      labels:
+        app: flower-next-la
+        zone: us
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: k8s.node1
+      dnsPolicy: Default
+      containers:
+      - name: flower-next
+        image: 100.76.15.64:5001/flower-next:la-latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          hostPort: 32000
+          protocol: TCP
+        env:
+        - name: NODE_ENV
+          value: production
+        - name: PORT
+          value: "3000"
+        - name: API_GATEWAY_URL
+          value: http://100.79.211.107:31030
+        - name: FLOWER_API_URL
+          value: http://100.79.211.107:31030
+        - name: SUPPLIER_MAP_URL
+          value: http://100.96.54.109:31307
+        - name: DEALER_MAP_URL
+          value: http://100.96.54.109:31308
+        - name: SEO_SERVICE_URL
+          value: http://100.96.54.109:31011
+        - name: NEXTAUTH_URL
+          value: https://horiculture.space
+        - name: NEXT_PUBLIC_API_URL
+          value: /api
+        - name: NEXT_PUBLIC_SITE_URL
+          value: https://horiculture.space
+        readinessProbe:
+          tcpSocket: { port: 3000 }
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket: { port: 3000 }
+          initialDelaySeconds: 30
+          periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flower-next-la
+  namespace: new-ecommerce
+spec:
+  type: ClusterIP
+  selector:
+    app: flower-next-la
+  ports:
+  - port: 3000
+    targetPort: 3000
