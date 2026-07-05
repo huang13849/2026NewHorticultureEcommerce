@@ -47,11 +47,6 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/hostname: huangfra-ubun-master-ms-7e11
-      # 让 pod 内 id.horiculture.club 解析到集群内 zitadel svc, 绕过 Zitadel ExternalDomain 校验
-      hostAliases:
-      - ip: "10.43.154.1"
-        hostnames:
-        - "id.horiculture.club"
       containers:
       - name: flower-next
         image: 100.76.15.64:5001/flower-next:latest
@@ -87,7 +82,7 @@ spec:
               name: zitadel-svc
               key: pat
         - name: NEXTAUTH_URL
-          value: "http://100.96.54.109:31000"
+          value: "https://horiculture.club"
         - name: API_GATEWAY_URL
           value: "http://api-gateway-origin.new-ecommerce.svc.cluster.local:3007"
         envFrom:
