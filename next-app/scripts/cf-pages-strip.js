@@ -14,8 +14,9 @@ if (!isGlobal || isLAStandalone) {
 }
 
 const ROUTES_TO_STRIP = [
-  'src/app/seo',            // force-dynamic + 运行时 fetch, CF 静态导出不支持
-  'src/app/api/auth',       // NextAuth v5 + SSO 运行时路由 (force-dynamic), CF 静态导出不支持
+  'src/app/seo',                        // force-dynamic + 运行时 fetch, CF 静态导出不支持
+  'src/app/api/auth',                   // NextAuth v5 + SSO 运行时路由 (force-dynamic), CF 静态导出不支持
+  'src/app/login/sso',                  // 服务端 fetchCsrf → NextAuth (force-dynamic), CF 静态导出不支持
 ];
 
 for (const rel of ROUTES_TO_STRIP) {
