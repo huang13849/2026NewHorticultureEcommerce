@@ -1,46 +1,28 @@
 "use client";
 // /login — Zitadel OIDC-only 单点登录/注册
-// 进来立即 startSSO 302 到 Zitadel Hosted Login UI, 不显示中间点击页
+// 无脑立即发 SSO. 已登录的用户会被 Zitadel 用 session cookie 静默返回 -> callback -> 首页.
+// 这样避免 auth-context 用旧 flower_token 乐观还原时把用户困在"看似已登录但按钮无响应"的坑里.
 import { Suspense, useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
+import { useSearchParams } from "next/navigation";
 import { startSSO } from "@/lib/sso";
 
 function LoginInner() {
-  const router = useRouter();
   const sp = useSearchParams();
-  const { user } = useAuth();
   const redirect = sp?.get("redirect") || sp?.get("callbackUrl") || "/";
   const errCode = sp?.get("error") || "";
   const startedRef = useRef(false);
   const [status, setStatus] = useState<string>("正在打开 Zitadel 单点登录…");
 
-  // 已登录用户: 直接回跳, 不进 SSO
+  // 无脑立即 SSO. 有 error 时才停下. 只跑一次.
   useEffect(() => {
-    if (!user) return;
-    if (/^https?:\/\//i.test(redirect)) {
-      try {
-        const u = new URL(redirect);
-        if (/(^|\.)horiculture\.(club|space)$/i.test(u.hostname)) {
-          window.location.href = redirect;
-          return;
-        }
-      } catch { /* ignore */ }
-    }
-    router.replace(redirect);
-  }, [user, redirect, router]);
-
-  // 未登录 & 无错误: 自动开始 SSO (仅一次)
-  useEffect(() => {
-    if (user || errCode || startedRef.current) return;
+    if (errCode || startedRef.current) return;
     startedRef.current = true;
     startSSO(redirect).catch((e) => {
       console.error("[login] startSSO failed:", e);
       setStatus("跳转失败, 请刷新页面重试");
     });
-  }, [user, errCode, redirect]);
+  }, [errCode, redirect]);
 
-  // 有错误码 / 或跳转失败时才显示可点按钮
   const showFallback = Boolean(errCode) || status.startsWith("跳转失败");
 
   return (
@@ -73,7 +55,7 @@ function LoginInner() {
         </div>
         {showFallback && (
           <button
-            onClick={() => { setStatus("正在打开 Zitadel 单点登录…"); startSSO(redirect); }}
+            onClick={() => { setStatus("正在打开 Zitadel 单点登录…"); startedRef.current = false; startSSO(redirect); }}
             style={{
               width: "100%", padding: "12px", borderRadius: 12,
               background: "linear-gradient(135deg, #047857, #059669)",
