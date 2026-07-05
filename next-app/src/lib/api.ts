@@ -190,13 +190,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 // ===== API 方法 =====
 
 export const api = {
-  // ----- 认证 -----
-  login: (phone: string, code?: string, password?: string) =>
-    request<{ token: string; user: User }>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ phone, code, password }),
-    }),
-
+  // ----- 认证 (OIDC-only; 登录/注册走 Zitadel, 不再有本地 login()) -----
   getMe: () =>
     request<User>('/auth/me'),
 

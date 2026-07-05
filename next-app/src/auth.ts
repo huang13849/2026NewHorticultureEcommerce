@@ -1,14 +1,16 @@
 // next-app/src/auth.ts
-// NextAuth v5 (Auth.js beta) 接入 Zitadel OIDC。
-// 同一套代码通过 host header 分区:
-//   horiculture.club / www.horiculture.club → club-web (中文, CLUB_* 环境变量)
-//   horiculture.space (及其它默认)          → space-web (英文, SPACE_* 环境变量)
-// 因为 self-hosted Zitadel 的 issuer 是 http://100.96.54.109:31111，官方
-// @auth/core/providers/zitadel 的默认发现有限制，这里手写一个通用 oidc provider。
+// NextAuth v5 接入 Zitadel OIDC —— OIDC-only 模式 (2026-07-05)
+// - 一份代码, 双站点 (club/space) 根据 host 挑 client
+// - jwt callback 里用 id_token 交换 flower-api 的本地 flower_token, 塞进 session
+//   前端 useEffect 从 session 拿 flower_token 写 localStorage, 兼容旧的 useAuth()
 import NextAuth, { type NextAuthConfig } from 'next-auth';
 import { headers } from 'next/headers';
 
-const ZITADEL_ISSUER = process.env.ZITADEL_ISSUER || 'http://100.96.54.109:31111';
+const ZITADEL_ISSUER = process.env.ZITADEL_ISSUER || 'https://id.horiculture.club';
+// flower-api 内部地址 (k3s svc / 本机)
+const FLOWER_API_INTERNAL = process.env.FLOWER_API_INTERNAL
+  || process.env.FLOWER_API_URL
+  || 'http://flower-api.new-ecommerce.svc.cluster.local:3010';
 
 interface ClientPair {
   clientId: string;
@@ -24,7 +26,6 @@ async function pickClient(): Promise<ClientPair> {
   } catch {
     host = '';
   }
-
   const isClub = host.includes('horiculture.club');
   if (isClub) {
     return {
@@ -40,8 +41,25 @@ async function pickClient(): Promise<ClientPair> {
   };
 }
 
-// Auth.js v5 支持 config 作为一个函数：每个请求都会重新 evaluate providers，
-// 这样可以按 host 动态挑 client_id / client_secret。
+async function exchangeFlowerToken(idToken: string): Promise<{ token: string; user: Record<string, unknown> } | null> {
+  try {
+    const r = await fetch(`${FLOWER_API_INTERNAL}/api/auth/sso-callback`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id_token: idToken }),
+    });
+    if (!r.ok) {
+      const body = await r.text().catch(() => '');
+      console.warn('[auth] flower sso-callback', r.status, body.slice(0, 200));
+      return null;
+    }
+    return (await r.json()) as { token: string; user: Record<string, unknown> };
+  } catch (e) {
+    console.warn('[auth] flower sso-callback fetch failed:', e);
+    return null;
+  }
+}
+
 const authConfig = async (): Promise<NextAuthConfig> => {
   const { clientId, clientSecret, brand } = await pickClient();
 
@@ -59,7 +77,7 @@ const authConfig = async (): Promise<NextAuthConfig> => {
         checks: ['pkce', 'state'],
         authorization: {
           params: {
-            scope: 'openid profile email offline_access',
+            scope: 'openid profile email phone offline_access',
             ui_locales: 'zh-CN',
           },
         },
@@ -76,22 +94,26 @@ const authConfig = async (): Promise<NextAuthConfig> => {
       },
     ],
     callbacks: {
-      async jwt({ token, account, profile }) {
-        if (account) {
-          token.accessToken = account.access_token;
-          token.idToken = account.id_token;
-          token.expiresAt = account.expires_at;
+      async jwt({ token, account }) {
+        // 登录成功那一次 (account 只在第一次 available), 用 id_token 换 flower_token
+        if (account?.id_token) {
+          token.idToken = account.id_token as string;
           token.brand = brand;
-        }
-        if (profile) {
-          const p = profile as Record<string, unknown>;
-          token.sub = String(p.sub ?? token.sub ?? '');
+          const exchanged = await exchangeFlowerToken(account.id_token as string);
+          if (exchanged) {
+            token.flowerToken = exchanged.token;
+            token.flowerUser = exchanged.user;
+          } else {
+            token.flowerToken = null;
+            token.flowerUser = null;
+          }
         }
         return token;
       },
       async session({ session, token }) {
         (session as unknown as Record<string, unknown>).brand = token.brand;
-        (session as unknown as Record<string, unknown>).accessToken = token.accessToken;
+        (session as unknown as Record<string, unknown>).flowerToken = token.flowerToken;
+        (session as unknown as Record<string, unknown>).flowerUser = token.flowerUser;
         return session;
       },
     },
