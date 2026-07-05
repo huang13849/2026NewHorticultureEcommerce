@@ -63,6 +63,15 @@ spec:
           value: production
         - name: ZITADEL_LOGIN_V2_URL
           value: "http://100.96.54.109:31112"
+        # === club-web OIDC (2026-07-05) ===
+        - name: ZITADEL_ISSUER
+          value: "https://id.horiculture.club"
+        - name: ZITADEL_CLUB_WEB_CLIENT_ID
+          value: "380222397556523217"
+        - name: ZITADEL_CLUB_WEB_REDIRECT_URI
+          value: "https://horiculture.club/api/auth/callback/zitadel"
+        - name: FLOWER_API_URL
+          value: "http://flower-api.new-ecommerce.svc.cluster.local:3010"
         # 方案 Z: Zitadel v2 Session API (后端 side)
         - name: ZITADEL_BASE_URL
           value: "http://id.horiculture.club:8080"
@@ -77,9 +86,6 @@ spec:
             secretKeyRef:
               name: zitadel-svc
               key: pat
-        # 前端 next-auth OIDC (保留, 供 space/CF Pages 触发)
-        - name: ZITADEL_ISSUER
-          value: "http://100.96.54.109:31111"
         - name: NEXTAUTH_URL
           value: "http://100.96.54.109:31000"
         - name: API_GATEWAY_URL
