@@ -1,9 +1,7 @@
 "use client";
 // /login — Zitadel OIDC-only 单点登录/注册
-// 用户点按钮 -> 走 startSSO -> NextAuth signIn -> 302 到 Zitadel Hosted Login UI
-// 从 Zitadel Login UI 回来 (登录/注册完成) -> NextAuth callback -> Session 已建
-// 再由 auth-context useEffect 把 session.flowerToken 写到 localStorage.flower_token
-import { Suspense, useEffect, useState } from "react";
+// 进来立即 startSSO 302 到 Zitadel Hosted Login UI, 不显示中间点击页
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { startSSO } from "@/lib/sso";
@@ -14,95 +12,78 @@ function LoginInner() {
   const { user } = useAuth();
   const redirect = sp?.get("redirect") || sp?.get("callbackUrl") || "/";
   const errCode = sp?.get("error") || "";
+  const startedRef = useRef(false);
+  const [status, setStatus] = useState<string>("正在打开 Zitadel 单点登录…");
 
-  const [autoStarting, setAutoStarting] = useState(false);
-
+  // 已登录用户: 直接回跳, 不进 SSO
   useEffect(() => {
-    if (user) {
-      if (/^https?:\/\//i.test(redirect)) {
-        try {
-          const u = new URL(redirect);
-          if (/(^|\.)horiculture\.(club|space)$/i.test(u.hostname)) {
-            window.location.href = redirect;
-            return;
-          }
-        } catch { /* ignore */ }
-      }
-      router.replace(redirect);
+    if (!user) return;
+    if (/^https?:\/\//i.test(redirect)) {
+      try {
+        const u = new URL(redirect);
+        if (/(^|\.)horiculture\.(club|space)$/i.test(u.hostname)) {
+          window.location.href = redirect;
+          return;
+        }
+      } catch { /* ignore */ }
     }
+    router.replace(redirect);
   }, [user, redirect, router]);
 
-  async function doSSO() {
-    setAutoStarting(true);
-    try {
-      await startSSO(redirect);
-    } catch (e) {
+  // 未登录 & 无错误: 自动开始 SSO (仅一次)
+  useEffect(() => {
+    if (user || errCode || startedRef.current) return;
+    startedRef.current = true;
+    startSSO(redirect).catch((e) => {
       console.error("[login] startSSO failed:", e);
-      setAutoStarting(false);
-    }
-  }
+      setStatus("跳转失败, 请刷新页面重试");
+    });
+  }, [user, errCode, redirect]);
+
+  // 有错误码 / 或跳转失败时才显示可点按钮
+  const showFallback = Boolean(errCode) || status.startsWith("跳转失败");
 
   return (
     <div style={{
       minHeight: "100vh",
       background: "linear-gradient(135deg, #ecfdf5 0%, #ffffff 40%, #f0fdf4 100%)",
-      display: "flex", flexDirection: "column",
+      display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
     }}>
-      <header style={{ padding: "18px 28px", display: "flex", alignItems: "center", gap: 10 }}>
-        <span style={{ fontSize: 28 }}>🌿</span>
-        <div>
-          <div style={{ fontWeight: 800, color: "#047857", fontSize: 17, lineHeight: 1.1 }}>植物收藏家</div>
-          <div style={{ fontSize: 10, color: "#065f46", opacity: 0.75 }}>Plant Collector · 林草二十年</div>
-        </div>
-      </header>
-
-      <div style={{ position: "absolute", top: 60, right: -40, fontSize: 200, opacity: 0.08, pointerEvents: "none" }}>🌸</div>
-      <div style={{ position: "absolute", bottom: -20, left: -30, fontSize: 180, opacity: 0.08, pointerEvents: "none" }}>🌱</div>
-
-      <main style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", position: "relative", zIndex: 1 }}>
-        <div style={{
-          width: "100%", maxWidth: 420, background: "#ffffff", borderRadius: 20,
-          padding: "36px 30px",
-          boxShadow: "0 10px 40px rgba(4, 120, 87, 0.08), 0 2px 8px rgba(0,0,0,0.03)",
-          border: "1px solid #d1fae5",
-          textAlign: "center",
-        }}>
-          <div style={{ fontSize: 64, marginBottom: 8 }}>🔐</div>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: "#111827" }}>登录 / 注册</h1>
-          <p style={{ marginTop: 8, marginBottom: 24, fontSize: 13, color: "#6b7280", lineHeight: 1.6 }}>
-            平台统一走 Zitadel 单点身份 (id.horiculture.club)。<br />
-            登录成功后自动返回。
-          </p>
-
-          {errCode && (
-            <div style={{ marginBottom: 16, padding: "10px 14px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10, fontSize: 12, color: "#b91c1c", textAlign: "left" }}>
-              登录失败: {errCode}
-            </div>
+      <div style={{
+        width: "100%", maxWidth: 380, background: "#ffffff", borderRadius: 20,
+        padding: "36px 30px",
+        boxShadow: "0 10px 40px rgba(4, 120, 87, 0.08)",
+        border: "1px solid #d1fae5",
+        textAlign: "center",
+      }}>
+        <div style={{ fontSize: 48, marginBottom: 10 }}>🌿</div>
+        <div style={{ fontWeight: 800, color: "#047857", fontSize: 17 }}>植物收藏家 · 林草二十年</div>
+        <div style={{ marginTop: 20, marginBottom: 20, fontSize: 13, color: "#6b7280", minHeight: 40 }}>
+          {showFallback ? (errCode ? `登录失败: ${errCode}` : status) : (
+            <>
+              <div style={{
+                width: 22, height: 22, margin: "0 auto 10px",
+                border: "3px solid #d1fae5", borderTopColor: "#047857",
+                borderRadius: "50%", animation: "spin 0.8s linear infinite",
+              }} />
+              {status}
+            </>
           )}
-
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+        {showFallback && (
           <button
-            onClick={doSSO}
-            disabled={autoStarting}
+            onClick={() => { setStatus("正在打开 Zitadel 单点登录…"); startSSO(redirect); }}
             style={{
-              width: "100%", padding: "14px", borderRadius: 12,
-              background: autoStarting ? "#6ee7b7" : "linear-gradient(135deg, #047857, #059669)",
-              color: "#fff", border: "none", fontSize: 15, fontWeight: 700,
-              cursor: autoStarting ? "wait" : "pointer",
-              boxShadow: "0 4px 14px rgba(4, 120, 87, 0.25)",
+              width: "100%", padding: "12px", borderRadius: 12,
+              background: "linear-gradient(135deg, #047857, #059669)",
+              color: "#fff", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer",
             }}
           >
-            {autoStarting ? "正在跳转到身份认证..." : "使用 Zitadel 登录 / 注册"}
+            重新登录 / 注册
           </button>
-
-          <p style={{ marginTop: 20, marginBottom: 0, fontSize: 11, color: "#9ca3af", textAlign: "center", lineHeight: 1.5 }}>
-            登录即表示同意《用户协议》与《隐私政策》
-          </p>
-        </div>
-      </main>
-
-      <footer style={{ textAlign: "center", padding: "16px", fontSize: 11, color: "#9ca3af", position: "relative", zIndex: 1 }}>
-        © 林草二十年 · 微信小店 · 花草如你所愿
-      </footer>
+        )}
+      </div>
     </div>
   );
 }
