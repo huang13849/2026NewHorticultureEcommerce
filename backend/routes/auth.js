@@ -128,6 +128,36 @@ router.post('/sso-callback', async (req, res) => {
   }
 });
 
+// helper: parse Cookie header (no cookie-parser dep)
+function parseCookies(header) {
+  const out = {};
+  if (!header) return out;
+  header.split(/;\s*/).forEach(p => {
+    const i = p.indexOf('=');
+    if (i < 0) return;
+    const k = p.slice(0, i).trim();
+    const v = p.slice(i + 1).trim();
+    if (k) out[k] = decodeURIComponent(v);
+  });
+  return out;
+}
+
+function shapeUser(decoded) {
+  const isAdmin = decoded.role === 'super_admin' || decoded.role === 'admin';
+  return {
+    id: decoded.zid,
+    phone: decoded.phone,
+    email: decoded.email,
+    nickname: isAdmin ? '超级管理员' : (decoded.nickname || ''),
+    avatar: isAdmin ? '👑' : '',
+    role: decoded.role || 'user',
+    roles: decoded.roles || [],
+    isAdmin,
+    isSuperAdmin: isAdmin,
+    address: [],
+  };
+}
+
 // ============================================================================
 // GET /auth/me   —— 直接从 flower_token 解, 不查库
 // ============================================================================
@@ -151,6 +181,22 @@ router.get('/me', (req, res) => {
     });
   } catch (err) {
     return res.status(401).json({ error: 'token_invalid' });
+  }
+});
+
+// GET /auth/me-flower  —— 从 .horiculture.club/.horiculture.space 的 flower_token cookie 解
+//   跨站 SSO 兜底: 主站 next-app 挂载时 fetch 这个端点, 拿到用户就当已登录。
+router.get('/me-flower', (req, res) => {
+  try {
+    const cookies = parseCookies(req.headers.cookie);
+    const authH = req.headers.authorization;
+    const bearer = authH ? authH.replace('Bearer ', '') : null;
+    const tok = cookies.flower_token || bearer;
+    if (!tok) return res.status(401).json({ error: 'no_flower_token' });
+    const decoded = jwt.verify(tok, JWT_SECRET);
+    return res.json({ user: shapeUser(decoded) });
+  } catch (err) {
+    return res.status(401).json({ error: 'flower_token_invalid', detail: err.message });
   }
 });
 

@@ -31,6 +31,19 @@ async function fetchSession(): Promise<SessionShape | null> {
   }
 }
 
+// 跨站 SSO 兜底: 直接问 flower-api /api/auth/me-flower 读取 .horiculture.club/.horiculture.space
+// cookie flower_token, 命中即视为登录, 不需要重跳 NextAuth OIDC.
+async function fetchMeFlower(): Promise<User | null> {
+  try {
+    const r = await fetch('/api/auth/me-flower', { credentials: 'include' });
+    if (!r.ok) return null;
+    const j = await r.json();
+    return (j && j.user) ? (j.user as User) : null;
+  } catch {
+    return null;
+  }
+}
+
 function decodeFlowerToken(token: string): User | null {
   try {
     const payload = JSON.parse(atob(token.split('.')[1] || ''));
@@ -58,8 +71,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
 
     async function boot() {
-      // Zitadel OIDC-only: NextAuth session 是唯一真理.
-      // 不再用旧 localStorage flower_token 乐观还原 (会导致"看似已登录"死循环).
+      // Step 1: 先探 me-flower (读 .horiculture.club/.horiculture.space cookie).
+      // 命中就直接登录, 兼容 peony/tropical/space 上的跨站 SSO. 没命中再走 NextAuth.
+      const flowerUser = await fetchMeFlower();
+      if (cancelled) return;
+      if (flowerUser) {
+        setUser(flowerUser);
+        if (!cancelled) setLoading(false);
+        return;
+      }
+
+      // Step 2: 无 flower_token cookie -> 落回 NextAuth session (OIDC 主流程)
       const sess = await fetchSession();
       if (cancelled) return;
 
