@@ -217,4 +217,142 @@ router.post('/sso-issue', goneHandler);
 router.put('/location', (req, res) => res.status(501).json({ error: 'not_implemented', note: 'awaiting zid-based reimpl' }));
 router.put('/address', (req, res) => res.status(501).json({ error: 'not_implemented', note: 'awaiting zid-based reimpl' }));
 
+// ============================================================================
+// 跨顶级域 SSO Bridge (2026-07-06, A 方案)
+// ----------------------------------------------------------------------------
+// 场景: horiculture.club <-> horiculture.space 是两个顶级域, cookie 不能共享。
+// 流程:
+//   1. space 前端 me-flower 401 → window.location = club/api/auth/cross-issue?return=<space-url>
+//   2. club flower-api 拿本域 flower_token cookie → 签 30s ticket → 302 到
+//      space/api/auth/consume-cross?ticket=<ticket>&return=<space-url>
+//   3. space flower-api-la 验 ticket → Set-Cookie flower_token (Domain=.horiculture.space)
+//      → 302 回 return
+// 两端共享 JWT_SECRET (fallback flower-shop-secret-2024)。
+// ============================================================================
+
+// 允许的跨域 host 白名单(防 open redirect)
+const XBRIDGE_ALLOWED_HOSTS = new Set([
+  'horiculture.club',
+  'horiculture.space',
+  'www.horiculture.club',
+  'www.horiculture.space',
+]);
+const XBRIDGE_TICKET_TTL_SEC = 30;
+const XBRIDGE_COOKIE_MAX_AGE = 30 * 24 * 60 * 60; // 30d, 与 flower_token 保持一致
+
+function xbridgeIsSafeReturn(url) {
+  try {
+    const u = new URL(url);
+    if (u.protocol !== 'https:' && u.protocol !== 'http:') return null;
+    if (!XBRIDGE_ALLOWED_HOSTS.has(u.hostname)) return null;
+    return u.toString();
+  } catch {
+    return null;
+  }
+}
+
+// 返回请求应该 Set-Cookie 的 domain: 根据 Host 头判断当前站点
+function xbridgeCookieDomain(reqHost) {
+  const h = String(reqHost || '').toLowerCase().split(':')[0];
+  if (h.endsWith('horiculture.club')) return '.horiculture.club';
+  if (h.endsWith('horiculture.space')) return '.horiculture.space';
+  return null;
+}
+
+// ============================================================================
+// GET /auth/cross-issue?return=<url>
+//   在本域读 flower_token cookie -> 签一个 30s 的 ticket -> 302 到目标域的 consume
+// ============================================================================
+router.get('/cross-issue', (req, res) => {
+  const returnUrl = xbridgeIsSafeReturn(req.query.return);
+  if (!returnUrl) return res.status(400).json({ error: 'invalid_return' });
+
+  const cookies = parseCookies(req.headers.cookie);
+  const flowerToken = cookies.flower_token;
+  if (!flowerToken) {
+    // 本域也没登录 -> 直接 302 回 return, 避免死循环
+    return res.redirect(302, returnUrl);
+  }
+
+  let decoded;
+  try {
+    decoded = jwt.verify(flowerToken, JWT_SECRET);
+  } catch (err) {
+    return res.redirect(302, returnUrl);
+  }
+
+  // ticket = 一个短寿命 JWT, 内含原 flower_token 的 claims + purpose 标记
+  const ticket = jwt.sign(
+    {
+      xb: 1, // cross-bridge marker
+      zid: decoded.zid,
+      phone: decoded.phone,
+      email: decoded.email,
+      nickname: decoded.nickname,
+      role: decoded.role,
+      roles: decoded.roles,
+    },
+    JWT_SECRET,
+    { expiresIn: `${XBRIDGE_TICKET_TTL_SEC}s` }
+  );
+
+  // 拼装 consume URL
+  const target = new URL(returnUrl);
+  const consumeUrl = new URL('/api/auth/consume-cross', `${target.protocol}//${target.host}`);
+  consumeUrl.searchParams.set('ticket', ticket);
+  consumeUrl.searchParams.set('return', returnUrl);
+  return res.redirect(302, consumeUrl.toString());
+});
+
+// ============================================================================
+// GET /auth/consume-cross?ticket=<xxx>&return=<url>
+//   验 ticket -> Set-Cookie flower_token (Domain=当前站点) -> 302 回 return
+// ============================================================================
+router.get('/consume-cross', (req, res) => {
+  const returnUrl = xbridgeIsSafeReturn(req.query.return);
+  if (!returnUrl) return res.status(400).json({ error: 'invalid_return' });
+
+  const ticket = String(req.query.ticket || '');
+  if (!ticket) return res.redirect(302, returnUrl);
+
+  let decoded;
+  try {
+    decoded = jwt.verify(ticket, JWT_SECRET);
+  } catch (err) {
+    return res.redirect(302, returnUrl);
+  }
+  if (decoded.xb !== 1) return res.redirect(302, returnUrl);
+
+  // 用 ticket 里的 claims 重新签一个 30d 的 flower_token
+  const flowerToken = jwt.sign(
+    {
+      zid: decoded.zid,
+      phone: decoded.phone,
+      email: decoded.email,
+      nickname: decoded.nickname,
+      role: decoded.role,
+      roles: decoded.roles,
+    },
+    JWT_SECRET,
+    { expiresIn: '30d' }
+  );
+
+  // 决定 cookie domain: 根据 Host 头
+  const domain = xbridgeCookieDomain(req.headers.host);
+  if (!domain) return res.status(400).json({ error: 'bad_host' });
+
+  // 注意: 跨站 SSO 场景 flower_token cookie 已经是"当前一级域全站可见",
+  // Secure + SameSite=Lax + HttpOnly=false (前端 auth-context.tsx 也要能读)
+  const cookieParts = [
+    `flower_token=${encodeURIComponent(flowerToken)}`,
+    `Domain=${domain}`,
+    'Path=/',
+    `Max-Age=${XBRIDGE_COOKIE_MAX_AGE}`,
+    'SameSite=Lax',
+    'Secure',
+  ];
+  res.setHeader('Set-Cookie', cookieParts.join('; '));
+  return res.redirect(302, returnUrl);
+});
+
 module.exports = router;
