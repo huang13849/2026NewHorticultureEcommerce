@@ -63,6 +63,33 @@ function decodeFlowerToken(token: string): User | null {
   } catch { return null; }
 }
 
+// 跨顶级域 SSO Bridge: space 探 me-flower 401 时, 尝试从 club 拿 ticket (仅一次, 靠 URL 参数打防抖).
+// 只在跨顶级域场景触发 —— 同一顶级域下的 subpath (peony/tropical) 早已经能读到 cookie, 不需要跨.
+function shouldTryXBridge(): { peer: string } | null {
+  if (typeof window === 'undefined') return null;
+  const host = window.location.hostname;
+  const url = new URL(window.location.href);
+  if (url.searchParams.get('__xb') === '1') return null; // 已尝试过, 别循环
+  if (host === 'horiculture.space' || host === 'www.horiculture.space') {
+    return { peer: 'https://horiculture.club' };
+  }
+  if (host === 'horiculture.club' || host === 'www.horiculture.club') {
+    return { peer: 'https://horiculture.space' };
+  }
+  return null;
+}
+
+function jumpToXBridge(peer: string): void {
+  try {
+    const cur = new URL(window.location.href);
+    cur.searchParams.set('__xb', '1'); // 打标, 回来后不再触发
+    const returnUrl = cur.toString();
+    const target = new URL('/api/auth/cross-issue', peer);
+    target.searchParams.set('return', returnUrl);
+    window.location.replace(target.toString());
+  } catch {}
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -79,6 +106,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(flowerUser);
         if (!cancelled) setLoading(false);
         return;
+      }
+
+      // Step 1.5: me-flower 401 -> 若是跨顶级域场景, 尝试一次 cross-bridge
+      const xb = shouldTryXBridge();
+      if (xb) {
+        jumpToXBridge(xb.peer);
+        return; // 页面已 replace, 后续 state 无意义
       }
 
       // Step 2: 无 flower_token cookie -> 落回 NextAuth session (OIDC 主流程)
