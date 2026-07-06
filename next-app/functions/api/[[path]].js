@@ -32,7 +32,10 @@ export async function onRequest(context) {
   const incoming = new URL(request.url);
   const target = new URL(incoming.pathname + incoming.search, API_ORIGIN);
   const headers = new Headers(request.headers);
+  const origHost = incoming.hostname;
   headers.set('Host', new URL(API_ORIGIN).host);
+  headers.set('X-Forwarded-Host', origHost);
+  headers.set('X-Forwarded-Proto', 'https');
   headers.delete('cf-connecting-ip');
   headers.delete('cf-ipcountry');
   headers.delete('cf-ray');
