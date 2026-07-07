@@ -12,22 +12,59 @@ function ipHash(req) {
   return raw ? crypto.createHash('sha256').update(raw).digest('hex').slice(0, 24) : '';
 }
 
-async function searchProducts(keyword, limit = 24) {
-  const filter = { status: { $ne: 'deleted' }, stock: { $gt: 0 } };
-  if (keyword) {
-    filter.$or = [
-      { name: { $regex: keyword, $options: 'i' } },
-      { title: { $regex: keyword, $options: 'i' } },
-      { flowerName: { $regex: keyword, $options: 'i' } },
-      { description: { $regex: keyword, $options: 'i' } },
-      { category: { $regex: keyword, $options: 'i' } },
-    ];
+// 列表卡片需要的字段，避免拉大数组 payload。
+// 与 backend/routes/products.js 的 LIST_FIELDS 保持一致。
+const LIST_FIELDS = [
+  '_id',
+  'title',
+  'flowerName',
+  'englishTitle',
+  'category',
+  'price',
+  'sellPrice',
+  'settlementPrice',
+  'costPrice',
+  'shippingFee',
+  'shipping_description',
+  'stock',
+  'salesCount',
+  'salesVolume',
+  'origin',
+  'supplierId',
+  'sellerName',
+  'images',
+  'panorama_images',
+  'detail_images',
+  'createdAt',
+].join(',');
+
+/**
+ * 关键词过滤：优先 MongoDB $text（复合文本索引 title+description+flowerName），
+ * 极短（1 字符）关键词退回 title 前缀正则以命中 title_1 索引。
+ */
+function buildKeywordFilter(keyword) {
+  if (!keyword) return null;
+  if (keyword.length < 2) {
+    const safe = keyword.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+    return { title: { $regex: '^' + safe, $options: 'i' } };
   }
+  return { $text: { $search: keyword } };
+}
+
+async function searchProducts(keyword, limit = 24, extra = {}) {
+  const filter = { status: { $ne: 'deleted' }, stock: { $gt: 0 } };
+  const kwFilter = buildKeywordFilter(keyword);
+  if (kwFilter) Object.assign(filter, kwFilter);
+  if (extra.category) filter.category = extra.category;
+
   const products = await db.find('products', {
     filter,
+    // $text 场景下按 textScore 排序意义更大，但网关目前只透传普通 sort。
+    // 保留销量/新鲜度的默认排序，业务反馈更符合小店直觉。
     sort: { salesCount: -1, createdAt: -1 },
     page: 1,
     limit: Math.min(Math.max(parseInt(limit) || 24, 1), 80),
+    fields: LIST_FIELDS,
   });
   const total = await db.count('products', filter).catch(() => products.length);
   return { products, total };
@@ -37,7 +74,7 @@ router.get('/products', async (req, res) => {
   try {
     const keyword = normalizeKeyword(req.query.keyword);
     if (!keyword) return res.json({ products: [], total: 0, keyword: '' });
-    const data = await searchProducts(keyword, req.query.limit);
+    const data = await searchProducts(keyword, req.query.limit, { category: req.query.category });
     res.json({ ...data, keyword });
   } catch (err) {
     console.error('Product search error:', err);
@@ -49,7 +86,7 @@ router.post('/products', async (req, res) => {
   try {
     const keyword = normalizeKeyword(req.body.keyword);
     if (!keyword) return res.status(400).json({ error: '关键词不能为空' });
-    const data = await searchProducts(keyword, req.body.limit);
+    const data = await searchProducts(keyword, req.body.limit, { category: req.body.category });
 
     const log = {
       keyword,

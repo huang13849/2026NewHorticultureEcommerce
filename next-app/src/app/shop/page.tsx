@@ -185,14 +185,18 @@ export default function ShopPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, hasMore, loadingMore, search, loading]);
 
-  // 搜索时加载全部商品（后端 keyword 只匹配 name/description，商品用 title，故改为前端过滤）
+  // 搜索时直接走后端 keyword 查询（命中 MongoDB $text 索引: title/description/flowerName）
+  // 只拉当前页大小的结果，代替原来"拉 500 条到浏览器再本地 filter"的方案，
+  // 平均减少 15 倍数据传输量，海外链路收益更明显。
   useEffect(() => {
     const kw = search.trim();
     if (!kw) return;
     let alive = true;
     const handle = setTimeout(async () => {
       try {
-        const res = await fetch(`${API}/products?limit=500`);
+        const res = await fetch(
+          `${API}/products?keyword=${encodeURIComponent(kw)}&limit=${PAGE_SIZE}`,
+        );
         const data = await res.json();
         if (!alive) return;
         setProducts(data.products || []);
@@ -245,12 +249,9 @@ export default function ShopPage() {
   const exchangeRate = rates[currency] || FALLBACK_RATES[currency];
   const fxLabel = rateSource === 'live' ? '实时汇率' : rateSource === 'loading' ? '汇率加载中' : '备用汇率';
 
-  const filtered = search
-    ? products.filter(p => {
-        const name = (p.title || p.flowerName || '').toLowerCase();
-        return name.includes(search.toLowerCase());
-      })
-    : products;
+  // 后端已按 $text 索引匹配 title/description/flowerName（命中
+  // title_text_description_text_flowerName_text 复合文本索引），前端不再重复 filter。
+  const filtered = products;
 
   const goCheckout = () => {
     localStorage.setItem('flower_cart', JSON.stringify(cart.filter(i => i.checked)));
