@@ -35,7 +35,7 @@ docker push "$IMG_LA"
 docker push "$IMG_LA_LATEST"
 
 echo "======= [3/5] 部署到 k3s ======="
-kubectl apply -f k8s/
+kubectl apply -f k8s/ --validate=false
 for svc in "${!SVC_CTX[@]}"; do
   kubectl -n new-ecommerce set image deployment/$svc $svc=100.76.15.64:5001/$svc:$COMMIT_SHA
 done
