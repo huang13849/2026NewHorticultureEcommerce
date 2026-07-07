@@ -9,7 +9,8 @@ git log -1 --oneline
 COMMIT_SHA=$(git rev-parse --short HEAD)
 
 echo "======= [2/5] 构建镜像 ======="
-export KUBECONFIG=$HOME/k3s.yaml
+# k3s.yaml symlink fell out of sync; use ~/.kube/config which points at the same cluster
+export KUBECONFIG=$HOME/.kube/config
 declare -A SVC_CTX=(
   ["flower-api"]="backend"
   ["flower-next"]="next-app"
@@ -35,7 +36,7 @@ docker push "$IMG_LA"
 docker push "$IMG_LA_LATEST"
 
 echo "======= [3/5] 部署到 k3s ======="
-kubectl apply -f k8s/ --validate=false
+kubectl apply -f k8s/
 for svc in "${!SVC_CTX[@]}"; do
   kubectl -n new-ecommerce set image deployment/$svc $svc=100.76.15.64:5001/$svc:$COMMIT_SHA
 done
