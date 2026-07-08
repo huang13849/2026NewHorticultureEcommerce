@@ -248,7 +248,8 @@
       "copyright": "Beijing-Tianjin-Hebei Flower Supply Chain Platform © 2026",
       "phone": "Phone",
       "email": "Email",
-      "address": "Address"
+      "address": "Address",
+      "addressValue": "Синьгун, Фэнтай, Пекин, Китай"
     },
     "intelligentSupply": "Intelligent Supply Chain",
     "greenCertSubtitle": "Green Certification · Carbon Credit",

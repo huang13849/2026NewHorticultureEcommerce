@@ -558,7 +558,7 @@ export default function HomePage() {
                 </a>
                 <div className="rounded-2xl border border-stone-200 bg-white/75 p-4">
                   <div className="text-stone-400 mb-1">{t('home.footer.address')}</div>
-                  <div className="font-semibold text-stone-800">中国北京市丰台区新宫</div>
+                  <div className="font-semibold text-stone-800">{t('home.footer.addressValue')}</div>
                 </div>
               </div>
             </div>

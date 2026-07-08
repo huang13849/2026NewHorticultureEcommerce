@@ -248,7 +248,8 @@
       "copyright": "Beijing-Tianjin-Hebei Flower Supply Chain Platform © 2026",
       "phone": "電話",
       "email": "メール",
-      "address": "住所"
+      "address": "住所",
+      "addressValue": "中国 北京市 豊台区 新宮"
     },
     "intelligentSupply": "Intelligent Supply Chain",
     "greenCertSubtitle": "Green Certification · Carbon Credit",
