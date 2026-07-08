@@ -15,7 +15,7 @@ const FLOWER_API_INTERNAL = process.env.FLOWER_API_INTERNAL
 interface ClientPair {
   clientId: string;
   clientSecret: string;
-  brand: 'club' | 'space';
+  brand: 'club' | 'space' | 'la';
 }
 
 async function pickClient(): Promise<ClientPair> {
@@ -25,6 +25,14 @@ async function pickClient(): Promise<ClientPair> {
     host = (h.get('x-forwarded-host') || h.get('host') || '').toLowerCase();
   } catch {
     host = '';
+  }
+  const isLa = host.startsWith('209.141.34.146') || host === '209.141.34.146:80';
+  if (isLa) {
+    return {
+      brand: 'la' as unknown as 'space',
+      clientId: process.env.LA_CLIENT_ID || '',
+      clientSecret: process.env.LA_CLIENT_SECRET || '',
+    };
   }
   const isClub = host.includes('horiculture.club');
   if (isClub) {
