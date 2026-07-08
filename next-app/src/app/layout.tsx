@@ -14,7 +14,7 @@ async function pickInitialDefaults(): Promise<{ lang: 'zh' | 'en'; region: 'cn' 
   try {
     const h = await headers();
     const host = (h.get('host') || '').toLowerCase();
-    const isCN = host.includes('horiculture.club') || host.includes('106.12.91.182');
+    const isCN = host.includes('horiculture.club') || host.includes('106.12.91.182') || host.startsWith('100.96.54.109') || host.startsWith('localhost') || host.startsWith('127.');
     if (host) return isCN ? { lang: 'zh', region: 'cn' } : { lang: 'en', region: 'us' };
   } catch { /* static export: no request headers */ }
   const isGlobal = process.env.NEXT_PUBLIC_REGION === 'global';

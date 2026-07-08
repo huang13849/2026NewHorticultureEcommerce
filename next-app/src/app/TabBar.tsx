@@ -16,7 +16,7 @@ const tabs = [
 
 
 function isCNHost(host: string) {
-  return host.includes('horiculture.club') || host.includes('106.12.91.182');
+  return host.includes('horiculture.club') || host.includes('106.12.91.182') || host.startsWith('100.96.54.109') || host.startsWith('localhost') || host.startsWith('127.');
 }
 
 export default function TabBar() {
