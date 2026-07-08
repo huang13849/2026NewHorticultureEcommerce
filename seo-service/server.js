@@ -11,6 +11,8 @@ const CF_API_TOKEN = process.env.CLOUDFLARE_API_TOKEN || '';
 const CF_ACCOUNT_ID = process.env.CLOUDFLARE_ACCOUNT_ID || '';
 const CF_ZONE_ID = process.env.CLOUDFLARE_ZONE_ID || '';
 const CF_ZONE_NAME = process.env.CLOUDFLARE_ZONE_NAME || 'horiculture.space';
+const ES_URL = process.env.ES_URL || 'http://100.96.54.109:9200';
+const ES_INDEX = process.env.ES_INDEX || 'products';
 const LOG_FILE = path.join(DATA_DIR, 'pageviews.jsonl');
 const TREND_FILE = path.join(DATA_DIR, 'horticulture-trends.json');
 fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -1005,17 +1007,57 @@ async function fetchCloudflareAnalytics(days = 30) {
 function analyticsSummary(days = 30, hostFilter = '') { const lines=readLines(); const since=Date.now()-days*86400000; const recent=lines.filter(x=>Date.parse(x.ts)>=since && (!hostFilter || x.host === hostFilter)); const byDay={}, byPath={}, byReferrer={}, byLang={}, byHost={}; const visitors=new Set(); for (const x of recent) { byDay[dayOf(x.ts)] = (byDay[dayOf(x.ts)] || 0) + 1; byPath[x.path || '/']=(byPath[x.path || '/']||0)+1; const ref=x.referrer?safeRef(x.referrer):'direct'; byReferrer[ref]=(byReferrer[ref]||0)+1; const h=x.host || hostOf(x.origin) || 'unknown'; byHost[h]=(byHost[h]||0)+1; if(x.lang) byLang[x.lang]=(byLang[x.lang]||0)+1; if(x.ipHash) visitors.add(`${h}:${x.ipHash}`); } return { days, host: hostFilter || 'all', pageviews: recent.length, estimatedVisitors: visitors.size, byDay, byHost, topHosts: top(byHost), topPages: top(byPath), topReferrers: top(byReferrer), languages: top(byLang), note: '访问人数是基于埋点日志的估算独立访客；历史 Cloudflare/Google 数据需要配置对应 API Token。' }; }
 async function auditOne(target) { const [home,robots,sitemap]=await Promise.allSettled([fetchText(target), fetchText(new URL('/robots.txt', target).toString(),6000), fetchText(new URL('/sitemap.xml', target).toString(),6000)]); const h=home.value?.text || ''; const title=extract(h, /<title[^>]*>([\s\S]*?)<\/title>/i); const desc=extract(h, /<meta[^>]+name=["']description["'][^>]+content=["']([^"']*)["']/i) || extract(h, /<meta[^>]+content=["']([^"']*)["'][^>]+name=["']description["']/i); const canonical=extract(h, /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']*)["']/i); const ogTitle=extract(h, /<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']*)["']/i); const jsonLdCount=count(/<script[^>]+type=["']application\/ld\+json["']/gi,h); const h1Count=count(/<h1[\s>]/gi,h); const imgWithoutAlt=count(/<img(?![^>]*\balt=)[^>]*>/gi,h); const hasBrand=/植物猎人|Plant Hunter/i.test(h + title + desc); const targetHost=hostOf(target); const scoreParts=[title.length>=8&&title.length<=80, desc.length>=35&&desc.length<=180, !!canonical, (canonical.includes('horiculture.space') || targetHost === '106.12.91.182'), !!ogTitle, jsonLdCount>0, h1Count===1, robots.value?.ok, sitemap.value?.ok, hasBrand]; const score=Math.round(scoreParts.filter(Boolean).length/scoreParts.length*100); return { target, host: hostOf(target), checkedAt: new Date().toISOString(), score, status: home.value?.status || 0, title, description: desc, canonical, ogTitle, jsonLdCount, h1Count, imgWithoutAlt, hasBrand, robots: { ok: !!robots.value?.ok, status: robots.value?.status || 0 }, sitemap: { ok: !!sitemap.value?.ok, status: sitemap.value?.status || 0 }, recommendations: buildRecommendations({ title, desc, canonical, ogTitle, jsonLdCount, h1Count, imgWithoutAlt, robotsOk: robots.value?.ok, sitemapOk: sitemap.value?.ok }, target) }; }
 
+
+async function esSearch(q, opts = {}) {
+  const size = Math.max(1, Math.min(50, Number(opts.size) || 20));
+  const from = Math.max(0, Number(opts.from) || 0);
+  const query = (q || '').toString().trim();
+  const body = query ? {
+    from, size,
+    _source: ['title','englishTitle','flowerName','category','sceneTags','sellerName','origin','image','specSize','stock','isListed'],
+    query: {
+      multi_match: {
+        query,
+        fields: ['title^3','englishTitle^3','flowerName^2','sceneTags^2','category^2','sellerName'],
+        type: 'best_fields',
+        fuzziness: 'AUTO'
+      }
+    },
+    highlight: { fields: { title: {}, sceneTags: {}, category: {} } }
+  } : { from, size, _source: ['title','englishTitle','flowerName','category','sceneTags','sellerName','image','isListed'], query: { match_all: {} }, sort: [{ updatedAt: 'desc' }] };
+  const url = `${ES_URL}/${ES_INDEX}/_search`;
+  const ctrl = new AbortController(); const id = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    const r = await fetch(url, { signal: ctrl.signal, method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify(body) });
+    const j = await r.json();
+    if (!r.ok) return { ok:false, status:r.status, error:j };
+    const hits = (j.hits && j.hits.hits || []).map(h => ({ id: h._id, score: h._score, ...h._source, _highlight: h.highlight || null }));
+    return { ok:true, total: j.hits?.total?.value || 0, took: j.took, size, from, query, hits };
+  } catch (e) { return { ok:false, error: e.message }; }
+  finally { clearTimeout(id); }
+}
+
+async function esCount() {
+  try {
+    const r = await fetch(`${ES_URL}/${ES_INDEX}/_count`, { method:'GET' });
+    const j = await r.json();
+    return { count: j.count || 0, index: ES_INDEX };
+  } catch (e) { return { count: 0, error: e.message }; }
+}
+
 async function handle(req, res) {
   if (req.method === 'OPTIONS') return send(res, 204, '');
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   try {
-    if (url.pathname === '/' || url.pathname === '/index.html') return send(res, 200, '<!doctype html><meta charset="utf-8"><title>SEO Service</title><body style="font-family:system-ui;padding:40px"><h1>SEO Service</h1><p>API: <a href="/api/health">/api/health</a> · <a href="/api/seo/audit-all">/api/seo/audit-all</a> · <a href="/api/seo/rankings">/api/seo/rankings</a> · <a href="/api/analytics/summary">/api/analytics/summary</a></p></body>');
+    if (url.pathname === '/' || url.pathname === '/index.html') return send(res, 200, '<!doctype html><meta charset="utf-8"><title>SEO Service</title><body style="font-family:system-ui;padding:40px"><h1>SEO Service</h1><p>API: <a href="/api/health">/api/health</a> · <a href="/api/seo/audit-all">/api/seo/audit-all</a> · <a href="/api/seo/rankings">/api/seo/rankings</a> · <a href="/api/analytics/summary">/api/analytics/summary</a> · <a href="/api/search?q=玫瑰">/api/search?q=玫瑰</a> · <a href="/api/search/count">/api/search/count</a></p></body>');
     if (url.pathname === '/api/health') return send(res, 200, { status: 'ok', service: 'seo-service', site: SITE_URL, sites: SITE_URLS, time: new Date().toISOString() });
     if (url.pathname === '/api/track' && req.method === 'POST') { const b = await bodyJson(req); const ip = (req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').toString().split(',')[0]; const host = String(b.host || hostOf(b.origin) || req.headers.host || 'unknown').slice(0,120); jsonLine({ ts: new Date().toISOString(), host, origin: String(b.origin || '').slice(0,200), path: String(b.path || '/').slice(0,300), referrer: String(b.referrer || '').slice(0,500), title: String(b.title || '').slice(0,200), lang: String(b.lang || '').slice(0,20), screen: String(b.screen || '').slice(0,50), ua: String(req.headers['user-agent'] || '').slice(0,300), ipHash: Buffer.from(ip).toString('base64').slice(0,16) }); return send(res, 200, { ok: true }); }
     if (url.pathname === '/api/analytics/summary') return send(res, 200, analyticsSummary(Number(url.searchParams.get('days') || 30), url.searchParams.get('host') || ''));
     if (url.pathname === '/api/analytics/cloudflare') { try { return send(res, 200, await fetchCloudflareAnalytics(Number(url.searchParams.get('days') || 30))); } catch (e) { return send(res, 200, { configured: !!CF_API_TOKEN, source: 'cloudflare', error: e.message, note: 'Cloudflare Analytics 暂不可用，检查 Token 权限或 Zone。' }); } }
     if (url.pathname === '/api/cloudflare/verify') return send(res, 200, await verifyCloudflareToken());
     if (url.pathname === '/api/seo/audit') return send(res, 200, await auditOne(safeUrl(url.searchParams.get('url') || SITE_URL)));
+    if (url.pathname === '/api/search') { const r = await esSearch(url.searchParams.get('q') || '', { size: url.searchParams.get('size'), from: url.searchParams.get('from') }); return send(res, r.ok===false ? 502 : 200, r); }
+    if (url.pathname === '/api/search/count') return send(res, 200, await esCount());
     if (url.pathname === '/api/seo/audit-all') return send(res, 200, { primary: SITE_URL, sites: await Promise.all(SITE_URLS.map(auditOne)) });
     if (url.pathname === '/api/seo/rankings') { const keywords=String(url.searchParams.get('keywords') || KEYWORDS.join('\n')).split(/[\n,，]+/).map(s=>s.trim()).filter(Boolean).slice(0,20); const domains=SITE_URLS.map(hostOf); const results=[]; for (const keyword of keywords) { const searchUrl='https://www.bing.com/search?q='+encodeURIComponent(keyword)+'&count=20'; try { const {text}=await fetchText(searchUrl,8000); const urls=[...text.matchAll(/<a href="(https?:\/\/[^"#]+)"/g)].map(m=>m[1]).filter(u=>!u.includes('bing.com')); const matches=domains.map(domain=>{ const pos=urls.findIndex(u=>{ try { return new URL(u).hostname.includes(domain); } catch { return false; } }); return { domain, rank: pos>=0?pos+1:null, found:pos>=0 }; }); results.push({ keyword, engine:'bing', matches, found: matches.some(m=>m.found), checkedAt:new Date().toISOString() }); } catch(e) { results.push({ keyword, engine:'bing', matches: domains.map(domain=>({domain, rank:null, found:false})), found:false, error:e.name==='AbortError'?'timeout':e.message, checkedAt:new Date().toISOString() }); } } return send(res, 200, { site:SITE_URL, domains, results, note:'公开搜索结果会因地区/个性化波动；准确排名建议接入 Google Search Console / Bing Webmaster Tools API。' }); }
     if (url.pathname === '/api/seo/trends') return send(res, 200, trendsPayload());
