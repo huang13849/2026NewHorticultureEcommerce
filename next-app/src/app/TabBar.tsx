@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useI18n } from '@/lib/i18n/context';
-import { IS_CN } from '@/lib/deploy';
+import { useEffect, useState } from 'react';
 
 const tabs = [
   { href: '/', labelKey: 'tabbar.collector', emoji: '🌿' },
@@ -14,12 +14,19 @@ const tabs = [
   { href: '/profile', labelKey: 'tabbar.mine', emoji: '👤' },
 ];
 
-// 国内版(备案合规): 仅保留â收藏家â主页, 隐藏其余入口
-const visibleTabs = IS_CN ? tabs.filter(t => t.href === '/') : tabs;
+
+function isCNHost(host: string) {
+  return host.includes('horiculture.club') || host.includes('106.12.91.182');
+}
 
 export default function TabBar() {
   const pathname = usePathname();
   const { t } = useI18n();
+  const [isCN, setIsCN] = useState<boolean | null>(null);
+  useEffect(() => {
+    setIsCN(isCNHost(typeof window !== 'undefined' ? window.location.hostname : ''));
+  }, []);
+  const visibleTabs = isCN ? tabs.filter(tb => tb.href === '/') : tabs;
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-t border-stone-200/60">
       <div className="max-w-6xl mx-auto flex justify-around items-center h-14">
