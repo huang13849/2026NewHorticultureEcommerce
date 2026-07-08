@@ -47,7 +47,7 @@ export default async function SeoDashboardPage() {
     getJson<SeoData['analytics']>('/api/analytics/summary?days=30', { topPages: [], topReferrers: [] }),
     getJson<SeoData['analytics']>('/api/analytics/summary?days=30&host=106.12.91.182', { topPages: [], topReferrers: [] }),
     getJson<SeoData['cloudflare']>('/api/analytics/cloudflare?days=30', { configured: false, error: 'Cloudflare Analytics 暂不可用' }),
-    getFlowerJson<{ logs: SeoData['searchLogs']; total: number }>('/search/logs?limit=200', { logs: [], total: 0 }),
+    getJson<{ logs: SeoData['searchLogs']; total: number }>('/api/search-logs?limit=200', { logs: [], total: 0 }),
     getJson<SeoData['trends']>('/api/seo/trends', { domestic: [], overseas: [], allKeywords: [] }),
   ]);
 

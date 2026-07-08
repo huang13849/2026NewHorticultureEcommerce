@@ -1056,8 +1056,44 @@ async function handle(req, res) {
     if (url.pathname === '/api/analytics/cloudflare') { try { return send(res, 200, await fetchCloudflareAnalytics(Number(url.searchParams.get('days') || 30))); } catch (e) { return send(res, 200, { configured: !!CF_API_TOKEN, source: 'cloudflare', error: e.message, note: 'Cloudflare Analytics 暂不可用，检查 Token 权限或 Zone。' }); } }
     if (url.pathname === '/api/cloudflare/verify') return send(res, 200, await verifyCloudflareToken());
     if (url.pathname === '/api/seo/audit') return send(res, 200, await auditOne(safeUrl(url.searchParams.get('url') || SITE_URL)));
-    if (url.pathname === '/api/search') { const r = await esSearch(url.searchParams.get('q') || '', { size: url.searchParams.get('size'), from: url.searchParams.get('from') }); return send(res, r.ok===false ? 502 : 200, r); }
+    if (url.pathname === '/api/search') {
+      const q = url.searchParams.get('q') || '';
+      const r = await esSearch(q, { size: url.searchParams.get('size'), from: url.searchParams.get('from') });
+      // fire-and-forget: 记录搜索日志到 ES search_logs
+      if (q.trim()) {
+        const host = req.headers['host'] || '';
+        const ip = (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || '').toString().split(',')[0].trim();
+        const doc = {
+          keyword: q.trim(),
+          result_count: r.total || 0,
+          took: r.took || 0,
+          size: r.size || 0,
+          from: r.from || 0,
+          region_code: url.searchParams.get('region') || (host.includes('space') || host.includes('209.141') ? 'overseas' : 'domestic'),
+          lang: url.searchParams.get('lang') || '',
+          source: url.searchParams.get('source') || 'home',
+          host,
+          ip: ip || null,
+          user_agent: (req.headers['user-agent'] || '').slice(0, 300),
+          created_at: new Date().toISOString(),
+        };
+        fetch(`${ES_URL}/search_logs/_doc?refresh=false`, { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify(doc) }).catch(()=>{});
+      }
+      return send(res, r.ok===false ? 502 : 200, r);
+    }
     if (url.pathname === '/api/search/count') return send(res, 200, await esCount());
+    if (url.pathname === '/api/search-logs') {
+      const limit = Math.max(1, Math.min(500, Number(url.searchParams.get('limit')) || 200));
+      try {
+        const r = await fetch(`${ES_URL}/search_logs/_search`, {
+          method: 'POST', headers: {'content-type':'application/json'},
+          body: JSON.stringify({ size: limit, sort: [{ created_at: 'desc' }], query: { match_all: {} } })
+        });
+        const j = await r.json();
+        const logs = (j.hits?.hits || []).map((h, i) => ({ id: i+1, keyword: h._source.keyword, normalized_keyword: (h._source.keyword||'').toLowerCase(), result_count: h._source.result_count || 0, region_code: h._source.region_code, lang: h._source.lang, source: h._source.source, created_at: h._source.created_at }));
+        return send(res, 200, { ok: true, logs, total: j.hits?.total?.value || 0 });
+      } catch (e) { return send(res, 502, { ok: false, error: String(e), logs: [], total: 0 }); }
+    }
     if (url.pathname === '/api/seo/audit-all') return send(res, 200, { primary: SITE_URL, sites: await Promise.all(SITE_URLS.map(auditOne)) });
     if (url.pathname === '/api/seo/rankings') { const keywords=String(url.searchParams.get('keywords') || KEYWORDS.join('\n')).split(/[\n,，]+/).map(s=>s.trim()).filter(Boolean).slice(0,20); const domains=SITE_URLS.map(hostOf); const results=[]; for (const keyword of keywords) { const searchUrl='https://www.bing.com/search?q='+encodeURIComponent(keyword)+'&count=20'; try { const {text}=await fetchText(searchUrl,8000); const urls=[...text.matchAll(/<a href="(https?:\/\/[^"#]+)"/g)].map(m=>m[1]).filter(u=>!u.includes('bing.com')); const matches=domains.map(domain=>{ const pos=urls.findIndex(u=>{ try { return new URL(u).hostname.includes(domain); } catch { return false; } }); return { domain, rank: pos>=0?pos+1:null, found:pos>=0 }; }); results.push({ keyword, engine:'bing', matches, found: matches.some(m=>m.found), checkedAt:new Date().toISOString() }); } catch(e) { results.push({ keyword, engine:'bing', matches: domains.map(domain=>({domain, rank:null, found:false})), found:false, error:e.name==='AbortError'?'timeout':e.message, checkedAt:new Date().toISOString() }); } } return send(res, 200, { site:SITE_URL, domains, results, note:'公开搜索结果会因地区/个性化波动；准确排名建议接入 Google Search Console / Bing Webmaster Tools API。' }); }
     if (url.pathname === '/api/seo/trends') return send(res, 200, trendsPayload());
