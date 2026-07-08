@@ -1,12 +1,22 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import './globals.css';
 import { Providers } from './providers';
 import SeoTracker from './components/SeoTracker';
 
-// 按 hostname 选默认语言/区域: horiculture.club → zh/cn, 其它(含 space) → en/us
-// 静态导出 (CF Pages) 时没有 request headers,靠 build-time env 决定默认区域。
-// 客户端 GlobalLangSwitch 会按 window.location.hostname + localStorage 调整实际显示。
-function pickInitialDefaults(): { lang: 'zh' | 'en'; region: 'cn' | 'us' } {
+// 运行时按 Host header 判定默认语言/区域:
+//   horiculture.club / 106.12.91.182 (国内苏州) → zh/cn
+//   其它 (horiculture.space / 209.141.34.146 / LA)          → en/us
+// SSR 时读 headers(),CF Pages 静态导出回退到 build-time env NEXT_PUBLIC_REGION。
+export const dynamic = 'force-dynamic';
+
+async function pickInitialDefaults(): Promise<{ lang: 'zh' | 'en'; region: 'cn' | 'us' }> {
+  try {
+    const h = await headers();
+    const host = (h.get('host') || '').toLowerCase();
+    const isCN = host.includes('horiculture.club') || host.includes('106.12.91.182');
+    if (host) return isCN ? { lang: 'zh', region: 'cn' } : { lang: 'en', region: 'us' };
+  } catch { /* static export: no request headers */ }
   const isGlobal = process.env.NEXT_PUBLIC_REGION === 'global';
   return isGlobal ? { lang: 'en', region: 'us' } : { lang: 'zh', region: 'cn' };
 }
@@ -45,8 +55,8 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const { lang, region } = pickInitialDefaults();
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const { lang, region } = await pickInitialDefaults();
   return (
     <html lang={lang === 'zh' ? 'zh-CN' : 'en'}>
       <body className="bg-white text-stone-900 min-h-screen antialiased">
