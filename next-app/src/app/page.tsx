@@ -155,21 +155,11 @@ export default function HomePage() {
     setSearchLoading(true);
     setHasSearched(true);
     try {
-      const res = await fetch(`${API}/search/products`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          keyword,
-          limit: 24,
-          regionCode: region.code,
-          lang,
-          source: 'home',
-          userId: user?.id,
-          path: typeof window !== 'undefined' ? window.location.pathname : '/',
-        }),
-      });
+      // ES-backed search via seo-service (/seo/api/search on both sites)
+      const res = await fetch(`/seo/api/search?q=${encodeURIComponent(keyword)}&size=24`);
       const data = await res.json();
-      setSearchResults(data.products || []);
+      const hits = data.hits || [];
+      setSearchResults(hits.map((h: any) => ({ ...h, _id: h.id })));
       setSearchTotal(data.total || 0);
     } catch {
       setSearchResults([]);

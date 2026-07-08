@@ -254,7 +254,7 @@
     "greenCertSubtitle": "Green Certification · Carbon Credit",
     "step": "Step {n}",
     "searchTitle": "Recherche produits",
-    "searchSubtitle": "Les termes recherchés sont enregistrés dans PostgreSQL pour analyser la stratégie SEO.",
+    "searchSubtitle": "",
     "searchPlaceholder": "Rechercher fleurs, arbres, catégories, fournisseurs…",
     "searching": "Recherche…",
     "clearSearch": "Effacer",
