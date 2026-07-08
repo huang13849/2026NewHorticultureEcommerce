@@ -13,7 +13,7 @@ const jwt = require('jsonwebtoken');
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } });
 
-const SCENE_SERVICE = process.env.SCENE_SERVICE_URL || 'http://100.96.54.109:3012';
+const SCENE_SERVICE = process.env.SCENE_SERVICE_URL || 'http://scene-service.supply-chain.svc.cluster.local:3012';
 const SEO_SERVICE = process.env.SEO_SERVICE_URL || 'http://127.0.0.1:3011';
 const PROXY_TIMEOUT = 15000;
 const JWT_SECRET = process.env.JWT_SECRET || 'flower-shop-secret-2024';
