@@ -1014,11 +1014,11 @@ async function esSearch(q, opts = {}) {
   const query = (q || '').toString().trim();
   const body = query ? {
     from, size,
-    _source: ['title','englishTitle','flowerName','category','sceneTags','sellerName','origin','image','specSize','stock','isListed'],
+    _source: ['title','englishTitle','flowerName','category','sceneTags','sellerName','origin','image','specSize','stock','isListed','sellPrice','settlementPrice','price'],
     query: {
       multi_match: {
         query,
-        fields: ['title^3','englishTitle^3','flowerName^2','sceneTags^2','category^2','sellerName'],
+        fields: ['title^3','englishTitle^3','flowerName^2','sceneTags^2','category^2','sellerName','origin'],
         type: 'best_fields',
         fuzziness: 'AUTO'
       }
