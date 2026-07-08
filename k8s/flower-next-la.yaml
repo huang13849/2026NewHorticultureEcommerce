@@ -49,11 +49,20 @@ spec:
         - name: SEO_SERVICE_URL
           value: http://100.96.54.109:31011
         - name: NEXTAUTH_URL
-          value: https://horiculture.space
+          value: http://209.141.34.146
+        - name: AUTH_TRUST_HOST
+          value: "true"
         - name: NEXT_PUBLIC_API_URL
           value: /api
         - name: NEXT_PUBLIC_SITE_URL
-          value: https://horiculture.space
+          value: http://209.141.34.146
+        - name: ZITADEL_ISSUER
+          value: https://id.horiculture.club
+        - name: FLOWER_API_INTERNAL
+          value: http://100.79.211.107:31030
+        envFrom:
+        - secretRef:
+            name: flower-next-zitadel
         readinessProbe:
           tcpSocket: { port: 3000 }
           initialDelaySeconds: 5
