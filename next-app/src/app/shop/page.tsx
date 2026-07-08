@@ -185,9 +185,7 @@ export default function ShopPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, hasMore, loadingMore, search, loading]);
 
-  // 搜索时直接走后端 keyword 查询（命中 MongoDB $text 索引: title/description/flowerName）
-  // 只拉当前页大小的结果，代替原来"拉 500 条到浏览器再本地 filter"的方案，
-  // 平均减少 15 倍数据传输量，海外链路收益更明显。
+  // 搜索走 ES (seo-service /seo/api/search),IK 中文分词
   useEffect(() => {
     const kw = search.trim();
     if (!kw) return;
@@ -195,11 +193,12 @@ export default function ShopPage() {
     const handle = setTimeout(async () => {
       try {
         const res = await fetch(
-          `${API}/products?keyword=${encodeURIComponent(kw)}&limit=${PAGE_SIZE}`,
+          `/seo/api/search?q=${encodeURIComponent(kw)}&size=${PAGE_SIZE}`,
         );
         const data = await res.json();
         if (!alive) return;
-        setProducts(data.products || []);
+        const hits = data.hits || [];
+        setProducts(hits.map((h: any) => ({ ...h, _id: h.id })));
         setHasMore(false);
       } catch { /* empty */ }
     }, 300);
