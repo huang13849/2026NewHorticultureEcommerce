@@ -1053,6 +1053,14 @@ async function handle(req, res) {
     if (url.pathname === '/api/health') return send(res, 200, { status: 'ok', service: 'seo-service', site: SITE_URL, sites: SITE_URLS, time: new Date().toISOString() });
     if (url.pathname === '/api/track' && req.method === 'POST') { const b = await bodyJson(req); const ip = (req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').toString().split(',')[0]; const host = String(b.host || hostOf(b.origin) || req.headers.host || 'unknown').slice(0,120); jsonLine({ ts: new Date().toISOString(), host, origin: String(b.origin || '').slice(0,200), path: String(b.path || '/').slice(0,300), referrer: String(b.referrer || '').slice(0,500), title: String(b.title || '').slice(0,200), lang: String(b.lang || '').slice(0,20), screen: String(b.screen || '').slice(0,50), ua: String(req.headers['user-agent'] || '').slice(0,300), ipHash: Buffer.from(ip).toString('base64').slice(0,16) }); return send(res, 200, { ok: true }); }
     if (url.pathname === '/api/analytics/summary') return send(res, 200, analyticsSummary(Number(url.searchParams.get('days') || 30), url.searchParams.get('host') || ''));
+    if (url.pathname === '/api/analytics/la-nginx') {
+      try {
+        const r = await fetch('http://209.141.34.146/_la-stats.json', { signal: AbortSignal.timeout(5000) });
+        if (!r.ok) return send(res, 200, { ok: false, error: `HTTP ${r.status}` });
+        const j = await r.json();
+        return send(res, 200, { ok: true, source: 'la-nginx', ...j });
+      } catch (e) { return send(res, 200, { ok: false, error: String(e.message || e), source: 'la-nginx' }); }
+    }
     if (url.pathname === '/api/analytics/cloudflare') { try { return send(res, 200, await fetchCloudflareAnalytics(Number(url.searchParams.get('days') || 30))); } catch (e) { return send(res, 200, { configured: !!CF_API_TOKEN, source: 'cloudflare', error: e.message, note: 'Cloudflare Analytics 暂不可用，检查 Token 权限或 Zone。' }); } }
     if (url.pathname === '/api/cloudflare/verify') return send(res, 200, await verifyCloudflareToken());
     if (url.pathname === '/api/seo/audit') return send(res, 200, await auditOne(safeUrl(url.searchParams.get('url') || SITE_URL)));

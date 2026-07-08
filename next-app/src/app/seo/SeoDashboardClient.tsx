@@ -18,6 +18,22 @@ type Audit = {
 };
 type RankingMatch = { domain: string; rank: number | null; found: boolean };
 type Ranking = { keyword: string; engine: string; matches?: RankingMatch[]; found: boolean; error?: string };
+export type LaNginxStats = {
+  ok: boolean;
+  error?: string;
+  pv: number;
+  uv: number;
+  bot_filtered?: number;
+  window_days?: number;
+  generated_at?: string;
+  byDay: Array<{ date: string; pv: number; uv: number }>;
+  topPaths: Array<[string, number]>;
+  topReferrers: Array<[string, number]>;
+  devices: Record<string, number>;
+  statuses: Record<string, number>;
+  topIpBlocks?: Array<[string, number]>;
+};
+
 type CloudflareAnalytics = {
   configured?: boolean;
   error?: string;
@@ -48,7 +64,7 @@ export type SeoData = {
   rankingData: { results: Ranking[]; note: string };
   analytics: Analytics;
   domesticAnalytics: Analytics;
-  cloudflare: CloudflareAnalytics;
+  laNginx: LaNginxStats;
   searchLogs: SearchLog[];
   trends: Trends;
   defaultRegion: 'domestic' | 'overseas';
@@ -78,7 +94,7 @@ export default function SeoDashboardClient(props: SeoData) {
 
   const trendDays: { label: string; value: number; sub: string }[] = IS_CN_VIEW
     ? Object.entries(analyticsForView.byDay || {}).sort(([a], [b]) => a.localeCompare(b)).slice(-14).map(([d, v]) => ({ label: d.slice(5), value: Number(v) || 0, sub: `${Number(v) || 0} PV` }))
-    : Object.entries(props.cloudflare.byDay || {}).sort(([a], [b]) => a.localeCompare(b)).slice(-14).map(([d, v]) => ({ label: d.slice(5), value: v.pageViews || v.requests || 0, sub: `${v.pageViews || v.requests || 0} PV · ${v.uniques || 0} 人` }));
+    : (props.laNginx.byDay || []).slice(-14).map(d => ({ label: d.date.slice(5), value: d.pv || 0, sub: `${d.pv || 0} PV · ${d.uv || 0} UV` }));
   const maxPv = Math.max(1, ...trendDays.map(d => d.value));
 
   const searchLogs = props.searchLogs || [];
@@ -140,16 +156,16 @@ export default function SeoDashboardClient(props: SeoData) {
           ) : (
             <>
               <Metric title="国外 SEO" value={`${overseasAudit.score || 0}`} sub="horiculture.space" tone="emerald" />
-              <Metric title="30天 PV" value={String(props.cloudflare.pageViews ?? 0)} sub="Cloudflare 国外" tone="violet" />
+              <Metric title="30天 PV" value={String(props.laNginx.pv ?? 0)} sub="LA nginx (国际)" tone="violet" /><Metric title="30天 UV" value={String(props.laNginx.uv ?? 0)} sub="独立访客" tone="sky" />
               <Metric title="进前20词" value={String(rankedCount)} sub={`${rankings.length} 个跟踪词`} tone="amber" />
               <Metric title="国外趋势词" value={String((props.trends.overseas || []).length)} sub="适合海外首页大图" tone="sky" />
             </>
           )}
         </section>
 
-        {!IS_CN_VIEW && props.cloudflare.error ? (
+        {!IS_CN_VIEW && props.laNginx.error ? (
           <section className="rounded-2xl border border-amber-400/20 bg-amber-400/10 p-4 text-sm text-amber-100">
-            Cloudflare 数据暂不可用：{props.cloudflare.error}
+            LA nginx 数据暂不可用：{props.laNginx.error}
           </section>
         ) : null}
 
@@ -161,7 +177,7 @@ export default function SeoDashboardClient(props: SeoData) {
                   <div className="flex justify-between text-xs text-slate-400 mb-1"><span>{d.label}</span><span>{d.sub}</span></div>
                   <div className="h-2 rounded bg-white/10"><div className="h-2 rounded bg-emerald-400" style={{ width: `${Math.max(4, d.value / maxPv * 100)}%` }} /></div>
                 </div>
-              )) : <p className="text-slate-400 text-sm">{IS_CN_VIEW ? '暂无站内访问埋点数据。' : '暂无 Cloudflare 趋势数据。'}</p>}
+              )) : <p className="text-slate-400 text-sm">{IS_CN_VIEW ? '暂无站内访问埋点数据。' : 'LA nginx 暂无趋势数据（可能刚部署，等 5 分钟）。'}</p>}
             </div>
           </Card>
         </section>

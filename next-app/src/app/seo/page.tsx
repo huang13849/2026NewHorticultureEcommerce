@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { IS_CN } from '@/lib/deploy';
-import SeoDashboardClient, { type SeoData } from './SeoDashboardClient';
+import SeoDashboardClient, { type SeoData, type LaNginxStats } from './SeoDashboardClient';
 
 // server 端一次拉两边数据,client 只做视图切换
 export const dynamic = 'force-dynamic';
@@ -41,12 +41,12 @@ async function getFlowerJson<T>(path: string, fallback: T): Promise<T> {
 
 export default async function SeoDashboardPage() {
   // 拉两边数据:analytics 拉两次(默认 host 和显式国内 host=106),trend/audit/cloudflare 一次共用
-  const [auditAll, rankingData, analytics, domesticAnalytics, cloudflare, searchLogsResp, trends] = await Promise.all([
+  const [auditAll, rankingData, analytics, domesticAnalytics, laNginx, searchLogsResp, trends] = await Promise.all([
     getJson<SeoData['auditAll']>('/api/seo/audit-all', { primary: 'https://horiculture.space', sites: [] }),
     getJson<SeoData['rankingData']>('/api/seo/rankings', { results: [], note: '' }),
     getJson<SeoData['analytics']>('/api/analytics/summary?days=30', { topPages: [], topReferrers: [] }),
     getJson<SeoData['analytics']>('/api/analytics/summary?days=30&host=106.12.91.182', { topPages: [], topReferrers: [] }),
-    getJson<SeoData['cloudflare']>('/api/analytics/cloudflare?days=30', { configured: false, error: 'Cloudflare Analytics 暂不可用' }),
+    getJson<LaNginxStats>('/api/analytics/la-nginx', { ok: false, error: 'LA nginx analytics 暂不可用', pv: 0, uv: 0, byDay: [], topPaths: [], topReferrers: [], devices: {}, statuses: {} }),
     getJson<{ logs: SeoData['searchLogs']; total: number }>('/api/search-logs?limit=200', { logs: [], total: 0 }),
     getJson<SeoData['trends']>('/api/seo/trends', { domestic: [], overseas: [], allKeywords: [] }),
   ]);
@@ -57,7 +57,7 @@ export default async function SeoDashboardPage() {
       rankingData={rankingData}
       analytics={analytics}
       domesticAnalytics={domesticAnalytics}
-      cloudflare={cloudflare}
+      laNginx={laNginx}
       searchLogs={searchLogsResp.logs || []}
       trends={trends}
       defaultRegion={IS_CN ? 'domestic' : 'overseas'}
