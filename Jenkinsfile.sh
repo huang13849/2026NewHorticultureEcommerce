@@ -118,12 +118,18 @@ else
   if [ "$FAIL" = "1" ]; then exit 1; fi
 fi
 
-echo "======= [6/5] Push to GitHub (trigger Cloudflare Pages) ======="
-# host 上 ~/.ssh/id_ed25519 已加到 GitHub, ssh -T git@github.com 已通
-if git push origin main 2>&1; then
-  echo "  OK  pushed main -> origin (GitHub); CF Pages should auto-build"
+echo "======= [6/5] GitHub 同步策略 ======="
+# 默认不自动推 github (gitea 是主 CI 源, github 只在大版本发布时手动同步)
+# 需要触发 github + CF Pages rebuild 时: PUSH_GITHUB=1 bash Jenkinsfile.sh
+#   或运行: bash ~/publish-github.sh
+if [ "${PUSH_GITHUB:-0}" = "1" ]; then
+  if git push origin main 2>&1; then
+    echo "  OK  pushed main -> origin (GitHub); CF Pages should auto-build"
+  else
+    echo "  WARN github push failed"
+  fi
 else
-  echo "  WARN github push failed (deploy still counts as success — CI can retry later)"
+  echo "  SKIP github push (set PUSH_GITHUB=1 to force; or use ~/publish-github.sh for big releases)"
 fi
 
 echo "======= DEPLOY SUCCESS: $COMMIT_SHA ======="
