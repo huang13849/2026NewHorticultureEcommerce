@@ -13,6 +13,7 @@ const db = require('./lib/db');
 
 // ===== 路由 =====
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/session', require('./routes/sessions'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/recommend', require('./routes/recommend'));
 app.use('/api/garden', require('./routes/garden'));
