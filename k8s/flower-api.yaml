@@ -36,7 +36,7 @@ spec:
           value: "380222566284984529"
         # === Redis session (2026-07-09) ===
         - name: REDIS_URL
-          value: "redis://100.96.54.109:6379"
+          value: "redis://session-redis.new-ecommerce.svc.cluster.local:6379"
         envFrom:
         - secretRef:
             name: flower-next-zitadel
