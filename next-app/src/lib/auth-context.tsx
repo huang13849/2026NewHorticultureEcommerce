@@ -144,9 +144,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     if (typeof window !== 'undefined') {
       try { localStorage.removeItem('flower_token'); } catch {}
-      // NextAuth signout + 广播清所有 cookie
-      fetch('/api/auth/signout', { method: 'POST', credentials: 'include' }).catch(() => {});
-      fetch('/api/auth/sso-logout', { method: 'POST', credentials: 'include' }).catch(() => {});
+      // NextAuth v5 signout 必须带 csrfToken 才能清 session cookie
+      (async () => {
+        try {
+          const r = await fetch('/api/auth/csrf', { credentials: 'include' });
+          const { csrfToken } = await r.json();
+          const body = new URLSearchParams();
+          body.set('csrfToken', csrfToken);
+          body.set('callbackUrl', '/');
+          await fetch('/api/auth/signout', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: body.toString(),
+            redirect: 'manual',
+          });
+        } catch {}
+        try {
+          await fetch('/api/auth/sso-logout', { method: 'POST', credentials: 'include' });
+        } catch {}
+        // 强制刷新, 让服务端根据被清掉的 cookie 重新渲染
+        try { window.location.assign('/'); } catch {}
+      })();
     }
   }, []);
 
