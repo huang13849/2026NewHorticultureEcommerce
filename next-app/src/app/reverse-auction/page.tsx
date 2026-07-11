@@ -47,7 +47,8 @@ function imgOf(p: Product) {
     || '';
   if (!raw) return '';
   if (raw.startsWith('http')) return raw;
-  return `/minio/supply-chain/${raw}`;
+  if (raw.startsWith('/')) return raw;            // 已经是绝对路径 (如 /minio/supply-chain/...) 直接返回
+  return `/minio/supply-chain/${raw}`;             // 裸 key 才拼前缀
 }
 function isFreshFlowerItem(p: Product) {
   return String(p.category || '').trim() === '鲜花';
