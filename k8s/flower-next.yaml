@@ -56,6 +56,10 @@ spec:
         env:
         - name: NODE_ENV
           value: production
+        - name: PEONY_MOBILE_AUTH_URL
+          value: "http://mobile-auth-service.peony.svc.cluster.local:3020"
+        - name: PEONY_SUPPLIER_URL
+          value: "http://supplier-service.supply-chain.svc.cluster.local:3002"
         - name: ZITADEL_LOGIN_V2_URL
           value: "http://100.96.54.109:31112"
         # === club-web OIDC (2026-07-05) ===
