@@ -669,5 +669,126 @@
     "reverseFlowerAuction": "鲜花拍卖",
     "shop": "商店",
     "mine": "我的"
+  },
+  "peonyRegister": {
+    "title": "芍药联盟入驻",
+    "subtitle": "国花芍药 · 四海同盟 · 手机号即账号",
+    "back": "上一步",
+    "next": "下一步",
+    "submit": "开启入驻",
+    "submitting": "花开中…",
+    "submitFailed": "注册失败",
+    "pwSaveUnsupported": "您的浏览器不支持自动保存密码。为保障您下次登录体验，请使用 Chrome / Edge / Safari 最新版本。",
+    "pwSaveFailed": "浏览器未能保存您的密码。请确认已允许密码自动填充。",
+    "footer": "© 芍药联盟 · Peony Alliance",
+    "step1": {
+      "title": "账号密钥",
+      "sub": "手机号即为登录账号,浏览器自动保存密码",
+      "phone": "手机号 / 账号",
+      "phonePh": "11 位手机号",
+      "password": "登录密码",
+      "passwordPh": "至少 6 位",
+      "confirm": "再次输入密码",
+      "confirmPh": "两次一致",
+      "mismatch": "两次密码不一致",
+      "pwSaveAck": "我理解并同意浏览器保存密码 — 未保存则无法完成注册,以保障下次登录顺畅。"
+    },
+    "step2": {
+      "title": "联盟归属",
+      "sub": "选择您所在的联盟分支"
+    },
+    "step3": {
+      "title": "我的身份",
+      "sub": "决定后续能做的事"
+    },
+    "step4": {
+      "title": "完善资料",
+      "sub": "再一步就完成入驻",
+      "positions": "岗位（可多选）",
+      "entity": "实体名称",
+      "entityPh": "公司/合作社/园艺场 全称",
+      "province": "省",
+      "city": "市",
+      "district": "区/县",
+      "address": "详细地址",
+      "addressPh": "街道 · 门牌 · 园区",
+      "species": "主营品类",
+      "capacity": "种植规模（亩）",
+      "capacityPh": "预估亩数",
+      "inviteCode": "邀请码",
+      "inviteCodePh": "6 位字母数字组合"
+    },
+    "alliance": {
+      "hq": {
+        "emoji": "🏛",
+        "title": "总部",
+        "sub": "菏泽/曹州牡丹园"
+      },
+      "branch": {
+        "emoji": "🌸",
+        "title": "分部",
+        "sub": "菏泽/洛阳/北京/云南/新疆"
+      },
+      "overseas": {
+        "emoji": "🌍",
+        "title": "海外用户",
+        "sub": "全球芍药爱好者"
+      },
+      "partner": {
+        "emoji": "🤝",
+        "title": "海外合伙人",
+        "sub": "国际经销/展会"
+      }
+    },
+    "identity": {
+      "admin": {
+        "emoji": "👑",
+        "title": "管理员",
+        "sub": "创建组织 · 邀请成员"
+      },
+      "staff": {
+        "emoji": "🧑‍🌾",
+        "title": "成员",
+        "sub": "通过邀请码加入"
+      }
+    },
+    "position": {
+      "sales": {
+        "emoji": "💐",
+        "label": "销售"
+      },
+      "operation": {
+        "emoji": "🌱",
+        "label": "运营"
+      },
+      "info": {
+        "emoji": "📋",
+        "label": "信息员"
+      },
+      "aftersales": {
+        "emoji": "💬",
+        "label": "售后"
+      }
+    },
+    "species": {
+      "peony": "芍药",
+      "moutan": "牡丹",
+      "cutflower": "鲜切花",
+      "seedling": "种苗",
+      "potted": "盆栽",
+      "other": "其他"
+    },
+    "badge": {
+      "seedling": "花开新芽",
+      "sprout": "破土青苗",
+      "rooted": "稳步成长",
+      "budding": "含苞待放",
+      "bloom": "盛放联盟"
+    },
+    "done": {
+      "title": "入驻成功 · 花开新芽",
+      "sub": "您已加入芍药联盟,徽章将随您的贡献成长",
+      "enter": "进入芍药联盟"
+    }
   }
 }

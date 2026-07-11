@@ -1,365 +1,613 @@
 "use client";
-// 芍药联盟注册 — 4 步向导 (无短信 / 玻璃拟态 / 徽章成长)
+// 芍药联盟注册 — 4 步向导
 // Route: /peony-alliance/register
-import { useMemo, useState } from "react";
+// Design principles:
+//   1. 大气雍容 · 国花气质（Peony gradient · gold-rimmed cards · floating petals）
+//   2. Framer-motion-free animations（pure CSS keyframes + Tailwind-like utility inline styles → CF-friendly SSR）
+//   3. i18n via @/lib/i18n/context — key: peonyRegister.*  (zh/en/ja/de/fr/ar/ru)
+//   4. 无短信验证；浏览器密码不保存则拒绝注册
+//   5. 徽章 🌱→🌿→🌵→🌸→🌺 五级成长可视化预览
+//
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useI18n } from "@/lib/i18n/context";
 
 type Alliance = "hq" | "branch" | "overseas" | "partner";
 type Identity = "admin" | "staff";
 type Position = "sales" | "operation" | "info" | "aftersales";
 
-const ALLIANCE_OPTIONS: { key: Alliance; title: string; sub: string; emoji: string }[] = [
-  { key: "hq",       title: "总部",       sub: "菏泽/曹州牡丹园",       emoji: "🏛" },
-  { key: "branch",   title: "分部",       sub: "菏泽/洛阳/北京/云南/新疆", emoji: "🌸" },
-  { key: "overseas", title: "海外用户",   sub: "全球芍药爱好者",         emoji: "🌍" },
-  { key: "partner",  title: "海外合伙人", sub: "国际经销/展会",         emoji: "🤝" },
-];
-const POSITION_OPTIONS: { key: Position; label: string; emoji: string }[] = [
-  { key: "sales",       label: "销售",   emoji: "💐" },
-  { key: "operation",   label: "运营",   emoji: "🌱" },
-  { key: "info",        label: "信息员", emoji: "📋" },
-  { key: "aftersales",  label: "售后",   emoji: "💬" },
-];
-const SPECIES = ["芍药", "牡丹", "鲜切花", "种苗", "盆栽", "其他"];
-
-// 徽章成长: 🌱 → 🌿 → 🌵 → 🌸 → 🌺 (5 级)
 const BADGES = [
-  { emoji: "🌱", name: "花开新芽", desc: "刚加入联盟，一切从这里开始" },
-  { emoji: "🌿", name: "破土青苗", desc: "开始积累业务足迹" },
-  { emoji: "🌵", name: "稳步成长", desc: "已有稳定业务贡献" },
-  { emoji: "🌸", name: "含苞待放", desc: "接近核心贡献者" },
-  { emoji: "🌺", name: "盛放联盟",  desc: "联盟骨干成员" },
+  { emoji: "🌱", key: "seedling" },
+  { emoji: "🌿", key: "sprout" },
+  { emoji: "🌵", key: "rooted" },
+  { emoji: "🌸", key: "budding" },
+  { emoji: "🌺", key: "bloom" },
 ];
+
+// ---------- Password credential helpers (强制浏览器保存密码) ----------
+type CredMgr = {
+  create: (init: { password: PasswordCredentialInit }) => Promise<Credential | null>;
+  store: (c: Credential) => Promise<Credential>;
+};
+type PasswordCredentialInit = { id: string; password: string; name?: string };
+function getCreds(): CredMgr | null {
+  if (typeof navigator === "undefined") return null;
+  const c = (navigator as Navigator & { credentials?: CredMgr }).credentials;
+  if (!c || typeof c.create !== "function" || typeof c.store !== "function") return null;
+  // PasswordCredential itself must exist
+  if (typeof (window as unknown as { PasswordCredential?: unknown }).PasswordCredential === "undefined") return null;
+  return c;
+}
 
 export default function PeonyRegisterPage() {
   const router = useRouter();
+  const { t, lang } = useI18n();
+
   const [step, setStep] = useState(1);
-  // step 1
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pwSaveError, setPwSaveError] = useState<string | null>(null);
+
+  // form state
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  // step 2
   const [alliance, setAlliance] = useState<Alliance | null>(null);
-  // step 3
   const [identity, setIdentity] = useState<Identity | null>(null);
-  // step 4
   const [positions, setPositions] = useState<Position[]>([]);
   const [entityName, setEntityName] = useState("");
   const [province, setProvince] = useState("");
   const [city, setCity] = useState("");
   const [district, setDistrict] = useState("");
   const [address, setAddress] = useState("");
-  const [licenseUrl, setLicenseUrl] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [mainSpecies, setMainSpecies] = useState<string[]>([]);
-  const [capacityMu, setCapacityMu] = useState<string>("");
-  // submit
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState<any>(null);
+  const [capacityMu, setCapacityMu] = useState("");
 
-  const step1Ok = /^1\d{10}$/.test(phone) && password.length >= 6 && password === confirm;
-  const step2Ok = !!alliance;
-  const step3Ok = !!identity;
-  const showInfo = positions.includes("info");
-  const step4Ok = useMemo(() => {
+  const [ackPwSave, setAckPwSave] = useState(false);
+
+  const canNextStep1 = phone.length >= 8 && password.length >= 6 && password === confirm && ackPwSave;
+  const canNextStep2 = alliance !== null;
+  const canNextStep3 = identity !== null;
+  const canSubmit = useMemo(() => {
+    if (!canNextStep1 || !canNextStep2 || !canNextStep3) return false;
     if (positions.length === 0) return false;
     if (identity === "admin" && !entityName.trim()) return false;
-    if (showInfo && (mainSpecies.length === 0 || !capacityMu)) return false;
     if (identity === "staff" && !inviteCode.trim()) return false;
     return true;
-  }, [positions, identity, entityName, showInfo, mainSpecies, capacityMu, inviteCode]);
+  }, [canNextStep1, canNextStep2, canNextStep3, positions, identity, entityName, inviteCode]);
 
-  const togglePos = (p: Position) =>
-    setPositions(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
-  const toggleSpecies = (s: string) =>
-    setMainSpecies(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
+  // Petal decorations (fixed positions to avoid hydration mismatch)
+  const petals = useMemo(
+    () => [
+      { top: "8%",  left: "6%",  size: 44, delay: "0s",   dur: "18s" },
+      { top: "22%", left: "88%", size: 32, delay: "2.5s", dur: "22s" },
+      { top: "62%", left: "4%",  size: 28, delay: "5s",   dur: "20s" },
+      { top: "78%", left: "82%", size: 40, delay: "1s",   dur: "24s" },
+      { top: "42%", left: "50%", size: 24, delay: "3.5s", dur: "26s" },
+    ],
+    []
+  );
 
-  async function handleSubmit() {
-    setSubmitting(true); setError(null);
+  const submit = async () => {
+    setError(null);
+    setPwSaveError(null);
+    if (!canSubmit) return;
+    setBusy(true);
+
+    // 1) 强制浏览器保存密码 — 失败即中止
+    const creds = getCreds();
+    if (!creds) {
+      setPwSaveError(t("peonyRegister.pwSaveUnsupported"));
+      setBusy(false);
+      return;
+    }
+    let cred: Credential | null = null;
     try {
-      const body: any = {
-        phone, password,
+      const PC = (window as unknown as { PasswordCredential: new (i: PasswordCredentialInit) => Credential }).PasswordCredential;
+      cred = new PC({ id: phone, password, name: `芍药联盟 ${phone}` });
+      await creds.store(cred);
+    } catch (e) {
+      setPwSaveError(t("peonyRegister.pwSaveFailed") + " · " + (e as Error).message);
+      setBusy(false);
+      return;
+    }
+
+    // 2) 提交注册
+    try {
+      const body = {
+        phone,
+        password,
         alliance_type: alliance,
         identity,
         positions,
+        main_species: mainSpecies,
+        capacity_mu: capacityMu ? Number(capacityMu) : null,
+        ...(identity === "admin"
+          ? {
+              org: {
+                entity_name: entityName,
+                office_province: province,
+                office_city: city,
+                office_district: district,
+                office_address: address,
+                business_license_url: "",
+              },
+            }
+          : { invite_code: inviteCode.toUpperCase() }),
       };
-      if (identity === "admin") {
-        body.org = {
-          entity_name: entityName,
-          office_province: province,
-          office_city: city,
-          office_district: district,
-          office_address: address,
-          business_license_url: licenseUrl,
-        };
-      }
-      if (identity === "staff") body.invite_code = inviteCode.trim().toUpperCase();
-      if (showInfo) {
-        body.main_species = mainSpecies;
-        body.capacity_mu = Number(capacityMu) || 0;
-      }
       const r = await fetch("/api/peony-alliance/register-v2", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
       const j = await r.json();
-      if (!r.ok) { setError(j.error || "register_failed"); setSubmitting(false); return; }
-      setDone(j);
-    } catch (e: any) {
-      setError(e?.message || "network_error");
-    } finally { setSubmitting(false); }
-  }
-
-  if (done) return <SuccessCard result={done} onExplore={() => router.push("/")} />;
+      if (!r.ok) {
+        setError(t("peonyRegister.submitFailed") + ": " + (j.error || j.detail?.message || r.status));
+        setBusy(false);
+        return;
+      }
+      // success — persist JWT and land on peony home
+      if (j.token) {
+        try {
+          localStorage.setItem("peony.token", j.token);
+          localStorage.setItem("peony.user", JSON.stringify(j.user));
+        } catch {}
+      }
+      setStep(5); // celebration
+    } catch (e) {
+      setError((e as Error).message);
+      setBusy(false);
+    }
+  };
 
   return (
-    <div className="peony-wrap">
-      {/* 背景: 芍药 + 数字网络 */}
-      <div className="peony-bg" aria-hidden />
-      <div className="peony-network" aria-hidden />
+    <div dir={lang === "ar" ? "rtl" : "ltr"} style={{
+      minHeight: "100vh", position: "relative", overflow: "hidden",
+      // 芍药雍容: 深绯 → 藤紫 → 金 → 珍珠白
+      background: "radial-gradient(1200px 800px at 20% 10%, #4a0e2b 0%, transparent 60%), radial-gradient(1000px 700px at 90% 90%, #2d1655 0%, transparent 55%), linear-gradient(160deg, #1a0a1f 0%, #2b0f36 45%, #4a1a48 100%)",
+      fontFamily: "'Noto Serif SC','Cormorant Garamond',serif",
+      color: "#fefbf7",
+    }}>
+      {/* Animated floating petals */}
+      {petals.map((p, i) => (
+        <div key={i} style={{
+          position: "absolute", top: p.top, left: p.left, width: p.size, height: p.size,
+          fontSize: p.size, opacity: 0.35, pointerEvents: "none",
+          animation: `peonyDrift ${p.dur} ease-in-out ${p.delay} infinite`,
+          filter: "blur(0.2px)",
+        }}>🌸</div>
+      ))}
 
-      <div className="peony-glass">
-        <header className="peony-header">
-          <div className="peony-brand">🌸 芍药联盟</div>
-          <div className="peony-step-dots">
-            {[1,2,3,4].map(n => (
-              <span key={n} className={`peony-dot ${n===step?"active":""} ${n<step?"done":""}`}>{n<step?"✓":n}</span>
-            ))}
-          </div>
+      {/* Gold ambient glow */}
+      <div style={{
+        position: "absolute", inset: 0, pointerEvents: "none",
+        background: "radial-gradient(circle at 50% 0%, rgba(255,215,150,0.15) 0%, transparent 40%)",
+      }} />
+
+      <main style={{
+        maxWidth: 720, margin: "0 auto", padding: "56px 20px 80px",
+        position: "relative", zIndex: 1,
+      }}>
+        {/* Hero */}
+        <header style={{ textAlign: "center", marginBottom: 40, animation: "peonyFadeDown .8s ease" }}>
+          <div style={{
+            fontSize: 72, lineHeight: 1, filter: "drop-shadow(0 10px 30px rgba(255,150,200,0.5))",
+            animation: "peonyBreath 4s ease-in-out infinite",
+          }}>🌸</div>
+          <h1 style={{
+            fontSize: 44, fontWeight: 700, margin: "16px 0 8px",
+            background: "linear-gradient(135deg, #fce3ec 0%, #f7a8c8 30%, #ffd89b 60%, #f7a8c8 100%)",
+            WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent",
+            letterSpacing: "0.02em",
+          }}>{t("peonyRegister.title")}</h1>
+          <p style={{ margin: 0, fontSize: 16, color: "#e8d5e0", letterSpacing: "0.05em" }}>
+            {t("peonyRegister.subtitle")}
+          </p>
+          <div style={{
+            marginTop: 16, height: 1,
+            background: "linear-gradient(90deg, transparent 0%, #d4a574 50%, transparent 100%)",
+          }} />
         </header>
 
-        {step === 1 && (
-          <section className="peony-section">
-            <h2>第一步 · 建立账户</h2>
-            <p className="hint">手机号 + 密码即可，无需验证码。</p>
-            <label>手机号</label>
-            <input inputMode="numeric" maxLength={11} value={phone}
-                   onChange={e => setPhone(e.target.value.replace(/\D/g,""))}
-                   placeholder="请输入 11 位手机号" />
-            <label>设置密码</label>
-            <input type="password" value={password}
-                   onChange={e => setPassword(e.target.value)}
-                   placeholder="至少 6 位" />
-            <label>确认密码</label>
-            <input type="password" value={confirm}
-                   onChange={e => setConfirm(e.target.value)}
-                   placeholder="再输一次" />
-            {password && confirm && password !== confirm && <div className="err">两次密码不一致</div>}
-            <div className="actions">
-              <button className="primary" disabled={!step1Ok} onClick={() => setStep(2)}>下一步 →</button>
-            </div>
-          </section>
-        )}
-
-        {step === 2 && (
-          <section className="peony-section">
-            <h2>第二步 · 选择联盟身份</h2>
-            <p className="hint">你的组织在联盟里的位置。</p>
-            <div className="cards">
-              {ALLIANCE_OPTIONS.map(o => (
-                <button key={o.key} className={`card ${alliance===o.key?"picked":""}`} onClick={() => setAlliance(o.key)}>
-                  <div className="card-emoji">{o.emoji}</div>
-                  <div className="card-title">{o.title}</div>
-                  <div className="card-sub">{o.sub}</div>
-                </button>
-              ))}
-            </div>
-            <div className="actions">
-              <button onClick={() => setStep(1)}>← 返回</button>
-              <button className="primary" disabled={!step2Ok} onClick={() => setStep(3)}>下一步 →</button>
-            </div>
-          </section>
-        )}
-
-        {step === 3 && (
-          <section className="peony-section">
-            <h2>第三步 · 你的身份</h2>
-            <p className="hint">管理员建立组织并等待审批；员工凭邀请码即刻加入。</p>
-            <div className="cards two">
-              <button className={`card big ${identity==="admin"?"picked":""}`} onClick={() => setIdentity("admin")}>
-                <div className="card-emoji">👑</div>
-                <div className="card-title">管理员 Admin</div>
-                <div className="card-sub">建立组织 / 需要联盟审批</div>
-              </button>
-              <button className={`card big ${identity==="staff"?"picked":""}`} onClick={() => setIdentity("staff")}>
-                <div className="card-emoji">👥</div>
-                <div className="card-title">员工 Staff</div>
-                <div className="card-sub">凭邀请码加入现有组织</div>
-              </button>
-            </div>
-            <div className="actions">
-              <button onClick={() => setStep(2)}>← 返回</button>
-              <button className="primary" disabled={!step3Ok} onClick={() => setStep(4)}>下一步 →</button>
-            </div>
-          </section>
-        )}
-
-        {step === 4 && (
-          <section className="peony-section">
-            <h2>第四步 · 岗位与资料</h2>
-            <p className="hint">岗位可多选，选择"信息员"需补充主营品种和产能。</p>
-
-            <label>岗位（可多选）</label>
-            <div className="chip-row">
-              {POSITION_OPTIONS.map(p => (
-                <button key={p.key} className={`chip ${positions.includes(p.key)?"picked":""}`} onClick={() => togglePos(p.key)}>
-                  <span className="chip-emoji">{p.emoji}</span>{p.label}
-                </button>
-              ))}
-            </div>
-
-            {identity === "admin" && (
-              <>
-                <label>组织主体名称 *</label>
-                <input value={entityName} onChange={e => setEntityName(e.target.value)} placeholder="如：曹州牡丹园" />
-                <label>办公地址</label>
-                <div className="row3">
-                  <input value={province} onChange={e => setProvince(e.target.value)} placeholder="省" />
-                  <input value={city} onChange={e => setCity(e.target.value)} placeholder="市" />
-                  <input value={district} onChange={e => setDistrict(e.target.value)} placeholder="区/县" />
-                </div>
-                <input value={address} onChange={e => setAddress(e.target.value)} placeholder="详细地址" />
-                <label>营业执照 URL（可选）</label>
-                <input value={licenseUrl} onChange={e => setLicenseUrl(e.target.value)} placeholder="MinIO 图片链接" />
-              </>
-            )}
-
-            {identity === "staff" && (
-              <>
-                <label>邀请码 *</label>
-                <input value={inviteCode} onChange={e => setInviteCode(e.target.value.toUpperCase())} placeholder="管理员提供的 6 位邀请码" />
-              </>
-            )}
-
-            {showInfo && (
-              <>
-                <label>主营品种（可多选）*</label>
-                <div className="chip-row">
-                  {SPECIES.map(s => (
-                    <button key={s} className={`chip ${mainSpecies.includes(s)?"picked":""}`} onClick={() => toggleSpecies(s)}>{s}</button>
-                  ))}
-                </div>
-                <label>产能（亩）*</label>
-                <input inputMode="numeric" value={capacityMu} onChange={e => setCapacityMu(e.target.value.replace(/\D/g,""))} placeholder="例如 200" />
-              </>
-            )}
-
-            {error && <div className="err">注册失败：{error}</div>}
-            <div className="actions">
-              <button onClick={() => setStep(3)}>← 返回</button>
-              <button className="primary" disabled={!step4Ok || submitting} onClick={handleSubmit}>
-                {submitting ? "提交中…" : "完成注册 🌸"}
-              </button>
-            </div>
-          </section>
-        )}
-
-        <footer className="peony-foot">
-          <div className="badge-strip">
-            {BADGES.map((b, i) => (
-              <div key={i} className={`badge ${i===0?"current":""}`}>
-                <div className="badge-emoji">{b.emoji}</div>
-                <div className="badge-name">{b.name}</div>
+        {/* Stepper */}
+        {step <= 4 && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 32 }}>
+            {[1, 2, 3, 4].map((s) => (
+              <div key={s} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: "50%",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 14, fontWeight: 600,
+                  background: s <= step
+                    ? "linear-gradient(135deg,#ec4899 0%,#a855f7 100%)"
+                    : "rgba(255,255,255,0.1)",
+                  color: s <= step ? "#fff" : "rgba(255,255,255,0.4)",
+                  border: s === step ? "2px solid #ffd89b" : "2px solid transparent",
+                  boxShadow: s === step ? "0 0 24px rgba(255,216,155,0.5)" : "none",
+                  transition: "all .3s",
+                }}>{s}</div>
+                {s < 4 && <div style={{
+                  width: 32, height: 2,
+                  background: s < step ? "#ec4899" : "rgba(255,255,255,0.15)",
+                  transition: "background .3s",
+                }} />}
               </div>
             ))}
           </div>
-          <div className="footnote">加入即获得 🌱 花开新芽 · 随贡献成长为 🌺 盛放联盟</div>
+        )}
+
+        {/* Card — glass */}
+        <section style={{
+          background: "linear-gradient(160deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)",
+          backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
+          border: "1px solid rgba(255,216,155,0.25)",
+          borderRadius: 24, padding: 32,
+          boxShadow: "0 24px 60px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.1)",
+          animation: "peonyFadeUp .6s ease",
+        }}>
+          {/* ============== STEP 1: 账号 ============== */}
+          {step === 1 && (
+            <>
+              <StepTitle text={t("peonyRegister.step1.title")} sub={t("peonyRegister.step1.sub")} />
+              <FormRow label={t("peonyRegister.step1.phone")}>
+                <input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 15))}
+                  autoComplete="tel username webauthn"
+                  inputMode="numeric"
+                  placeholder={t("peonyRegister.step1.phonePh")}
+                  style={inputStyle}
+                />
+              </FormRow>
+              <FormRow label={t("peonyRegister.step1.password")}>
+                <input
+                  type="password" value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
+                  placeholder={t("peonyRegister.step1.passwordPh")}
+                  style={inputStyle}
+                />
+              </FormRow>
+              <FormRow label={t("peonyRegister.step1.confirm")}>
+                <input
+                  type="password" value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  autoComplete="new-password"
+                  placeholder={t("peonyRegister.step1.confirmPh")}
+                  style={inputStyle}
+                />
+                {confirm && confirm !== password && (
+                  <div style={hintErr}>{t("peonyRegister.step1.mismatch")}</div>
+                )}
+              </FormRow>
+              <label style={{
+                display: "flex", alignItems: "flex-start", gap: 10, padding: 14,
+                marginTop: 8,
+                background: "rgba(255,216,155,0.08)",
+                border: "1px solid rgba(255,216,155,0.25)",
+                borderRadius: 12, cursor: "pointer",
+              }}>
+                <input
+                  type="checkbox" checked={ackPwSave}
+                  onChange={(e) => setAckPwSave(e.target.checked)}
+                  style={{ marginTop: 4, accentColor: "#ec4899" }}
+                />
+                <span style={{ fontSize: 13, lineHeight: 1.6, color: "#f5e8dd" }}>
+                  🔐 {t("peonyRegister.step1.pwSaveAck")}
+                </span>
+              </label>
+            </>
+          )}
+
+          {/* ============== STEP 2: 联盟归属 ============== */}
+          {step === 2 && (
+            <>
+              <StepTitle text={t("peonyRegister.step2.title")} sub={t("peonyRegister.step2.sub")} />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                {(["hq", "branch", "overseas", "partner"] as Alliance[]).map((k) => (
+                  <ChoiceCard
+                    key={k} selected={alliance === k}
+                    onClick={() => setAlliance(k)}
+                    emoji={t(`peonyRegister.alliance.${k}.emoji`)}
+                    title={t(`peonyRegister.alliance.${k}.title`)}
+                    sub={t(`peonyRegister.alliance.${k}.sub`)}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* ============== STEP 3: 身份 ============== */}
+          {step === 3 && (
+            <>
+              <StepTitle text={t("peonyRegister.step3.title")} sub={t("peonyRegister.step3.sub")} />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                {(["admin", "staff"] as Identity[]).map((k) => (
+                  <ChoiceCard
+                    key={k} selected={identity === k}
+                    onClick={() => setIdentity(k)}
+                    emoji={t(`peonyRegister.identity.${k}.emoji`)}
+                    title={t(`peonyRegister.identity.${k}.title`)}
+                    sub={t(`peonyRegister.identity.${k}.sub`)}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* ============== STEP 4: 详情 ============== */}
+          {step === 4 && (
+            <>
+              <StepTitle text={t("peonyRegister.step4.title")} sub={t("peonyRegister.step4.sub")} />
+
+              {/* Positions */}
+              <FormRow label={t("peonyRegister.step4.positions")}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  {(["sales", "operation", "info", "aftersales"] as Position[]).map((p) => {
+                    const on = positions.includes(p);
+                    return (
+                      <button
+                        type="button" key={p}
+                        onClick={() => setPositions(on
+                          ? positions.filter((x) => x !== p)
+                          : [...positions, p])}
+                        style={chipStyle(on)}
+                      >
+                        <span style={{ fontSize: 20 }}>{t(`peonyRegister.position.${p}.emoji`)}</span>
+                        <span>{t(`peonyRegister.position.${p}.label`)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </FormRow>
+
+              {identity === "admin" ? (
+                <>
+                  <FormRow label={t("peonyRegister.step4.entity")}>
+                    <input value={entityName} onChange={(e) => setEntityName(e.target.value)} placeholder={t("peonyRegister.step4.entityPh")} style={inputStyle} />
+                  </FormRow>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                    <input value={province} onChange={(e) => setProvince(e.target.value)} placeholder={t("peonyRegister.step4.province")} style={inputStyle} />
+                    <input value={city} onChange={(e) => setCity(e.target.value)} placeholder={t("peonyRegister.step4.city")} style={inputStyle} />
+                    <input value={district} onChange={(e) => setDistrict(e.target.value)} placeholder={t("peonyRegister.step4.district")} style={inputStyle} />
+                  </div>
+                  <FormRow label={t("peonyRegister.step4.address")}>
+                    <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder={t("peonyRegister.step4.addressPh")} style={inputStyle} />
+                  </FormRow>
+                  <FormRow label={t("peonyRegister.step4.species")}>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                      {["peony", "moutan", "cutflower", "seedling", "potted", "other"].map((k) => {
+                        const on = mainSpecies.includes(k);
+                        return (
+                          <button
+                            type="button" key={k}
+                            onClick={() => setMainSpecies(on ? mainSpecies.filter((x) => x !== k) : [...mainSpecies, k])}
+                            style={chipStyle(on)}
+                          >{t(`peonyRegister.species.${k}`)}</button>
+                        );
+                      })}
+                    </div>
+                  </FormRow>
+                  <FormRow label={t("peonyRegister.step4.capacity")}>
+                    <input type="number" min={0} value={capacityMu} onChange={(e) => setCapacityMu(e.target.value)} placeholder={t("peonyRegister.step4.capacityPh")} style={inputStyle} />
+                  </FormRow>
+                </>
+              ) : (
+                <FormRow label={t("peonyRegister.step4.inviteCode")}>
+                  <input
+                    value={inviteCode}
+                    onChange={(e) => setInviteCode(e.target.value.toUpperCase().slice(0, 12))}
+                    placeholder={t("peonyRegister.step4.inviteCodePh")}
+                    style={{ ...inputStyle, fontFamily: "monospace", letterSpacing: "0.3em", textAlign: "center", fontSize: 22 }}
+                  />
+                </FormRow>
+              )}
+            </>
+          )}
+
+          {/* ============== STEP 5: 庆祝 ============== */}
+          {step === 5 && (
+            <div style={{ textAlign: "center", padding: "20px 0" }}>
+              <div style={{
+                fontSize: 96, animation: "peonyBloom 1.2s cubic-bezier(.34,1.56,.64,1)",
+                filter: "drop-shadow(0 12px 40px rgba(255,150,200,0.7))",
+              }}>🌱</div>
+              <h2 style={{
+                marginTop: 20, fontSize: 32,
+                background: "linear-gradient(135deg,#fce3ec 0%,#ffd89b 100%)",
+                WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent",
+              }}>{t("peonyRegister.done.title")}</h2>
+              <p style={{ marginTop: 8, color: "#e8d5e0" }}>{t("peonyRegister.done.sub")}</p>
+
+              {/* Badge growth path */}
+              <div style={{ marginTop: 32, marginBottom: 24, display: "flex", justifyContent: "center", alignItems: "center", gap: 10 }}>
+                {BADGES.map((b, i) => (
+                  <div key={b.key} style={{
+                    display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                    opacity: i === 0 ? 1 : 0.4,
+                    animation: `peonyPop .4s ease ${0.3 + i * 0.15}s both`,
+                  }}>
+                    <div style={{
+                      fontSize: 36,
+                      filter: i === 0 ? "drop-shadow(0 4px 12px rgba(255,150,200,0.6))" : "grayscale(0.6)",
+                    }}>{b.emoji}</div>
+                    <div style={{ fontSize: 11, color: "#d4b8c8" }}>{t(`peonyRegister.badge.${b.key}`)}</div>
+                    {i < BADGES.length - 1 && (
+                      <div style={{ position: "absolute", opacity: 0 }}>→</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <button onClick={() => router.push("/peony")} style={{ ...primaryBtn, marginTop: 16 }}>
+                {t("peonyRegister.done.enter")} →
+              </button>
+            </div>
+          )}
+
+          {/* Error banners */}
+          {(error || pwSaveError) && step <= 4 && (
+            <div style={{
+              marginTop: 20, padding: 14, borderRadius: 12,
+              background: "rgba(220,80,110,0.15)",
+              border: "1px solid rgba(220,80,110,0.35)",
+              color: "#ffc9d4", fontSize: 13,
+            }}>
+              ⚠️ {pwSaveError || error}
+            </div>
+          )}
+
+          {/* Nav buttons */}
+          {step >= 1 && step <= 4 && (
+            <div style={{ display: "flex", gap: 12, marginTop: 28 }}>
+              {step > 1 && (
+                <button onClick={() => { setStep(step - 1); setError(null); setPwSaveError(null); }} style={ghostBtn} disabled={busy}>
+                  ← {t("peonyRegister.back")}
+                </button>
+              )}
+              {step < 4 && (
+                <button
+                  onClick={() => setStep(step + 1)}
+                  disabled={
+                    (step === 1 && !canNextStep1) ||
+                    (step === 2 && !canNextStep2) ||
+                    (step === 3 && !canNextStep3)
+                  }
+                  style={primaryBtn}
+                >{t("peonyRegister.next")} →</button>
+              )}
+              {step === 4 && (
+                <button onClick={submit} disabled={!canSubmit || busy} style={primaryBtn}>
+                  {busy ? t("peonyRegister.submitting") : `🌸 ${t("peonyRegister.submit")}`}
+                </button>
+              )}
+            </div>
+          )}
+        </section>
+
+        {/* Footer */}
+        <footer style={{ textAlign: "center", marginTop: 32, color: "rgba(255,255,255,0.4)", fontSize: 12 }}>
+          {t("peonyRegister.footer")}
         </footer>
-      </div>
+      </main>
 
       <style jsx>{`
-        .peony-wrap { position: relative; min-height: 100vh; overflow: hidden; padding: 32px 16px 80px;
-          background: radial-gradient(1200px 800px at 10% 0%, #fff1f6 0%, transparent 60%),
-                      radial-gradient(1000px 700px at 90% 100%, #f0fdf4 0%, transparent 55%),
-                      linear-gradient(180deg, #fef7fb 0%, #fdfdff 100%); }
-        .peony-bg { position: absolute; inset: 0; pointer-events: none;
-          background: radial-gradient(closest-side, rgba(244,114,182,0.25), transparent) 12% 22%/280px 280px no-repeat,
-                      radial-gradient(closest-side, rgba(244,114,182,0.20), transparent) 82% 30%/220px 220px no-repeat,
-                      radial-gradient(closest-side, rgba(147,197,253,0.18), transparent) 30% 78%/260px 260px no-repeat; }
-        .peony-network { position: absolute; inset: 0; pointer-events: none; opacity: 0.35;
-          background-image:
-            linear-gradient(rgba(4,120,87,0.10) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(4,120,87,0.10) 1px, transparent 1px);
-          background-size: 32px 32px, 32px 32px; mask-image: radial-gradient(ellipse at 50% 40%, black 40%, transparent 75%); }
-        .peony-glass { position: relative; max-width: 560px; margin: 0 auto; padding: 28px 24px 22px;
-          background: rgba(255,255,255,0.55); backdrop-filter: blur(24px) saturate(1.1);
-          -webkit-backdrop-filter: blur(24px) saturate(1.1);
-          border: 1px solid rgba(255,255,255,0.7); border-radius: 24px;
-          box-shadow: 0 20px 60px rgba(190,24,93,0.10), 0 4px 20px rgba(4,120,87,0.06); }
-        .peony-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
-        .peony-brand { font-weight: 800; font-size: 18px; background: linear-gradient(135deg,#be185d,#047857); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .peony-step-dots { display: flex; gap: 8px; }
-        .peony-dot { width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
-          background: rgba(255,255,255,0.6); border: 1px solid rgba(190,24,93,0.15); color: #9ca3af; font-size: 12px; font-weight: 700; }
-        .peony-dot.active { background: linear-gradient(135deg,#be185d,#f472b6); color: #fff; border-color: transparent; box-shadow: 0 4px 12px rgba(190,24,93,0.35); }
-        .peony-dot.done { background: linear-gradient(135deg,#047857,#10b981); color: #fff; border-color: transparent; }
-        .peony-section h2 { margin: 6px 0 2px; color: #831843; font-size: 18px; }
-        .peony-section .hint { color: #6b7280; font-size: 12.5px; margin: 0 0 14px; }
-        label { display: block; font-size: 12px; font-weight: 600; color: #4b5563; margin: 10px 0 4px; }
-        input { width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(190,24,93,0.15);
-          background: rgba(255,255,255,0.85); font-size: 14px; outline: none; transition: border .15s, box-shadow .15s; }
-        input:focus { border-color: #f472b6; box-shadow: 0 0 0 3px rgba(244,114,182,0.15); }
-        .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-        .row3 input { margin-bottom: 6px; }
-        .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
-        .cards.two { grid-template-columns: 1fr 1fr; }
-        .card { padding: 14px 12px; background: rgba(255,255,255,0.7); border: 1.5px solid rgba(190,24,93,0.10);
-          border-radius: 16px; text-align: left; cursor: pointer; transition: all .15s; }
-        .card:hover { transform: translateY(-2px); }
-        .card.picked { border-color: #f472b6; background: linear-gradient(135deg, rgba(244,114,182,0.14), rgba(255,255,255,0.85)); box-shadow: 0 8px 24px rgba(190,24,93,0.15); }
-        .card.big { padding: 22px 14px; }
-        .card-emoji { font-size: 26px; }
-        .card-title { font-weight: 700; color: #831843; margin-top: 4px; font-size: 14px; }
-        .card-sub { color: #6b7280; font-size: 11.5px; margin-top: 2px; }
-        .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 0 4px; }
-        .chip { padding: 7px 12px; border-radius: 999px; border: 1px solid rgba(4,120,87,0.15); background: rgba(255,255,255,0.75);
-          font-size: 13px; color: #374151; cursor: pointer; transition: all .15s; }
-        .chip:hover { transform: translateY(-1px); }
-        .chip.picked { background: linear-gradient(135deg, #047857, #10b981); color: #fff; border-color: transparent; box-shadow: 0 4px 12px rgba(4,120,87,0.25); }
-        .chip-emoji { margin-right: 4px; }
-        .actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 20px; }
-        .actions button { flex: 1; padding: 11px 14px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.06); background: rgba(255,255,255,0.7); font-weight: 600; cursor: pointer; }
-        .actions .primary { background: linear-gradient(135deg,#be185d,#f472b6); color: #fff; border-color: transparent; box-shadow: 0 6px 20px rgba(190,24,93,0.28); }
-        .actions .primary:disabled { background: #e5e7eb; color: #9ca3af; box-shadow: none; cursor: not-allowed; }
-        .err { color: #b91c1c; font-size: 12px; margin-top: 8px; }
-        .peony-foot { margin-top: 22px; padding-top: 16px; border-top: 1px dashed rgba(190,24,93,0.15); }
-        .badge-strip { display: flex; justify-content: space-between; gap: 6px; }
-        .badge { flex: 1; text-align: center; padding: 6px 4px; border-radius: 12px; opacity: 0.55; }
-        .badge.current { opacity: 1; background: linear-gradient(135deg, rgba(244,114,182,0.12), rgba(4,120,87,0.10)); box-shadow: inset 0 0 0 1px rgba(190,24,93,0.15); }
-        .badge-emoji { font-size: 22px; }
-        .badge-name { font-size: 10.5px; color: #6b7280; margin-top: 2px; }
-        .footnote { text-align: center; font-size: 11px; color: #9ca3af; margin-top: 10px; }
+        @keyframes peonyDrift {
+          0%   { transform: translate(0, 0) rotate(0); }
+          33%  { transform: translate(30px, -40px) rotate(120deg); }
+          66%  { transform: translate(-20px, 30px) rotate(240deg); }
+          100% { transform: translate(0, 0) rotate(360deg); }
+        }
+        @keyframes peonyBreath {
+          0%,100% { transform: scale(1); }
+          50%     { transform: scale(1.08); }
+        }
+        @keyframes peonyFadeDown {
+          from { opacity: 0; transform: translateY(-16px); }
+          to   { opacity: 1; transform: none; }
+        }
+        @keyframes peonyFadeUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: none; }
+        }
+        @keyframes peonyPop {
+          from { opacity: 0; transform: scale(0.5); }
+          to   { opacity: 0.4; transform: scale(1); }
+        }
+        @keyframes peonyBloom {
+          0%   { transform: scale(0.3) rotate(-30deg); opacity: 0; }
+          60%  { transform: scale(1.2) rotate(10deg); }
+          100% { transform: scale(1) rotate(0); opacity: 1; }
+        }
+        input:focus { outline: none; border-color: #ec4899 !important; box-shadow: 0 0 0 3px rgba(236,72,153,0.2) !important; }
+        button:not(:disabled):hover { transform: translateY(-1px); }
+        button:disabled { opacity: 0.4; cursor: not-allowed; }
       `}</style>
     </div>
   );
 }
 
-function SuccessCard({ result, onExplore }: { result: any; onExplore: () => void }) {
-  const badge = result?.registration?.badge || { emoji: "🌱", name: "花开新芽" };
-  const zOrg = result?.registration?.zitadel_org_id;
+// ---------- style objects ----------
+const inputStyle: React.CSSProperties = {
+  width: "100%", padding: "12px 14px",
+  background: "rgba(255,255,255,0.08)",
+  border: "1px solid rgba(255,216,155,0.2)",
+  borderRadius: 10, color: "#fefbf7",
+  fontSize: 15, transition: "all .2s", fontFamily: "inherit",
+};
+const primaryBtn: React.CSSProperties = {
+  flex: 1, padding: "14px 24px",
+  background: "linear-gradient(135deg,#ec4899 0%,#a855f7 60%,#d4a574 100%)",
+  color: "#fff", fontWeight: 600, fontSize: 15,
+  border: "none", borderRadius: 12, cursor: "pointer",
+  boxShadow: "0 8px 24px rgba(236,72,153,0.4)",
+  transition: "all .2s",
+};
+const ghostBtn: React.CSSProperties = {
+  padding: "14px 20px",
+  background: "rgba(255,255,255,0.06)",
+  color: "#fefbf7", fontSize: 14,
+  border: "1px solid rgba(255,255,255,0.15)",
+  borderRadius: 12, cursor: "pointer",
+  transition: "all .2s",
+};
+const hintErr: React.CSSProperties = { marginTop: 6, fontSize: 12, color: "#ffb0c0" };
+
+function chipStyle(on: boolean): React.CSSProperties {
+  return {
+    display: "flex", alignItems: "center", gap: 6,
+    padding: "10px 14px", borderRadius: 10,
+    fontSize: 14, fontFamily: "inherit", cursor: "pointer",
+    background: on ? "linear-gradient(135deg,#ec4899 0%,#a855f7 100%)" : "rgba(255,255,255,0.06)",
+    color: on ? "#fff" : "#e8d5e0",
+    border: on ? "1px solid rgba(255,216,155,0.5)" : "1px solid rgba(255,255,255,0.12)",
+    boxShadow: on ? "0 6px 18px rgba(236,72,153,0.35)" : "none",
+    transition: "all .2s",
+  };
+}
+
+// ---------- reusable pieces ----------
+function StepTitle({ text, sub }: { text: string; sub: string }) {
   return (
-    <div style={{ minHeight: "100vh", padding: "60px 20px", background: "linear-gradient(180deg,#fef7fb,#f0fdf4)" }}>
-      <div style={{ maxWidth: 480, margin: "0 auto", background: "rgba(255,255,255,0.7)", backdropFilter: "blur(20px)",
-        border: "1px solid rgba(255,255,255,0.6)", borderRadius: 24, padding: "40px 28px", textAlign: "center",
-        boxShadow: "0 20px 60px rgba(190,24,93,0.15)" }}>
-        <div style={{ fontSize: 72, marginBottom: 10 }}>{badge.emoji}</div>
-        <div style={{ fontSize: 22, fontWeight: 800, color: "#831843" }}>欢迎加入芍药联盟</div>
-        <div style={{ marginTop: 6, color: "#6b7280", fontSize: 13 }}>
-          你获得了徽章 <b>{badge.name}</b>
-        </div>
-        <div style={{ marginTop: 20, padding: "12px 14px", background: "rgba(255,255,255,0.6)", borderRadius: 14, fontSize: 12, color: "#374151" }}>
-          注册 ID: {result?.registration?.id}<br />
-          组织: {zOrg || "待建"}<br />
-          Zitadel 用户: {result?.registration?.zitadel_user_id || "同步中"}
-        </div>
-        <button onClick={onExplore} style={{ marginTop: 24, padding: "12px 28px", borderRadius: 999,
-          background: "linear-gradient(135deg,#be185d,#f472b6)", color: "#fff", border: "none", fontWeight: 700, cursor: "pointer",
-          boxShadow: "0 8px 24px rgba(190,24,93,0.28)" }}>
-          🌸 进入新人首页
-        </button>
-      </div>
+    <div style={{ marginBottom: 24, textAlign: "center" }}>
+      <h2 style={{
+        margin: 0, fontSize: 26, fontWeight: 600,
+        background: "linear-gradient(135deg,#fce3ec 0%,#ffd89b 100%)",
+        WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent",
+      }}>{text}</h2>
+      <p style={{ marginTop: 6, marginBottom: 0, fontSize: 13, color: "#c8b5be", letterSpacing: "0.02em" }}>{sub}</p>
     </div>
+  );
+}
+
+function FormRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <label style={{ display: "block", fontSize: 13, color: "#d4b8c8", marginBottom: 6, letterSpacing: "0.03em" }}>{label}</label>
+      {children}
+    </div>
+  );
+}
+
+function ChoiceCard({ selected, onClick, emoji, title, sub }: {
+  selected: boolean; onClick: () => void; emoji: string; title: string; sub: string;
+}) {
+  return (
+    <button type="button" onClick={onClick} style={{
+      padding: "22px 16px", textAlign: "center", cursor: "pointer",
+      background: selected
+        ? "linear-gradient(160deg, rgba(236,72,153,0.25) 0%, rgba(168,85,247,0.2) 100%)"
+        : "rgba(255,255,255,0.04)",
+      border: selected ? "1.5px solid #ffd89b" : "1px solid rgba(255,255,255,0.1)",
+      borderRadius: 14, color: "#fefbf7", fontFamily: "inherit",
+      boxShadow: selected ? "0 10px 30px rgba(236,72,153,0.3), inset 0 1px 0 rgba(255,216,155,0.3)" : "none",
+      transition: "all .25s cubic-bezier(.34,1.56,.64,1)",
+      transform: selected ? "translateY(-2px)" : "none",
+    }}>
+      <div style={{ fontSize: 36, marginBottom: 8, filter: selected ? "drop-shadow(0 4px 12px rgba(255,216,155,0.5))" : "none" }}>{emoji}</div>
+      <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>{title}</div>
+      <div style={{ fontSize: 12, color: "#c8b5be", lineHeight: 1.4 }}>{sub}</div>
+    </button>
   );
 }
