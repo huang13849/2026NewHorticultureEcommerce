@@ -46,6 +46,8 @@ spec:
         envFrom:
         - secretRef:
             name: flower-next-zitadel
+        - secretRef:
+            name: flower-api-la-payment
         readinessProbe:
           tcpSocket: { port: 3010 }
           initialDelaySeconds: 5
