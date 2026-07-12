@@ -11,6 +11,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../lib/db');
+const loginService = require('../services/login-service');
 
 const axios = require('axios');
 const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL || 'http://100.96.54.109:3008';
@@ -234,6 +235,12 @@ router.get('/products', async (req, res) => {
 
 router.post('/checkout', async (req, res) => {
   try {
+    let currentZid = '';
+    let currentBrand = '';
+    try {
+      const sess = await loginService.readSession(req);
+      if (sess && sess.user && sess.user.zid) { currentZid = sess.user.zid; currentBrand = sess.user.brand || ''; }
+    } catch (_) {}
     const { items, payMethod = 'stripe', couponCode = '', customer = {}, deliveryAddress = '' } = req.body;
     if (!String(deliveryAddress || '').trim()) return res.status(400).json({ error: '请先填写收货地址' });
     const provider = PROVIDERS[payMethod];
@@ -263,6 +270,8 @@ router.post('/checkout', async (req, res) => {
       memberName: customer.name || '',
       phone: customer.phone || '',
       deliveryAddress,
+      zid: currentZid,
+      brand: currentBrand,
       region: ['wechat','alipay'].includes(payMethod) ? 'cn' : 'global',
       createdAt: new Date().toISOString(),
       paidAt: provider.configured ? null : new Date().toISOString(),
@@ -354,9 +363,16 @@ router.get('/order/:orderId', async (req, res) => {
 
 router.get('/orders', async (req, res) => {
   try {
-    const filter = {};
+    // 必须登录: 只返回该用户 (zid) 的订单
+    let zid = '';
+    try {
+      const sess = await loginService.readSession(req);
+      if (sess && sess.user && sess.user.zid) zid = sess.user.zid;
+    } catch (_) {}
+    if (!zid) return res.status(401).json({ error: 'unauthenticated', orders: [], total: 0 });
+    const filter = { zid };
     if (req.query.region) filter.region = req.query.region;
-    const orders = await db.find('orders', { filter, sort: { createdAt: -1 } });
+    const orders = await db.find('orders', { filter, sort: { createdAt: -1 }, limit: 200 });
     res.json({ orders, total: orders.length });
   } catch (err) {
     res.status(500).json({ error: err.message });

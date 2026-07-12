@@ -62,7 +62,7 @@ async function upsertFromLogin(user) {
 }
 
 // Whitelist patch — never let clients change zid/brand/orgId via PATCH
-const PATCHABLE = new Set(['nickname', 'phone', 'email', 'gender', 'tags', 'preferences', 'avatar']);
+const PATCHABLE = new Set(['nickname', 'phone', 'email', 'gender', 'tags', 'preferences', 'avatar', 'cart']);
 async function patchProfile(zid, body) {
   const existing = await getByZid(zid);
   if (!existing) throw new Error('profile_not_found');
