@@ -181,6 +181,33 @@ for CHECK in "https://horiculture.club|horiculture.club" "https://horiculture.sp
 done
 echo "  OK  both /api/auth/signin/zitadel produce correct https://<host>/api/auth/callback/zitadel redirect_uri"
 
+echo "======= [5.8/5] password login (Zitadel v2 sessions -> Redis sid) ======="
+for BASE in "https://horiculture.club" "https://horiculture.space"; do
+  HOST=$(echo "$BASE" | sed 's|https://||')
+  RESP=$(curl -sSk -m 15 -c /tmp/lp.$$ -o /tmp/lp.body.$$ -w '%{http_code}' \
+    -X POST "$BASE/api/session/password-login" \
+    -H 'Content-Type: application/json' \
+    -d '{"loginName":"guest","password":"guest"}')
+  BODY=$(cat /tmp/lp.body.$$ | head -c 400)
+  SIDCK=$(grep -o 'sid=[^;[:space:]]*' /tmp/lp.$$ | head -1)
+  echo "  [$HOST] code=$RESP cookie=$SIDCK body=$BODY"
+  if [ "$RESP" != "200" ]; then echo "  FAIL $HOST password-login expected 200 got $RESP"; rm -f /tmp/lp.$$ /tmp/lp.body.$$; exit 1; fi
+  if [ -z "$SIDCK" ]; then echo "  FAIL $HOST no sid cookie"; rm -f /tmp/lp.$$ /tmp/lp.body.$$; exit 1; fi
+  ME=$(curl -sSk -m 10 -b /tmp/lp.$$ -o /tmp/me.$$ -w '%{http_code}' "$BASE/api/session/me")
+  MEBODY=$(cat /tmp/me.$$ | head -c 400)
+  echo "  [$HOST] /me code=$ME body=$MEBODY"
+  if [ "$ME" != "200" ]; then echo "  FAIL $HOST /me expected 200 got $ME"; rm -f /tmp/lp.$$ /tmp/lp.body.$$ /tmp/me.$$; exit 1; fi
+  # wrong password
+  BAD=$(curl -sSk -m 15 -o /dev/null -w '%{http_code}' \
+    -X POST "$BASE/api/session/password-login" \
+    -H 'Content-Type: application/json' \
+    -d '{"loginName":"guest","password":"wrong-pwd-xxx"}')
+  echo "  [$HOST] bad-pwd code=$BAD"
+  if [ "$BAD" != "401" ] && [ "$BAD" != "400" ]; then echo "  FAIL $HOST wrong-pwd expected 401/400 got $BAD"; rm -f /tmp/lp.$$ /tmp/lp.body.$$ /tmp/me.$$; exit 1; fi
+  rm -f /tmp/lp.$$ /tmp/lp.body.$$ /tmp/me.$$
+done
+echo "  OK  guest/guest password-login OK on club & space, /me returns 200, wrong-pwd -> 401"
+
 echo "======= [6/5] GitHub 同步策略 ======="
 # 默认不自动推 github (gitea 是主 CI 源, github 只在大版本发布时手动同步)
 # 需要触发 github + CF Pages rebuild 时: PUSH_GITHUB=1 bash Jenkinsfile.sh
