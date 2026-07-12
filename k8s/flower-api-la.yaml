@@ -42,7 +42,12 @@ spec:
           value: "3010"
         # === Redis session (2026-07-09) ===
         - name: REDIS_URL
-          value: "redis://100.79.211.107:31379"
+          value: "redis://100.96.54.109:31379"
+        - name: ZITADEL_PAT
+          valueFrom:
+            secretKeyRef:
+              name: zitadel-svc
+              key: pat
         envFrom:
         - secretRef:
             name: flower-next-zitadel
