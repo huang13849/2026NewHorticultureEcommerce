@@ -270,4 +270,41 @@ async function doLogout(req, res) {
 router.post('/logout', doLogout);
 router.get('/logout', doLogout);
 
+// ---------- NEW (2026-07-12): password-login via reusable service ----------
+const loginService = require('../services/login-service');
+
+router.post('/password-login', express.json(), async (req, res) => {
+  try {
+    const loginName = String((req.body || {}).loginName || (req.body || {}).username || '').trim();
+    const password = String((req.body || {}).password || '');
+    if (!loginName || !password) return res.status(400).json({ error: 'missing_credentials' });
+
+    const { sid, user, brand } = await loginService.passwordLogin(req, { loginName, password });
+    loginService.setSidCookie(res, req.headers.host, sid, loginService.SESSION_TTL_SEC);
+    return res.json({ ok: true, brand, user: { zid: user.zid, loginName: user.loginName, nickname: user.nickname, brand: user.brand, role: user.role } });
+  } catch (e) {
+    console.warn('[session:password-login] fail:', e.message, e.zitadelStatus || '');
+    if (e.zitadelStatus === 401 || e.zitadelStatus === 400) {
+      return res.status(401).json({ error: 'invalid_credentials' });
+    }
+    return res.status(500).json({ error: 'login_failed', detail: e.message });
+  }
+});
+
+// Also accept form-encoded post (纯 HTML form path, 无 JS)
+router.post('/password-login-form', express.urlencoded({ extended: false }), async (req, res) => {
+  const loginName = String((req.body || {}).loginName || (req.body || {}).username || '').trim();
+  const password = String((req.body || {}).password || '');
+  const redirectTo = String((req.body || {}).redirect || '/');
+  if (!loginName || !password) return res.redirect(302, `/login?error=missing_credentials`);
+  try {
+    const { sid } = await loginService.passwordLogin(req, { loginName, password });
+    loginService.setSidCookie(res, req.headers.host, sid, loginService.SESSION_TTL_SEC);
+    return res.redirect(302, /^https?:\/\//i.test(redirectTo) ? '/' : redirectTo);
+  } catch (e) {
+    console.warn('[session:password-login-form] fail:', e.message);
+    return res.redirect(302, `/login?error=invalid_credentials`);
+  }
+});
+
 module.exports = router;

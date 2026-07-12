@@ -1,79 +1,79 @@
-"use client";
-// /login — Zitadel OIDC-only 单点登录/注册
-// 无脑立即发 SSO. 已登录的用户会被 Zitadel 用 session cookie 静默返回 -> callback -> 首页.
-// 这样避免 auth-context 用旧 flower_token 乐观还原时把用户困在"看似已登录但按钮无响应"的坑里.
-import { Suspense, useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { startSSO } from "@/lib/sso";
+// /login — 纯 HTML form 直接 POST 到后端 password-login-form
+// 后端 zitadel v2 session -> Redis -> sid HttpOnly cookie
+// 国内 (club) / 国际 (space/la) 由后端按 host 自动选 zitadel instance/client
+export const dynamic = 'force-dynamic';
 
-function LoginInner() {
-  const sp = useSearchParams();
-  const redirect = sp?.get("redirect") || sp?.get("callbackUrl") || "/";
-  const errCode = sp?.get("error") || "";
-  const startedRef = useRef(false);
-  const [status, setStatus] = useState<string>("正在打开 Zitadel 单点登录…");
+type SP = { redirect?: string; error?: string; callbackUrl?: string };
 
-  // 无脑立即 SSO. 有 error 时才停下. 只跑一次.
-  useEffect(() => {
-    if (errCode || startedRef.current) return;
-    startedRef.current = true;
-    startSSO(redirect).catch((e) => {
-      console.error("[login] startSSO failed:", e);
-      setStatus("跳转失败, 请刷新页面重试");
-    });
-  }, [errCode, redirect]);
-
-  const showFallback = Boolean(errCode) || status.startsWith("跳转失败");
+export default async function LoginPage({ searchParams }: { searchParams: Promise<SP> }) {
+  const sp = (await searchParams) || {};
+  const redirect = sp.redirect || sp.callbackUrl || '/';
+  const err = sp.error || '';
+  const errMsg =
+    err === 'invalid_credentials' ? '用户名或密码错误' :
+    err === 'missing_credentials' ? '请填写用户名和密码' :
+    err ? `登录失败: ${err}` : '';
 
   return (
     <div style={{
-      minHeight: "100vh",
-      background: "linear-gradient(135deg, #ecfdf5 0%, #ffffff 40%, #f0fdf4 100%)",
-      display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #ecfdf5 0%, #ffffff 40%, #f0fdf4 100%)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
     }}>
-      <div style={{
-        width: "100%", maxWidth: 380, background: "#ffffff", borderRadius: 20,
-        padding: "36px 30px",
-        boxShadow: "0 10px 40px rgba(4, 120, 87, 0.08)",
-        border: "1px solid #d1fae5",
-        textAlign: "center",
-      }}>
-        <div style={{ fontSize: 48, marginBottom: 10 }}>🌿</div>
-        <div style={{ fontWeight: 800, color: "#047857", fontSize: 17 }}>植物收藏家 · 林草二十年</div>
-        <div style={{ marginTop: 20, marginBottom: 20, fontSize: 13, color: "#6b7280", minHeight: 40 }}>
-          {showFallback ? (errCode ? `登录失败: ${errCode}` : status) : (
-            <>
-              <div style={{
-                width: 22, height: 22, margin: "0 auto 10px",
-                border: "3px solid #d1fae5", borderTopColor: "#047857",
-                borderRadius: "50%", animation: "spin 0.8s linear infinite",
-              }} />
-              {status}
-            </>
-          )}
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <form
+        method="POST"
+        action="/api/session/password-login-form"
+        style={{
+          width: '100%', maxWidth: 380, background: '#ffffff', borderRadius: 20,
+          padding: '36px 30px',
+          boxShadow: '0 10px 40px rgba(4, 120, 87, 0.08)',
+          border: '1px solid #d1fae5',
+        }}
+      >
+        <div style={{ fontSize: 48, marginBottom: 10, textAlign: 'center' }}>🌿</div>
+        <div style={{ fontWeight: 800, color: '#047857', fontSize: 17, textAlign: 'center', marginBottom: 6 }}>
+          植物收藏家 · 林草二十年
         </div>
-        {showFallback && (
-          <button
-            onClick={() => { setStatus("正在打开 Zitadel 单点登录…"); startedRef.current = false; startSSO(redirect); }}
-            style={{
-              width: "100%", padding: "12px", borderRadius: 12,
-              background: "linear-gradient(135deg, #047857, #059669)",
-              color: "#fff", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer",
-            }}
-          >
-            重新登录 / 注册
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
+        <div style={{ color: '#6b7280', fontSize: 12, textAlign: 'center', marginBottom: 20 }}>
+          请输入账号密码登录
+        </div>
 
-export default function LoginPage() {
-  return (
-    <Suspense fallback={null}>
-      <LoginInner />
-    </Suspense>
+        {errMsg && (
+          <div style={{
+            background: '#fef2f2', color: '#b91c1c', border: '1px solid #fecaca',
+            borderRadius: 8, padding: '8px 12px', fontSize: 13, marginBottom: 12,
+          }}>{errMsg}</div>
+        )}
+
+        <label style={{ fontSize: 12, color: '#374151' }}>用户名 / 邮箱 / 手机号</label>
+        <input
+          name="loginName" autoComplete="username" required
+          style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8, marginTop: 4, marginBottom: 12, fontSize: 14 }}
+        />
+
+        <label style={{ fontSize: 12, color: '#374151' }}>密码</label>
+        <input
+          name="password" type="password" autoComplete="current-password" required
+          style={{ width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: 8, marginTop: 4, marginBottom: 16, fontSize: 14 }}
+        />
+
+        <input type="hidden" name="redirect" value={redirect} />
+
+        <button
+          type="submit"
+          style={{
+            width: '100%', padding: '12px', borderRadius: 12,
+            background: 'linear-gradient(135deg, #047857, #059669)',
+            color: '#fff', border: 'none', fontSize: 14, fontWeight: 700, cursor: 'pointer',
+          }}
+        >
+          登录
+        </button>
+
+        <div style={{ marginTop: 14, textAlign: 'center', fontSize: 12, color: '#6b7280' }}>
+          <a href="/register" style={{ color: '#047857', textDecoration: 'underline' }}>注册新账号</a>
+        </div>
+      </form>
+    </div>
   );
 }
