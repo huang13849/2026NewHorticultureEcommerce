@@ -120,8 +120,8 @@ fi
 
 echo "======= [5.6/5] public domain isolation test =======" 
 # 5.6: 国内 (club) / 国际 (space) 首页必须都能独立 200 访问, 且不跨域跳转
-for CHECK in "https://horiculture.club/:horiculture.club" "https://horiculture.space/:horiculture.space"; do
-  URL="${CHECK%:*}"; HOST="${CHECK#*:}"
+for CHECK in "https://horiculture.club/|horiculture.club" "https://horiculture.space/|horiculture.space"; do
+  URL="${CHECK%|*}"; HOST="${CHECK##*|}"
   # -L 跟 3xx; -w 拿最终 URL + code
   RES=$(curl -sSk -L --max-redirs 3 -o /dev/null -m 15 -w "%{http_code} %{url_effective}" "$URL" 2>/dev/null || echo "000 error")
   CODE="${RES%% *}"; FINAL="${RES#* }"
