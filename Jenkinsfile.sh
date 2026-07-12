@@ -41,6 +41,8 @@ for svc in "${!SVC_CTX[@]}"; do
   kubectl -n new-ecommerce set image deployment/$svc $svc=100.76.15.64:5001/$svc:$COMMIT_SHA
 done
 kubectl -n new-ecommerce set image deployment/flower-next-la flower-next=100.76.15.64:5001/flower-next:la-$COMMIT_SHA
+kubectl -n new-ecommerce set image deployment/flower-api-la flower-api=100.76.15.64:5001/flower-api:$COMMIT_SHA
+kubectl -n new-ecommerce delete pod -l app=flower-api-la --ignore-not-found
 # Recreate 策略下老 pod 释放 hostPort 后新 pod 才能起, 显式 delete pod 加速
 kubectl -n new-ecommerce delete pod -l app=flower-next-la --ignore-not-found
 
@@ -49,6 +51,7 @@ for svc in "${!SVC_CTX[@]}"; do
   kubectl -n new-ecommerce rollout status deployment/$svc --timeout=180s
 done
 kubectl -n new-ecommerce rollout status deployment/flower-next-la --timeout=180s
+kubectl -n new-ecommerce rollout status deployment/flower-api-la --timeout=180s
 
 echo "======= [5/5] system-test (retry 5x) ======="
 for check in "31010:404" "31000:200" "31011:200" "31307:200" "31308:200" "32000:200"; do
