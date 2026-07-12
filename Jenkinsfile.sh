@@ -250,7 +250,13 @@ for BASE in "https://horiculture.club" "https://horiculture.space"; do
   curl -sSk -m 15 -b "$JAR" -H "Content-Type: application/json" -X PUT "$BASE/api/user/cart" -d '{"cart":[{"productId":"smoke-1","name":"smoke","price":0.01,"quantity":1,"checked":true,"image":"🌸"}]}' -w "put=%{http_code}\n" -o /dev/null | grep -q 'put=200' || { echo "  FAIL [$HOST] PUT cart"; exit 1; }
   C=$(curl -sSk -m 15 -b "$JAR" "$BASE/api/user/cart")
   echo "$C" | grep -q 'smoke-1' || { echo "  FAIL [$HOST] cart round-trip missing product"; exit 1; }
-  echo "  OK  [$HOST] orders+cart per-user isolation"
+  # DELETE endpoint smoke: missing order -> 404 (auth valid, order not exists)
+  D=$(curl -sSk -m 15 -b "$JAR" -w "%{http_code}" -o /dev/null -X DELETE "$BASE/api/user/orders/does-not-exist-xxx")
+  if [ "$D" != "404" ]; then echo "  FAIL [$HOST] DELETE nonexistent order -> $D (expected 404)"; exit 1; fi
+  # DELETE without auth -> 401
+  DA=$(curl -sSk -m 15 -w "%{http_code}" -o /dev/null -X DELETE "$BASE/api/user/orders/anything")
+  if [ "$DA" != "401" ]; then echo "  FAIL [$HOST] DELETE without auth -> $DA (expected 401)"; exit 1; fi
+  echo "  OK  [$HOST] orders+cart per-user isolation + delete authz"
   rm -f "$JAR"
 done
 echo "  OK  per-user cart & orders scoped to zid"
