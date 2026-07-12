@@ -167,13 +167,12 @@ router.get('/me', async (req, res) => {
     if (!auth) return res.status(401).json({ error: 'unauthenticated' });
     const decoded = jwt.verify(auth.replace('Bearer ', ''), JWT_SECRET);
     const isAdmin = decoded.role === 'super_admin' || decoded.role === 'admin';
-    // 从 Mongo flower_user_addresses 拉地址列表 (静默失败, 不阻塞登录)
+    // 从 Mongo user_profiles 拉地址列表 (静默失败, 不阻塞登录)
     let address = [];
     try {
-      const dbLib = require('../lib/db');
-      const list = await dbLib.find('flower_user_addresses', { filter: { zid: decoded.zid }, limit: 1 });
-      const doc = list && list.data ? list.data[0] : (Array.isArray(list) ? list[0] : null);
-      if (doc && Array.isArray(doc.addresses)) address = doc.addresses;
+      const ups = require('../services/user-profile-service');
+      const profile = await ups.getByZid(decoded.zid);
+      if (profile && Array.isArray(profile.addresses)) address = profile.addresses;
     } catch (e) { /* silent */ }
     return res.json({
       id: decoded.zid,
@@ -194,15 +193,44 @@ router.get('/me', async (req, res) => {
 
 // GET /auth/me-flower  —— 从 .horiculture.club/.horiculture.space 的 flower_token cookie 解
 //   跨站 SSO 兜底: 主站 next-app 挂载时 fetch 这个端点, 拿到用户就当已登录。
-router.get('/me-flower', (req, res) => {
+router.get('/me-flower', async (req, res) => {
   try {
     const cookies = parseCookies(req.headers.cookie);
+    // 1) sid cookie path (login-service)
+    try {
+      const loginService = require('../services/login-service');
+      const sess = await loginService.readSession(req);
+      if (sess && sess.user && sess.user.zid) {
+        const ups = require('../services/user-profile-service');
+        const profile = await ups.getByZid(sess.user.zid);
+        return res.json({ user: {
+          id: sess.user.zid,
+          zid: sess.user.zid,
+          phone: sess.user.phone,
+          email: sess.user.email,
+          nickname: sess.user.nickname,
+          brand: sess.user.brand,
+          role: sess.user.role || 'user',
+          isAdmin: false,
+          avatar: (profile && profile.avatar) || '',
+          address: (profile && profile.addresses) || [],
+        }});
+      }
+    } catch (_) {}
+    // 2) flower_token cookie fallback
     const authH = req.headers.authorization;
     const bearer = authH ? authH.replace('Bearer ', '') : null;
     const tok = cookies.flower_token || bearer;
     if (!tok) return res.status(401).json({ error: 'no_flower_token' });
     const decoded = jwt.verify(tok, JWT_SECRET);
-    return res.json({ user: shapeUser(decoded) });
+    const shaped = shapeUser(decoded);
+    try {
+      const ups = require('../services/user-profile-service');
+      const profile = await ups.getByZid(decoded.zid);
+      if (profile && Array.isArray(profile.addresses)) shaped.address = profile.addresses;
+      if (profile && profile.avatar) shaped.avatar = profile.avatar;
+    } catch (_) {}
+    return res.json({ user: shaped });
   } catch (err) {
     return res.status(401).json({ error: 'flower_token_invalid', detail: err.message });
   }

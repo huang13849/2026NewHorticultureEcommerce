@@ -89,4 +89,36 @@ router.post('/address/:id/default', async (req, res) => {
   } catch (e) { console.error('[POST /user/address/:id/default]', e.message); res.status(500).json({ error: 'db_error', detail: e.message }); }
 });
 
+
+// GET /user/orders — 按登录用户 (zid) 拉取订单
+router.get('/orders', async (req, res) => {
+  const u = await requireUser(req, res); if (!u) return;
+  try {
+    const db = require('../lib/db');
+    const filter = { zid: u.zid };
+    if (req.query.region) filter.region = req.query.region;
+    const orders = await db.find('orders', { filter, sort: { createdAt: -1 }, limit: 200 });
+    res.json({ orders, total: orders.length });
+  } catch (e) { console.error('[GET /user/orders]', e.message); res.status(500).json({ error: 'db_error', detail: e.message }); }
+});
+
+// GET /user/cart — 服务端购物车 (persistent, per-zid)
+router.get('/cart', async (req, res) => {
+  const u = await requireUser(req, res); if (!u) return;
+  try {
+    const profile = await userProfileService.getByZid(u.zid);
+    res.json({ cart: (profile && profile.cart) || [] });
+  } catch (e) { res.status(500).json({ error: 'db_error', detail: e.message }); }
+});
+
+// PUT /user/cart — 覆盖式保存购物车
+router.put('/cart', async (req, res) => {
+  const u = await requireUser(req, res); if (!u) return;
+  try {
+    const cart = Array.isArray(req.body.cart) ? req.body.cart : [];
+    await userProfileService.patchProfile(u.zid, { cart });
+    res.json({ ok: true, cart });
+  } catch (e) { res.status(500).json({ error: 'db_error', detail: e.message }); }
+});
+
 module.exports = router;

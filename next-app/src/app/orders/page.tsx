@@ -72,7 +72,7 @@ export default function OrdersPage() {
   const fetchOrders = (r: Region) => {
     setLoading(true);
     setError('');
-    fetch(`${API}/payment/orders?region=${r}`)
+    fetch(`${API}/user/orders?region=${r}`, { credentials: 'include', cache: 'no-store' })
       .then(res => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();

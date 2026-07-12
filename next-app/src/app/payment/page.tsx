@@ -90,6 +90,30 @@ function PaymentContent() {
   const [savingAddress, setSavingAddress] = useState(false);
   const [addressMessage, setAddressMessage] = useState('');
 
+  // Live refetch from /api/user/address so newly-saved rows show without needing profile refresh
+  useEffect(() => {
+    const zid = (user as any)?.id || (user as any)?.zid;
+    if (!zid) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetch(`${API}/user/address`, { credentials: 'include', cache: 'no-store' });
+        if (!r.ok) return;
+        const j = await r.json();
+        if (cancelled) return;
+        const list = ((j.address as Address[]) || []).filter(isAddressComplete) as Address[];
+        setAddressList(prev => list.length ? list : prev);
+        if (list.length) {
+          const defaultIndex = list.findIndex(a => a.isDefault);
+          const idx = defaultIndex >= 0 ? defaultIndex : 0;
+          setSelectedAddressIndex(idx);
+          setAddressForm({ ...list[idx], isDefault: true });
+        }
+      } catch (_) {}
+    })();
+    return () => { cancelled = true; };
+  }, [(user as any)?.id, (user as any)?.zid]);
+
   useEffect(() => {
     const list = (user?.address || []).filter(isAddressComplete) as Address[];
     setAddressList(list);

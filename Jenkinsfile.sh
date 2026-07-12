@@ -233,6 +233,28 @@ for BASE in "https://horiculture.club" "https://horiculture.space"; do
 done
 echo "  OK  user-profile-service (Mongo) end-to-end on club & space"
 
+echo "======= [5.10/5] orders + cart per-user isolation ======="
+for BASE in "https://horiculture.club" "https://horiculture.space"; do
+  HOST=$(echo "$BASE" | sed 's|https://||')
+  JAR=$(mktemp)
+  curl -sSk -m 15 -c "$JAR" -o /dev/null -X POST "$BASE/api/session/password-login" \
+    -H "Content-Type: application/json" -d '{"loginName":"guest","password":"guest"}' >/dev/null
+  # /user/orders must 200 when logged in
+  O=$(curl -sSk -m 15 -b "$JAR" -w "\n%{http_code}" "$BASE/api/user/orders?region=global")
+  OC=$(echo "$O" | tail -1)
+  if [ "$OC" != "200" ]; then echo "  FAIL [$HOST] /user/orders logged-in -> $OC"; exit 1; fi
+  # /user/orders must 401 when logged out
+  U=$(curl -sSk -m 15 -w "%{http_code}" -o /dev/null "$BASE/api/user/orders?region=global")
+  if [ "$U" != "401" ]; then echo "  FAIL [$HOST] /user/orders anon -> $U (expected 401)"; exit 1; fi
+  # /user/cart roundtrip
+  curl -sSk -m 15 -b "$JAR" -H "Content-Type: application/json" -X PUT "$BASE/api/user/cart" -d '{"cart":[{"productId":"smoke-1","name":"smoke","price":0.01,"quantity":1,"checked":true,"image":"🌸"}]}' -w "put=%{http_code}\n" -o /dev/null | grep -q 'put=200' || { echo "  FAIL [$HOST] PUT cart"; exit 1; }
+  C=$(curl -sSk -m 15 -b "$JAR" "$BASE/api/user/cart")
+  echo "$C" | grep -q 'smoke-1' || { echo "  FAIL [$HOST] cart round-trip missing product"; exit 1; }
+  echo "  OK  [$HOST] orders+cart per-user isolation"
+  rm -f "$JAR"
+done
+echo "  OK  per-user cart & orders scoped to zid"
+
 echo "======= [6/5] GitHub 同步策略 ======="
 # 默认不自动推 github (gitea 是主 CI 源, github 只在大版本发布时手动同步)
 # 需要触发 github + CF Pages rebuild 时: PUSH_GITHUB=1 bash Jenkinsfile.sh
