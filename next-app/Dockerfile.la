@@ -4,6 +4,8 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci
+ARG CACHE_BUST=dev
+RUN echo "cache_bust=$CACHE_BUST"
 COPY . .
 # 用 docker 版配置, 但强制关闭 CF-Pages 判定,让 output=standalone (国际版 SSR)
 RUN cp next.config.docker.ts next.config.ts && \

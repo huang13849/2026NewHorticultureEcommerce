@@ -23,7 +23,7 @@ for svc in "${!SVC_CTX[@]}"; do
   IMG="100.76.15.64:5001/$svc:$COMMIT_SHA"
   IMG_LATEST="100.76.15.64:5001/$svc:latest"
   echo "-- Building $svc ($IMG) --"
-  docker build -t "$IMG" -t "$IMG_LATEST" -f "$ctx/Dockerfile" "$ctx"
+  docker build --build-arg CACHE_BUST="$COMMIT_SHA" -t "$IMG" -t "$IMG_LATEST" -f "$ctx/Dockerfile" "$ctx"
   docker push "$IMG"
   docker push "$IMG_LATEST"
 done
@@ -31,7 +31,7 @@ done
 echo "-- Building flower-next-la (Dockerfile.la, 国际版 LA/horiculture.space) --"
 IMG_LA="100.76.15.64:5001/flower-next:la-$COMMIT_SHA"
 IMG_LA_LATEST="100.76.15.64:5001/flower-next:la-latest"
-docker build -t "$IMG_LA" -t "$IMG_LA_LATEST" -f next-app/Dockerfile.la next-app
+docker build --build-arg CACHE_BUST="$COMMIT_SHA" -t "$IMG_LA" -t "$IMG_LA_LATEST" -f next-app/Dockerfile.la next-app
 docker push "$IMG_LA"
 docker push "$IMG_LA_LATEST"
 
