@@ -189,7 +189,7 @@ for BASE in "https://horiculture.club" "https://horiculture.space"; do
     -H 'Content-Type: application/json' \
     -d '{"loginName":"guest","password":"guest"}')
   BODY=$(cat /tmp/lp.body.$$ | head -c 400)
-  SIDCK=$(grep -o 'sid=[^;[:space:]]*' /tmp/lp.$$ | head -1)
+  SIDCK=$(awk '$6=="sid"{print $7}' /tmp/lp.$$ | head -1)
   echo "  [$HOST] code=$RESP cookie=$SIDCK body=$BODY"
   if [ "$RESP" != "200" ]; then echo "  FAIL $HOST password-login expected 200 got $RESP"; rm -f /tmp/lp.$$ /tmp/lp.body.$$; exit 1; fi
   if [ -z "$SIDCK" ]; then echo "  FAIL $HOST no sid cookie"; rm -f /tmp/lp.$$ /tmp/lp.body.$$; exit 1; fi
