@@ -3,6 +3,8 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci
+ARG CACHE_BUST=dev
+RUN echo "cache_bust=$CACHE_BUST"
 COPY . .
 RUN if [ -f "next.config.docker.ts" ]; then cp next.config.docker.ts next.config.ts; fi
 ENV NEXT_TELEMETRY_DISABLED=1
