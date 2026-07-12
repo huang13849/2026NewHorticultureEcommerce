@@ -37,6 +37,12 @@ spec:
         # === Redis session (2026-07-09) ===
         - name: REDIS_URL
           value: "redis://session-redis.new-ecommerce.svc.cluster.local:6379"
+        # Zitadel service PAT (v2/sessions password-login)
+        - name: ZITADEL_PAT
+          valueFrom:
+            secretKeyRef:
+              name: zitadel-svc
+              key: pat
         envFrom:
         - secretRef:
             name: flower-next-zitadel
