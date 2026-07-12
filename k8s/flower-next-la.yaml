@@ -53,13 +53,13 @@ spec:
         - name: SEO_SERVICE_URL
           value: http://100.96.54.109:31011
         - name: NEXTAUTH_URL
-          value: http://209.141.34.146
+          value: https://horiculture.space
         - name: AUTH_TRUST_HOST
           value: "true"
         - name: NEXT_PUBLIC_API_URL
           value: /api
         - name: NEXT_PUBLIC_SITE_URL
-          value: http://209.141.34.146
+          value: https://horiculture.space
         - name: ZITADEL_ISSUER
           value: https://id.horiculture.club
         - name: FLOWER_API_INTERNAL

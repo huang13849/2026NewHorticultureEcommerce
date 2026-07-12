@@ -149,6 +149,38 @@ for CHECK in "https://horiculture.club/|horiculture.club" "https://horiculture.s
 done
 echo "  OK  club/space homepages isolated (no cross-domain redirect, no cross-issue refs)"
 
+echo "======= [5.7/5] OIDC login redirect_uri test ======="
+# 5.7: NextAuth signin -> Zitadel authorize URL, 校验 redirect_uri 指向自身顶级域, 不出现原始 IP
+for CHECK in "https://horiculture.club|horiculture.club" "https://horiculture.space|horiculture.space"; do
+  BASE="${CHECK%|*}"; HOST="${CHECK##*|}"
+  JAR=$(mktemp)
+  CSRF=$(curl -sSk -c "$JAR" -b "$JAR" -m 15 "$BASE/api/auth/csrf" | python3 -c "import sys,json;print(json.load(sys.stdin).get('csrfToken',''))")
+  if [ -z "$CSRF" ]; then echo "  FAIL $HOST csrf token empty"; exit 1; fi
+  RES=$(curl -sSk -c "$JAR" -b "$JAR" -m 20 -o /dev/null \
+    -w '%{http_code}|%{redirect_url}' \
+    -X POST "$BASE/api/auth/signin/zitadel" \
+    -H 'Content-Type: application/x-www-form-urlencoded' \
+    --data-urlencode "csrfToken=$CSRF" \
+    --data-urlencode "callbackUrl=$BASE/")
+  CODE="${RES%%|*}"; LOC="${RES#*|}"
+  echo "  [$HOST] code=$CODE loc=${LOC:0:100}"
+  if [ "$CODE" != "302" ]; then echo "  FAIL $HOST expected 302, got $CODE"; exit 1; fi
+  if ! echo "$LOC" | grep -q 'id.horiculture.club/oauth/v2/authorize'; then
+    echo "  FAIL $HOST did not redirect to zitadel authorize"; exit 1
+  fi
+  RUI=$(echo "$LOC" | grep -oE 'redirect_uri=[^&]+' | head -1 | sed 's/redirect_uri=//' | python3 -c "import sys,urllib.parse;print(urllib.parse.unquote(sys.stdin.read().strip()))")
+  echo "  [$HOST] redirect_uri=$RUI"
+  case "$RUI" in
+    "https://$HOST"/*|"https://www.$HOST"/*) echo "  OK  $HOST redirect_uri OK";;
+    *) echo "  FAIL $HOST redirect_uri wrong: $RUI"; exit 1;;
+  esac
+  if echo "$RUI" | grep -qE '209\.141\.34\.146|100\.(76|96)\.(15|54)\.[0-9]+'; then
+    echo "  FAIL $HOST redirect_uri leaks raw IP: $RUI"; exit 1
+  fi
+  rm -f "$JAR"
+done
+echo "  OK  both /api/auth/signin/zitadel produce correct https://<host>/api/auth/callback/zitadel redirect_uri"
+
 echo "======= [6/5] GitHub 同步策略 ======="
 # 默认不自动推 github (gitea 是主 CI 源, github 只在大版本发布时手动同步)
 # 需要触发 github + CF Pages rebuild 时: PUSH_GITHUB=1 bash Jenkinsfile.sh
