@@ -102,6 +102,24 @@ router.get('/orders', async (req, res) => {
   } catch (e) { console.error('[GET /user/orders]', e.message); res.status(500).json({ error: 'db_error', detail: e.message }); }
 });
 
+
+// DELETE /user/orders/:orderId — 删除订单 (只能删自己名下的)
+router.delete('/orders/:orderId', async (req, res) => {
+  const u = await requireUser(req, res); if (!u) return;
+  try {
+    const db = require('../lib/db');
+    const { orderId } = req.params;
+    // 只查 zid 匹配的订单
+    const order = await db.findOne('orders', { orderId, zid: u.zid });
+    if (!order) return res.status(404).json({ error: 'order_not_found_or_not_yours' });
+    await db.remove('orders', order._id);
+    res.json({ ok: true, deletedId: order._id, orderId });
+  } catch (e) {
+    console.error('[DELETE /user/orders]', e.message);
+    res.status(500).json({ error: 'db_error', detail: e.message });
+  }
+});
+
 // GET /user/cart — 服务端购物车 (persistent, per-zid)
 router.get('/cart', async (req, res) => {
   const u = await requireUser(req, res); if (!u) return;

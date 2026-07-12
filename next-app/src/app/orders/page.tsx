@@ -91,6 +91,33 @@ export default function OrdersPage() {
     fetchOrders(region);
   }, [region]);
 
+  const [deletingId, setDeletingId] = useState<string>('');
+  const deleteOrder = async (orderId: string) => {
+    if (!orderId) return;
+    if (!confirm(`确定要删除订单 ${orderId}?此操作不可恢复。`)) return;
+    setDeletingId(orderId);
+    try {
+      const res = await fetch(`${API}/user/orders/${encodeURIComponent(orderId)}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data?.error === 'order_not_found_or_not_yours' ? '订单不存在或不属于你' : (data?.error || `删除失败 HTTP ${res.status}`));
+        setDeletingId('');
+        return;
+      }
+      // 乐观移除 + 重拉一次兜底
+      setOrders(prev => prev.filter(o => o.orderId !== orderId));
+      setDeletingId('');
+      // Silent refetch to sync w/ backend
+      fetchOrders(region);
+    } catch (e: any) {
+      alert(e?.message || '删除失败');
+      setDeletingId('');
+    }
+  };
+
   const totalAmount = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
   const totalItems = orders.reduce((sum, o) => sum + (o.items || []).reduce((s, i) => s + (i.quantity || 1), 0), 0);
 
@@ -208,6 +235,15 @@ export default function OrdersPage() {
                       )}
                     </div>
                     <p className="text-base font-black text-emerald-700">¥{(order.totalAmount || 0).toFixed(2)}</p>
+                  </div>
+                  <div className="pt-3 mt-1 border-t border-stone-100 flex justify-end">
+                    <button
+                      onClick={() => deleteOrder(order.orderId)}
+                      disabled={deletingId === order.orderId}
+                      className="text-xs px-3 py-1.5 rounded-lg border border-stone-200 text-stone-500 hover:border-red-300 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40"
+                    >
+                      {deletingId === order.orderId ? '删除中…' : '🗑 删除订单'}
+                    </button>
                   </div>
                 </div>
               );

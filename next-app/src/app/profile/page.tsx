@@ -129,7 +129,7 @@ export default function ProfilePage() {
           {/* 功能菜单 */}
           <div className="rounded-2xl border border-stone-200 divide-y divide-stone-100">
             {[
-              { icon: '📦', label: t('profile.myOrders'), href: '/payment' },
+              { icon: '📦', label: t('profile.myOrders'), href: '/orders' },
               { icon: '🌱', label: t('garden.title'), href: '/garden' },
               { icon: '📍', label: '收货地址', action: 'address' },
               { icon: '💬', label: '联系客服', href: 'tel:18511987921' },
