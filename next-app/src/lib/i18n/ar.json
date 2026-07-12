@@ -7,7 +7,7 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "confirm": "Confirm",
-    "login": "Login",
+    "login": "تسجيل الدخول",
     "logout": "Logout",
     "back": "Back",
     "submit": "Submit",
@@ -414,7 +414,12 @@
     "province": "المقاطعة",
     "city": "المدينة",
     "district": "المنطقة",
-    "detailAddress": "العنوان التفصيلي: الشارع، رقم المبنى"
+    "detailAddress": "العنوان التفصيلي: الشارع، رقم المبنى",
+    "addressDeleted": "تم حذف العنوان",
+    "defaultSet": "تم التعيين كافتراضي",
+    "defaultLabel": "افتراضي",
+    "setDefault": "تعيين كافتراضي",
+    "deleteAddress": "حذف"
   },
   "login": {
     "title": "Login",

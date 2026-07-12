@@ -161,12 +161,20 @@ function shapeUser(decoded) {
 // ============================================================================
 // GET /auth/me   —— 直接从 flower_token 解, 不查库
 // ============================================================================
-router.get('/me', (req, res) => {
+router.get('/me', async (req, res) => {
   try {
     const auth = req.headers.authorization;
     if (!auth) return res.status(401).json({ error: 'unauthenticated' });
     const decoded = jwt.verify(auth.replace('Bearer ', ''), JWT_SECRET);
     const isAdmin = decoded.role === 'super_admin' || decoded.role === 'admin';
+    // 从 Mongo flower_user_addresses 拉地址列表 (静默失败, 不阻塞登录)
+    let address = [];
+    try {
+      const dbLib = require('../lib/db');
+      const list = await dbLib.find('flower_user_addresses', { filter: { zid: decoded.zid }, limit: 1 });
+      const doc = list && list.data ? list.data[0] : (Array.isArray(list) ? list[0] : null);
+      if (doc && Array.isArray(doc.addresses)) address = doc.addresses;
+    } catch (e) { /* silent */ }
     return res.json({
       id: decoded.zid,
       phone: decoded.phone,
@@ -177,7 +185,7 @@ router.get('/me', (req, res) => {
       roles: decoded.roles || [],
       isAdmin,
       isSuperAdmin: isAdmin,
-      address: [],
+      address,
     });
   } catch (err) {
     return res.status(401).json({ error: 'token_invalid' });
@@ -215,7 +223,118 @@ router.post('/sso-issue', goneHandler);
 // 业务数据端点 —— 先占位, 后续按 zid 重接 Mongo
 // ============================================================================
 router.put('/location', (req, res) => res.status(501).json({ error: 'not_implemented', note: 'awaiting zid-based reimpl' }));
-router.put('/address', (req, res) => res.status(501).json({ error: 'not_implemented', note: 'awaiting zid-based reimpl' }));
+
+// ============================================================================
+// /auth/address — 收货地址 CRUD (按 zid 存 Mongo flower_user_addresses)
+// ============================================================================
+const db = require('../lib/db');
+
+function requireZid(req, res) {
+  const auth = req.headers.authorization;
+  if (!auth) { res.status(401).json({ error: 'unauthenticated' }); return null; }
+  try {
+    const decoded = jwt.verify(auth.replace('Bearer ', ''), JWT_SECRET);
+    return { zid: decoded.zid, phone: decoded.phone, nickname: decoded.nickname };
+  } catch (e) {
+    res.status(401).json({ error: 'token_invalid' });
+    return null;
+  }
+}
+
+async function getUserDoc(zid) {
+  const list = await db.find('flower_user_addresses', { filter: { zid }, limit: 1 });
+  return (list && list.data ? list.data[0] : (Array.isArray(list) ? list[0] : null)) || null;
+}
+
+// GET /auth/address — 列出全部地址
+router.get('/address', async (req, res) => {
+  const u = requireZid(req, res); if (!u) return;
+  try {
+    const doc = await getUserDoc(u.zid);
+    res.json({ address: (doc && doc.addresses) || [] });
+  } catch (e) {
+    console.error('[GET /auth/address]', e.message);
+    res.status(500).json({ error: 'db_error', detail: e.message });
+  }
+});
+
+// PUT /auth/address — 新增/更新一条地址; isDefault=true 则自动清其他 default
+router.put('/address', async (req, res) => {
+  const u = requireZid(req, res); if (!u) return;
+  try {
+    const { name, phone, province, city, district, detail, isDefault } = req.body || {};
+    for (const k of ['name','phone','province','city','district','detail']) {
+      if (!String((req.body||{})[k] || '').trim()) return res.status(400).json({ error: 'missing_field', field: k });
+    }
+    const newAddr = {
+      id: 'a_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+      name, phone, province, city, district, detail,
+      isDefault: !!isDefault,
+      createdAt: new Date().toISOString(),
+    };
+    let doc = await getUserDoc(u.zid);
+    let list = (doc && doc.addresses) || [];
+    // 去重: 相同 (province/city/district/detail/phone) 视为同一条
+    const existIdx = list.findIndex(a =>
+      a.detail === detail && a.province === province &&
+      a.city === city && a.district === district && a.phone === phone);
+    if (existIdx >= 0) {
+      newAddr.id = list[existIdx].id || newAddr.id;
+      list[existIdx] = { ...list[existIdx], ...newAddr };
+    } else {
+      if (list.length === 0) newAddr.isDefault = true;
+      list.push(newAddr);
+    }
+    if (newAddr.isDefault) list = list.map(a => ({ ...a, isDefault: a.id === newAddr.id }));
+
+    if (doc && doc._id) {
+      await db.update('flower_user_addresses', doc._id, { addresses: list, updatedAt: new Date().toISOString() });
+    } else {
+      await db.insert('flower_user_addresses', {
+        zid: u.zid, phone: u.phone || '', nickname: u.nickname || '',
+        addresses: list, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      });
+    }
+    res.json({ message: 'address_updated', address: list });
+  } catch (e) {
+    console.error('[PUT /auth/address]', e.message);
+    res.status(500).json({ error: 'db_error', detail: e.message });
+  }
+});
+
+// DELETE /auth/address/:id — 删除一条
+router.delete('/address/:id', async (req, res) => {
+  const u = requireZid(req, res); if (!u) return;
+  try {
+    const doc = await getUserDoc(u.zid);
+    if (!doc || !doc.addresses) return res.json({ address: [] });
+    const rid = req.params.id;
+    let list = doc.addresses.filter(a => a.id !== rid);
+    // 如果删掉了默认地址, 首位设为默认
+    if (list.length && !list.some(a => a.isDefault)) list[0].isDefault = true;
+    await db.update('flower_user_addresses', doc._id, { addresses: list, updatedAt: new Date().toISOString() });
+    res.json({ message: 'address_deleted', address: list });
+  } catch (e) {
+    console.error('[DELETE /auth/address]', e.message);
+    res.status(500).json({ error: 'db_error', detail: e.message });
+  }
+});
+
+// POST /auth/address/:id/default — 设为默认
+router.post('/address/:id/default', async (req, res) => {
+  const u = requireZid(req, res); if (!u) return;
+  try {
+    const doc = await getUserDoc(u.zid);
+    if (!doc || !doc.addresses) return res.status(404).json({ error: 'no_address' });
+    const rid = req.params.id;
+    const list = doc.addresses.map(a => ({ ...a, isDefault: a.id === rid }));
+    await db.update('flower_user_addresses', doc._id, { addresses: list, updatedAt: new Date().toISOString() });
+    res.json({ message: 'default_set', address: list });
+  } catch (e) {
+    console.error('[POST /auth/address/:id/default]', e.message);
+    res.status(500).json({ error: 'db_error', detail: e.message });
+  }
+});
 
 // ============================================================================
 // 跨顶级域 SSO Bridge (2026-07-06, A 方案)

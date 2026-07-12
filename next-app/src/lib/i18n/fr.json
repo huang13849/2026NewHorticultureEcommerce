@@ -7,7 +7,7 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "confirm": "Confirm",
-    "login": "Login",
+    "login": "Se connecter",
     "logout": "Logout",
     "back": "Back",
     "submit": "Submit",
@@ -414,7 +414,12 @@
     "province": "Province",
     "city": "Ville",
     "district": "District",
-    "detailAddress": "Adresse détaillée : rue, numéro"
+    "detailAddress": "Adresse détaillée : rue, numéro",
+    "addressDeleted": "Adresse supprimée",
+    "defaultSet": "Par défaut",
+    "defaultLabel": "Par défaut",
+    "setDefault": "Définir par défaut",
+    "deleteAddress": "Supprimer"
   },
   "login": {
     "title": "Login",

@@ -7,7 +7,7 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "confirm": "Confirm",
-    "login": "Login",
+    "login": "Войти",
     "logout": "Logout",
     "back": "Back",
     "submit": "Submit",
@@ -414,7 +414,12 @@
     "province": "Провинция",
     "city": "Город",
     "district": "Район",
-    "detailAddress": "Подробный адрес: улица, номер дома"
+    "detailAddress": "Подробный адрес: улица, номер дома",
+    "addressDeleted": "Адрес удалён",
+    "defaultSet": "Установлен по умолчанию",
+    "defaultLabel": "По умолчанию",
+    "setDefault": "По умолчанию",
+    "deleteAddress": "Удалить"
   },
   "login": {
     "title": "Login",
