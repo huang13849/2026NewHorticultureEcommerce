@@ -201,7 +201,7 @@ export const api = {
     }),
 
   updateAddress: (addressData: Partial<Address>) =>
-    request<{ message: string; address: Address[] }>('/auth/address', {
+    request<{ message: string; address: Address[] }>('/user/address', {
       method: 'PUT',
       body: JSON.stringify(addressData),
     }),
