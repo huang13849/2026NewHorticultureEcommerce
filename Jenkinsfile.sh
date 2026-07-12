@@ -118,6 +118,37 @@ else
   if [ "$FAIL" = "1" ]; then exit 1; fi
 fi
 
+echo "======= [5.6/5] public domain isolation test =======" 
+# 5.6: 国内 (club) / 国际 (space) 首页必须都能独立 200 访问, 且不跨域跳转
+for CHECK in "https://horiculture.club/:horiculture.club" "https://horiculture.space/:horiculture.space"; do
+  URL="${CHECK%:*}"; HOST="${CHECK#*:}"
+  # -L 跟 3xx; -w 拿最终 URL + code
+  RES=$(curl -sSk -L --max-redirs 3 -o /dev/null -m 15 -w "%{http_code} %{url_effective}" "$URL" 2>/dev/null || echo "000 error")
+  CODE="${RES%% *}"; FINAL="${RES#* }"
+  if [ "$CODE" != "200" ]; then
+    echo "  FAIL $URL -> HTTP $CODE (final=$FINAL)"
+    exit 1
+  fi
+  # 落地 URL 必须留在同一 host, 不能跨到另一顶级域
+  FINAL_HOST=$(echo "$FINAL" | sed -E 's|https?://([^/]+)/.*|\1|')
+  case "$FINAL_HOST" in
+    "$HOST"|"www.$HOST")
+      echo "  OK  $URL -> $CODE (stayed on $FINAL_HOST)"
+      ;;
+    *)
+      echo "  FAIL $URL redirected off-domain to $FINAL_HOST (cross-issue leak)"
+      exit 1
+      ;;
+  esac
+  # 首页 HTML 不能包含另一顶级域的 cross-issue 端点 (静态断言)
+  BODY=$(curl -sSk -m 15 "$URL" 2>/dev/null | head -c 500000)
+  if echo "$BODY" | grep -q '/api/auth/cross-issue'; then
+    echo "  FAIL $URL body still references /api/auth/cross-issue (should be removed)"
+    exit 1
+  fi
+done
+echo "  OK  club/space homepages isolated (no cross-domain redirect, no cross-issue refs)"
+
 echo "======= [6/5] GitHub 同步策略 ======="
 # 默认不自动推 github (gitea 是主 CI 源, github 只在大版本发布时手动同步)
 # 需要触发 github + CF Pages rebuild 时: PUSH_GITHUB=1 bash Jenkinsfile.sh
