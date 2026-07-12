@@ -155,6 +155,14 @@ async function passwordLogin(req, { loginName, password }) {
   const sid = b64url(crypto.randomBytes(24));
   const r = await getRedis();
   await r.setEx(`sess:${sid}`, SESSION_TTL_SEC, JSON.stringify(user));
+
+  // Upsert Mongo user_profiles (never blocks login on Mongo hiccup)
+  try {
+    const ups = require('./user-profile-service');
+    await ups.upsertFromLogin(user);
+  } catch (e) {
+    console.warn('[login-service:profile-upsert]', e.message);
+  }
   return { sid, user, brand };
 }
 
