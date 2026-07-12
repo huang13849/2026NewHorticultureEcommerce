@@ -214,15 +214,15 @@ for BASE in "https://horiculture.club" "https://horiculture.space"; do
   JAR=$(mktemp)
   curl -sSk -m 15 -c "$JAR" -o /dev/null -X POST "$BASE/api/session/password-login" \
     -H "Content-Type: application/json" -d '{"loginName":"guest","password":"guest"}' >/dev/null
-  P=$(curl -sSk -m 15 -b "$JAR" -w "\n%{http_code}" "$BASE/api/auth/profile")
+  P=$(curl -sSk -m 15 -b "$JAR" -w "\n%{http_code}" "$BASE/api/user/profile")
   PC=$(echo "$P" | tail -1); PB=$(echo "$P" | sed '$d')
   if [ "$PC" != "200" ]; then echo "  FAIL [$HOST] GET /auth/profile -> $PC"; exit 1; fi
   echo "$PB" | grep -q '"zid"' || { echo "  FAIL [$HOST] profile missing zid"; exit 1; }
   ADDR='{"name":"Guest","phone":"13800000000","province":"北京","city":"北京","district":"丰台","detail":"新宫正商明苑3号楼1单元1401"}'
-  A=$(curl -sSk -m 15 -b "$JAR" -H "Content-Type: application/json" -X PUT "$BASE/api/auth/address" -d "$ADDR" -w "\n%{http_code}")
+  A=$(curl -sSk -m 15 -b "$JAR" -H "Content-Type: application/json" -X PUT "$BASE/api/user/address" -d "$ADDR" -w "\n%{http_code}")
   AC=$(echo "$A" | tail -1); AB=$(echo "$A" | sed '$d')
   if [ "$AC" != "200" ]; then echo "  FAIL [$HOST] PUT /auth/address -> $AC body=${AB:0:200}"; exit 1; fi
-  G=$(curl -sSk -m 15 -b "$JAR" -w "%{http_code}" -o /tmp/addr.$$ "$BASE/api/auth/address")
+  G=$(curl -sSk -m 15 -b "$JAR" -w "%{http_code}" -o /tmp/addr.$$ "$BASE/api/user/address")
   if [ "$G" != "200" ]; then echo "  FAIL [$HOST] GET /auth/address -> $G"; exit 1; fi
   grep -q '新宫' /tmp/addr.$$ || { echo "  FAIL [$HOST] saved address not returned"; head -c 300 /tmp/addr.$$; exit 1; }
   echo "  OK  [$HOST] profile+address roundtrip"

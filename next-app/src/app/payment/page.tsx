@@ -144,7 +144,7 @@ function PaymentContent() {
     try {
       const id = (addr as any).id;
       if (!id) return;
-      const res = await fetch(`${API}/auth/address/${id}`, {
+      const res = await fetch(`${API}/user/address/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -174,7 +174,7 @@ function PaymentContent() {
     try {
       const id = (addr as any).id;
       if (!id) return;
-      const res = await fetch(`${API}/auth/address/${id}/default`, {
+      const res = await fetch(`${API}/user/address/${id}/default`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
