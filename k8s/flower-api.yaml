@@ -40,6 +40,8 @@ spec:
         envFrom:
         - secretRef:
             name: flower-next-zitadel
+        - secretRef:
+            name: flower-api-la-payment
 ---
 apiVersion: v1
 kind: Service
