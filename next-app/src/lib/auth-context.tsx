@@ -63,20 +63,10 @@ function decodeFlowerToken(token: string): User | null {
   } catch { return null; }
 }
 
-// 跨顶级域 SSO Bridge: space 探 me-flower 401 时, 尝试从 club 拿 ticket (仅一次, 靠 URL 参数打防抖).
-// 只在跨顶级域场景触发 —— 同一顶级域下的 subpath (peony/tropical) 早已经能读到 cookie, 不需要跨.
+// 跨顶级域 SSO Bridge: 已停用. club/space 域名/登录彻底隔离.
+// 保留 cross-issue 后端端点用于其他系统(peony 等), 但前端不再自动跳转.
 function shouldTryXBridge(): { peer: string } | null {
-  if (typeof window === 'undefined') return null;
-  const host = window.location.hostname;
-  const url = new URL(window.location.href);
-  if (url.searchParams.get('__xb') === '1') return null; // 已尝试过, 别循环
-  if (host === 'horiculture.space' || host === 'www.horiculture.space') {
-    return { peer: 'https://horiculture.club' };
-  }
-  if (host === 'horiculture.club' || host === 'www.horiculture.club') {
-    return { peer: 'https://horiculture.space' };
-  }
-  return null;
+  return null; // 隔离国内/国际, 不再跨域桥接
 }
 
 function jumpToXBridge(peer: string): void {
