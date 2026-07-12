@@ -118,7 +118,7 @@ function PaymentContent() {
     setAddressMessage('');
   };
 
-  const handleSaveAddress = async () => {
+    const handleSaveAddress = async (): Promise<boolean> => {
     if (!isAddressComplete(addressForm)) {
       setAddressMessage(t('payment.addressRequired'));
       return false;
@@ -137,6 +137,62 @@ function PaymentContent() {
       return false;
     } finally {
       setSavingAddress(false);
+    }
+  };
+
+  const handleDeleteAddress = async (addr: Address) => {
+    try {
+      const id = (addr as any).id;
+      if (!id) return;
+      const res = await fetch(`${API}/auth/address/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(typeof window !== 'undefined' && localStorage.getItem('flower_token')
+            ? { Authorization: `Bearer ${localStorage.getItem('flower_token')}` }
+            : {}),
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'delete_failed');
+      const list = (data.address || []).filter(isAddressComplete) as Address[];
+      setAddressList(list);
+      const defaultIdx = list.findIndex(a => a.isDefault);
+      setSelectedAddressIndex(list.length ? (defaultIdx >= 0 ? defaultIdx : 0) : -1);
+      if (list.length && (defaultIdx >= 0 || list[0])) {
+        setAddressForm({ ...(list[defaultIdx >= 0 ? defaultIdx : 0]), isDefault: true });
+      } else {
+        setAddressForm({ ...EMPTY_ADDRESS, name: user?.nickname || '', phone: user?.phone || '' });
+      }
+      setAddressMessage(t('payment.addressDeleted'));
+    } catch (err: any) {
+      setAddressMessage(err.message || t('payment.createOrderFailed'));
+    }
+  };
+
+  const handleSetDefault = async (addr: Address) => {
+    try {
+      const id = (addr as any).id;
+      if (!id) return;
+      const res = await fetch(`${API}/auth/address/${id}/default`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(typeof window !== 'undefined' && localStorage.getItem('flower_token')
+            ? { Authorization: `Bearer ${localStorage.getItem('flower_token')}` }
+            : {}),
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'default_failed');
+      const list = (data.address || []).filter(isAddressComplete) as Address[];
+      setAddressList(list);
+      const idx = list.findIndex(a => (a as any).id === id);
+      setSelectedAddressIndex(idx >= 0 ? idx : 0);
+      if (idx >= 0) setAddressForm({ ...list[idx], isDefault: true });
+      setAddressMessage(t('payment.defaultSet'));
+    } catch (err: any) {
+      setAddressMessage(err.message || t('payment.createOrderFailed'));
     }
   };
 
@@ -176,6 +232,38 @@ function PaymentContent() {
 
   const totalAmount = Math.round(products.reduce((sum, p) => sum + p.price * (p.quantity || 1), 0) * 100) / 100;
   const totalItems = products.reduce((sum, p) => sum + (p.quantity || 1), 0);
+
+  // 更新商品数量/移除商品; fromCart 时同步回 localStorage 保持一致
+  const persistCart = (list: PayProduct[]) => {
+    try {
+      if (fromCart && typeof window !== 'undefined') {
+        const raw = localStorage.getItem('flower_cart');
+        const saved = raw ? JSON.parse(raw) : [];
+        const byId = new Map((list || []).map(p => [p.id, p]));
+        const next = saved
+          .filter((i: any) => byId.has(i.productId))
+          .map((i: any) => {
+            const p = byId.get(i.productId)!;
+            return { ...i, quantity: p.quantity || 1, checked: true };
+          });
+        localStorage.setItem('flower_cart', JSON.stringify(next));
+      }
+    } catch {}
+  };
+  const setQty = (id: string, next: number) => {
+    setProducts(prev => {
+      const list = prev.map(p => p.id === id ? { ...p, quantity: Math.max(1, next) } : p);
+      persistCart(list);
+      return list;
+    });
+  };
+  const removeItem = (id: string) => {
+    setProducts(prev => {
+      const list = prev.filter(p => p.id !== id);
+      persistCart(list);
+      return list;
+    });
+  };
 
   // 按部署区域筛选支付方式
   const allPaymentMethods = [
@@ -328,9 +416,19 @@ function PaymentContent() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate">{p.name}</p>
-                    <p className="text-xs text-stone-400">×{p.quantity || 1}</p>
+                    <p className="text-xs text-stone-400">¥{p.price.toFixed(2)} · 小计 ¥{(p.price * (p.quantity || 1)).toFixed(2)}</p>
                   </div>
-                  <p className="text-sm font-bold text-stone-900">¥{(p.price * (p.quantity || 1)).toFixed(2)}</p>
+                  <div className="flex items-center gap-1.5">
+                    <button type="button" onClick={() => setQty(p.id, (p.quantity || 1) - 1)} className="w-7 h-7 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30" disabled={(p.quantity || 1) <= 1} aria-label="decrease">−</button>
+                    <input
+                      type="number" min={1}
+                      value={p.quantity || 1}
+                      onChange={e => setQty(p.id, parseInt(e.target.value || '1', 10) || 1)}
+                      className="w-10 text-center text-sm font-bold rounded-lg border border-stone-200 py-1 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                    />
+                    <button type="button" onClick={() => setQty(p.id, (p.quantity || 1) + 1)} className="w-7 h-7 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-50" aria-label="increase">+</button>
+                    <button type="button" onClick={() => removeItem(p.id)} className="ml-1 text-rose-400 hover:text-rose-600 w-7 h-7 rounded-lg hover:bg-rose-50 text-sm" aria-label="remove">✕</button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -351,18 +449,36 @@ function PaymentContent() {
           {addressList.length > 0 && (
             <div className="space-y-2 mb-4">
               {addressList.map((addr, idx) => (
-                <button
-                  key={`${addr.phone}-${addr.detail}-${idx}`}
-                  type="button"
-                  onClick={() => { setSelectedAddressIndex(idx); setAddressForm({ ...addr, isDefault: true }); setAddressMessage(''); }}
-                  className={`w-full text-left rounded-2xl border p-3 transition-colors ${selectedAddressIndex === idx ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200 bg-white hover:border-stone-300'}`}
+                <div
+                  key={(addr as any).id || `${addr.phone}-${addr.detail}-${idx}`}
+                  className={`rounded-2xl border p-3 transition-colors ${selectedAddressIndex === idx ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200 bg-white hover:border-stone-300'}`}
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-bold">{addr.name} <span className="ml-2 text-stone-500 font-normal">{addr.phone}</span></p>
-                    {selectedAddressIndex === idx && <span className="text-xs font-bold text-emerald-700">✓ {t('payment.use')}</span>}
+                  <button
+                    type="button"
+                    onClick={() => { setSelectedAddressIndex(idx); setAddressForm({ ...addr, isDefault: true }); setAddressMessage(''); }}
+                    className="w-full text-left"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-bold">
+                        {addr.name}
+                        <span className="ml-2 text-stone-500 font-normal">{addr.phone}</span>
+                        {addr.isDefault && <span className="ml-2 text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-full">{t('payment.defaultLabel')}</span>}
+                      </p>
+                      {selectedAddressIndex === idx && <span className="text-xs font-bold text-emerald-700">✓ {t('payment.use')}</span>}
+                    </div>
+                    <p className="text-xs text-stone-500 mt-1">{formatAddress(addr)}</p>
+                  </button>
+                  <div className="mt-2 flex items-center gap-3 text-xs">
+                    {!addr.isDefault && (
+                      <button type="button" onClick={() => handleSetDefault(addr)} className="text-emerald-700 hover:underline">
+                        {t('payment.setDefault')}
+                      </button>
+                    )}
+                    <button type="button" onClick={() => handleDeleteAddress(addr)} className="text-rose-500 hover:underline ml-auto">
+                      {t('payment.deleteAddress')}
+                    </button>
                   </div>
-                  <p className="text-xs text-stone-500 mt-1">{formatAddress(addr)}</p>
-                </button>
+                </div>
               ))}
               <button
                 type="button"

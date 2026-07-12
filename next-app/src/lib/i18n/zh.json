@@ -414,7 +414,12 @@
     "province": "省/直辖市",
     "city": "城市",
     "district": "区/县",
-    "detailAddress": "详细地址：街道、门牌号"
+    "detailAddress": "详细地址：街道、门牌号",
+    "addressDeleted": "地址已删除",
+    "defaultSet": "已设为默认",
+    "defaultLabel": "默认",
+    "setDefault": "设为默认",
+    "deleteAddress": "删除"
   },
   "login": {
     "title": "登录",

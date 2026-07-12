@@ -7,7 +7,7 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "confirm": "Confirm",
-    "login": "Login",
+    "login": "サインイン",
     "logout": "Logout",
     "back": "Back",
     "submit": "Submit",
@@ -414,7 +414,12 @@
     "province": "都道府県",
     "city": "市区町村",
     "district": "区/県",
-    "detailAddress": "詳細住所：番地、建物名"
+    "detailAddress": "詳細住所：番地、建物名",
+    "addressDeleted": "住所を削除",
+    "defaultSet": "既定に設定",
+    "defaultLabel": "既定",
+    "setDefault": "既定にする",
+    "deleteAddress": "削除"
   },
   "login": {
     "title": "Login",
