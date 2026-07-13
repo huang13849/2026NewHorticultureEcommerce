@@ -197,14 +197,10 @@ router.post('/confirm-stripe', async (req, res) => {
   try {
     const { sessionId, orderId } = req.body;
     let pgOrder = null;
-    let mongoOrder = null;
     if (sessionId) pgOrder = await pgOrders.findByStripeSession(sessionId);
     if (!pgOrder && orderId) pgOrder = await pgOrders.findByOrderNo(orderId);
-    if (sessionId) mongoOrder = await db.findOne('orders', { stripeSessionId: sessionId });
-    if (!mongoOrder && orderId) mongoOrder = await db.findOne('orders', { orderId });
-    const order = pgOrder || mongoOrder;
-    if (!order) return res.status(404).json({ error: '订单不存在' });
-    let paid = (order.status === 'paid' || order.status === 'mock_paid');
+    if (!pgOrder) return res.status(404).json({ error: '订单不存在' });
+    let paid = (pgOrder.status === 'paid' || pgOrder.status === 'mock_paid');
     if (stripeConfigured && sessionId) {
       const sessionRes = await axios.get(`https://api.stripe.com/v1/checkout/sessions/${sessionId}`, {
         auth: { username: process.env.STRIPE_SECRET_KEY, password: '' },
@@ -212,30 +208,25 @@ router.post('/confirm-stripe', async (req, res) => {
       });
       paid = sessionRes.data.payment_status === 'paid';
     }
-    if (!paid) return res.status(400).json({ error: '支付尚未完成', order });
-    const paidAt = order.paid_at || order.paidAt || new Date().toISOString();
-    if (pgOrder && pgOrder.status !== 'paid') {
+    if (!paid) return res.status(400).json({ error: '支付尚未完成', order: pgOrder });
+    const paidAt = pgOrder.paid_at || new Date().toISOString();
+    if (pgOrder.status !== 'paid') {
       await pgOrders.updateOrderStatus(pgOrder.order_no, { status: 'paid', paidAt });
     }
-    if (mongoOrder && mongoOrder.status !== 'paid') {
-      await db.update('orders', mongoOrder._id, { status: 'paid', paidAt });
-    }
     const purchaseOrderId = await syncPurchaseOrder({
-      ...(mongoOrder || {}),
-      ...(pgOrder ? {
-        orderId: pgOrder.order_no,
-        items: pgOrder.items,
-        totalAmount: Number(pgOrder.total),
-        subtotal: Number(pgOrder.subtotal),
-        shippingFee: Number(pgOrder.shipping_fee),
-        memberName: (pgOrder.shipping_address || {}).memberName || '',
-        phone: (pgOrder.shipping_address || {}).phone || '',
-        deliveryAddress: (pgOrder.shipping_address || {}).text || '',
-        zid: pgOrder.zid,
-      } : {}),
+      orderId: pgOrder.order_no,
+      _id: pgOrder.id,
+      items: pgOrder.items,
+      totalAmount: Number(pgOrder.total),
+      subtotal: Number(pgOrder.subtotal),
+      shippingFee: Number(pgOrder.shipping_fee),
+      memberName: (pgOrder.shipping_address || {}).memberName || '',
+      phone: (pgOrder.shipping_address || {}).phone || '',
+      deliveryAddress: (pgOrder.shipping_address || {}).text || '',
+      zid: pgOrder.zid,
       status: 'paid', paidAt,
     });
-    res.json({ ok: true, order: { ...(pgOrder || mongoOrder), status: 'paid', paidAt, syncedPurchaseOrderId: purchaseOrderId } });
+    res.json({ ok: true, order: { ...pgOrder, status: 'paid', paidAt, syncedPurchaseOrderId: purchaseOrderId } });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -372,10 +363,9 @@ router.post('/checkout', async (req, res) => {
       console.error('[checkout] PG createOrder failed:', e.message);
       return res.status(500).json({ error: 'pg_write_failed', detail: e.message });
     }
-    // legacy Mongo mirror (transitional)
-    const saved = await db.create('orders', { ...order, pgId: pgSaved.id });
+    // No Mongo mirror — PostgreSQL is the source of truth.
     if (!provider.configured) {
-      try { await syncPurchaseOrder({ ...order, _id: saved._id }); } catch (e) { console.error('sync mock order failed:', e.message); }
+      try { await syncPurchaseOrder({ ...order, _id: pgSaved.id }); } catch (e) { console.error('sync mock order failed:', e.message); }
     }
 
     res.json({
@@ -419,8 +409,7 @@ router.post('/pay/:orderId', async (req, res) => {
 
 router.get('/order/:orderId', async (req, res) => {
   try {
-    const pgOrder = await pgOrders.findByOrderNo(req.params.orderId);
-    const order = pgOrder || await db.findOne('orders', { orderId: req.params.orderId });
+    const order = await pgOrders.findByOrderNo(req.params.orderId);
     if (!order) return res.status(404).json({ error: '订单不存在' });
     res.json({ order });
   } catch (err) {
