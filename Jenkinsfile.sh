@@ -261,6 +261,36 @@ for BASE in "https://horiculture.club" "https://horiculture.space"; do
 done
 echo "  OK  per-user cart & orders scoped to zid"
 
+
+echo "======= [5.11/5] orders backed by PostgreSQL (plant_collector.orders) ======="
+# flower-api must have PG deps loaded + pg pool env vars — pod boot success indicates that.
+POD=$(kubectl -n new-ecommerce get pod --no-headers -l app=flower-api | awk '$3=="Running"{print $1; exit}')
+if [ -z "$POD" ]; then echo "  FAIL no flower-api pod running"; exit 1; fi
+if ! kubectl -n new-ecommerce logs "$POD" --tail=200 2>&1 | grep -q '\[pgOrders\]'; then
+  echo "  FAIL flower-api pod $POD missing [pgOrders] init log — pg module not loaded"; exit 1
+fi
+echo "  OK  flower-api pod $POD loaded pgOrders module"
+
+# checkout → PG write path: hit /api/payment/checkout with mock alipay (not configured) to skip Stripe, verify PG row.
+JAR=$(mktemp)
+BASE=https://horiculture.club
+curl -sSk -m 15 -c "$JAR" -o /dev/null -X POST "$BASE/api/session/password-login" \
+  -H "Content-Type: application/json" -d '{"loginName":"guest","password":"***"}' >/dev/null
+OID="SMOKE-PG-$(date +%s)"
+RESP=$(curl -sSk -m 20 -b "$JAR" -X POST "$BASE/api/payment/checkout" \
+  -H "Content-Type: application/json" \
+  -d "{\"items\":[{\"productId\":\"smoke-pg-1\",\"name\":\"pg smoke\",\"price\":1.00,\"quantity\":1}],\"payMethod\":\"alipay\",\"deliveryAddress\":\"pg-smoke-test\",\"customer\":{\"name\":\"pg\",\"phone\":\"000\"}}")
+OID=$(echo "$RESP" | python3 -c 'import json,sys; d=json.loads(sys.stdin.read()); print(d.get("orderId",""))' 2>/dev/null)
+if [ -z "$OID" ]; then echo "  FAIL checkout returned no orderId: $RESP"; rm -f "$JAR"; exit 1; fi
+# GET /user/orders — must contain that orderId
+LIST=$(curl -sSk -m 15 -b "$JAR" "$BASE/api/user/orders")
+if ! echo "$LIST" | grep -q "$OID"; then
+  echo "  FAIL new order $OID not in /user/orders (PG list broken): $LIST" | head -c 400
+  rm -f "$JAR"; exit 1
+fi
+echo "  OK  order $OID created via checkout and readable via /user/orders (PG-backed)"
+rm -f "$JAR"
+
 echo "======= [6/5] GitHub 同步策略 ======="
 # 默认不自动推 github (gitea 是主 CI 源, github 只在大版本发布时手动同步)
 # 需要触发 github + CF Pages rebuild 时: PUSH_GITHUB=1 bash Jenkinsfile.sh

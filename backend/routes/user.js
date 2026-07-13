@@ -94,11 +94,30 @@ router.post('/address/:id/default', async (req, res) => {
 router.get('/orders', async (req, res) => {
   const u = await requireUser(req, res); if (!u) return;
   try {
-    const db = require('../lib/db');
-    const filter = { zid: u.zid };
-    if (req.query.region) filter.region = req.query.region;
-    const orders = await db.find('orders', { filter, sort: { createdAt: -1 }, limit: 200 });
-    res.json({ orders, total: orders.length });
+    const pgOrders = require('../lib/pgOrders');
+    const rows = await pgOrders.listByUser(u.zid, { limit: 200 });
+    const orders = rows.map(r => {
+      const meta = r.metadata || {};
+      const addr = r.shipping_address || {};
+      return {
+        _id: r.id, orderId: r.order_no, zid: r.zid, status: r.status,
+        subtotal: Number(r.subtotal), shippingFee: Number(r.shipping_fee),
+        couponDiscount: Number(r.discount), totalAmount: Number(r.total),
+        currency: r.currency, payMethod: meta.pay_method || '',
+        provider: meta.provider || '', brand: meta.brand || '',
+        region: meta.region || '',
+        stripeSessionId: meta.stripe_session_id || '', checkoutUrl: meta.checkout_url || '',
+        memberName: addr.memberName || '', phone: addr.phone || '',
+        deliveryAddress: addr.text || '',
+        items: (r.items || []).map(it => ({
+          productId: it.sku_id, name: it.title, price: Number(it.unit_price),
+          quantity: it.qty, ...(it.snapshot || {}),
+        })),
+        createdAt: r.created_at, paidAt: r.paid_at,
+      };
+    });
+    const filtered = req.query.region ? orders.filter(o => o.region === req.query.region) : orders;
+    res.json({ orders: filtered, total: filtered.length });
   } catch (e) { console.error('[GET /user/orders]', e.message); res.status(500).json({ error: 'db_error', detail: e.message }); }
 });
 
@@ -107,13 +126,22 @@ router.get('/orders', async (req, res) => {
 router.delete('/orders/:orderId', async (req, res) => {
   const u = await requireUser(req, res); if (!u) return;
   try {
+    const pgOrders = require('../lib/pgOrders');
     const db = require('../lib/db');
     const { orderId } = req.params;
-    // 只查 zid 匹配的订单
-    const order = await db.findOne('orders', { orderId, zid: u.zid });
-    if (!order) return res.status(404).json({ error: 'order_not_found_or_not_yours' });
-    await db.remove('orders', order._id);
-    res.json({ ok: true, deletedId: order._id, orderId });
+    // PG: cancel (soft-delete via status)
+    const pgOrder = await pgOrders.findByOrderNo(orderId);
+    let deletedPgId = null;
+    if (pgOrder) {
+      if (pgOrder.zid !== u.zid) return res.status(404).json({ error: 'order_not_found_or_not_yours' });
+      const upd = await pgOrders.updateOrderStatus(pgOrder.order_no, { status: 'cancelled', cancelledAt: new Date().toISOString() });
+      deletedPgId = upd ? upd.id : null;
+    }
+    // Mongo: hard delete legacy row if present
+    const mongoOrder = await db.findOne('orders', { orderId, zid: u.zid });
+    if (mongoOrder) await db.remove('orders', mongoOrder._id);
+    if (!pgOrder && !mongoOrder) return res.status(404).json({ error: 'order_not_found_or_not_yours' });
+    res.json({ ok: true, deletedId: deletedPgId || (mongoOrder && mongoOrder._id), orderId });
   } catch (e) {
     console.error('[DELETE /user/orders]', e.message);
     res.status(500).json({ error: 'db_error', detail: e.message });

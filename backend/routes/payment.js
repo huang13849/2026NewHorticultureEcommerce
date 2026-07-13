@@ -11,6 +11,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../lib/db');
+const pgOrders = require('../lib/pgOrders');
 const loginService = require('../services/login-service');
 
 const axios = require('axios');
@@ -195,11 +196,15 @@ router.post('/quote', async (req, res) => {
 router.post('/confirm-stripe', async (req, res) => {
   try {
     const { sessionId, orderId } = req.body;
-    let order = null;
-    if (sessionId) order = await db.findOne('orders', { stripeSessionId: sessionId });
-    if (!order && orderId) order = await db.findOne('orders', { orderId });
+    let pgOrder = null;
+    let mongoOrder = null;
+    if (sessionId) pgOrder = await pgOrders.findByStripeSession(sessionId);
+    if (!pgOrder && orderId) pgOrder = await pgOrders.findByOrderNo(orderId);
+    if (sessionId) mongoOrder = await db.findOne('orders', { stripeSessionId: sessionId });
+    if (!mongoOrder && orderId) mongoOrder = await db.findOne('orders', { orderId });
+    const order = pgOrder || mongoOrder;
     if (!order) return res.status(404).json({ error: '订单不存在' });
-    let paid = order.status === 'paid' || order.status === 'mock_paid';
+    let paid = (order.status === 'paid' || order.status === 'mock_paid');
     if (stripeConfigured && sessionId) {
       const sessionRes = await axios.get(`https://api.stripe.com/v1/checkout/sessions/${sessionId}`, {
         auth: { username: process.env.STRIPE_SECRET_KEY, password: '' },
@@ -208,10 +213,29 @@ router.post('/confirm-stripe', async (req, res) => {
       paid = sessionRes.data.payment_status === 'paid';
     }
     if (!paid) return res.status(400).json({ error: '支付尚未完成', order });
-    const updates = { status: 'paid', paidAt: order.paidAt || new Date().toISOString() };
-    if (order.status !== 'paid') order = await db.update('orders', order._id, updates);
-    const purchaseOrderId = await syncPurchaseOrder({ ...order, ...updates });
-    res.json({ ok: true, order: { ...order, ...updates, syncedPurchaseOrderId: purchaseOrderId } });
+    const paidAt = order.paid_at || order.paidAt || new Date().toISOString();
+    if (pgOrder && pgOrder.status !== 'paid') {
+      await pgOrders.updateOrderStatus(pgOrder.order_no, { status: 'paid', paidAt });
+    }
+    if (mongoOrder && mongoOrder.status !== 'paid') {
+      await db.update('orders', mongoOrder._id, { status: 'paid', paidAt });
+    }
+    const purchaseOrderId = await syncPurchaseOrder({
+      ...(mongoOrder || {}),
+      ...(pgOrder ? {
+        orderId: pgOrder.order_no,
+        items: pgOrder.items,
+        totalAmount: Number(pgOrder.total),
+        subtotal: Number(pgOrder.subtotal),
+        shippingFee: Number(pgOrder.shipping_fee),
+        memberName: (pgOrder.shipping_address || {}).memberName || '',
+        phone: (pgOrder.shipping_address || {}).phone || '',
+        deliveryAddress: (pgOrder.shipping_address || {}).text || '',
+        zid: pgOrder.zid,
+      } : {}),
+      status: 'paid', paidAt,
+    });
+    res.json({ ok: true, order: { ...(pgOrder || mongoOrder), status: 'paid', paidAt, syncedPurchaseOrderId: purchaseOrderId } });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -307,7 +331,49 @@ router.post('/checkout', async (req, res) => {
       checkoutUrl = order.checkoutUrl;
     }
 
-    const saved = await db.create('orders', order);
+    // === PG: canonical write to plant_collector.orders ===
+    let pgSaved = null;
+    try {
+      pgSaved = await pgOrders.createOrder({
+        zid: currentZid,
+        orderNo: orderId,
+        subtotal: quote.subtotal,
+        shippingFee: quote.shippingFee,
+        discount: quote.couponDiscount,
+        total: quote.totalAmount,
+        currency: 'CNY',
+        shippingAddress: (deliveryAddress || customer) ? { text: deliveryAddress, memberName: customer.name || '', phone: customer.phone || '' } : null,
+        couponCode: quote.couponCode || null,
+        source: 'checkout',
+        originSite: req.get('host') || null,
+        metadata: {
+          pay_method: payMethod,
+          provider: provider.name,
+          brand: currentBrand,
+          region: order.region,
+          checkout_url: checkoutUrl,
+          stripe_session_id: stripeSessionId || null,
+          cost_amount: quote.costAmount,
+          profit_amount: quote.profitAmount,
+          coupon_title: quote.couponTitle || null,
+        },
+        items: orderItems.map(it => ({
+          sku_id: it.productId || it.id || '',
+          title: it.name || it.title || '',
+          qty: it.quantity || 1,
+          unit_price: Number(it.price || 0),
+          subtotal: Number(it.price || 0) * Number(it.quantity || 1),
+          snapshot: it,
+        })),
+        status: provider.configured ? 'pending' : 'mock_paid',
+      });
+      order._pgId = pgSaved.id;
+    } catch (e) {
+      console.error('[checkout] PG createOrder failed:', e.message);
+      return res.status(500).json({ error: 'pg_write_failed', detail: e.message });
+    }
+    // legacy Mongo mirror (transitional)
+    const saved = await db.create('orders', { ...order, pgId: pgSaved.id });
     if (!provider.configured) {
       try { await syncPurchaseOrder({ ...order, _id: saved._id }); } catch (e) { console.error('sync mock order failed:', e.message); }
     }
@@ -353,7 +419,8 @@ router.post('/pay/:orderId', async (req, res) => {
 
 router.get('/order/:orderId', async (req, res) => {
   try {
-    const order = await db.findOne('orders', { orderId: req.params.orderId });
+    const pgOrder = await pgOrders.findByOrderNo(req.params.orderId);
+    const order = pgOrder || await db.findOne('orders', { orderId: req.params.orderId });
     if (!order) return res.status(404).json({ error: '订单不存在' });
     res.json({ order });
   } catch (err) {
@@ -370,10 +437,39 @@ router.get('/orders', async (req, res) => {
       if (sess && sess.user && sess.user.zid) zid = sess.user.zid;
     } catch (_) {}
     if (!zid) return res.status(401).json({ error: 'unauthenticated', orders: [], total: 0 });
-    const filter = { zid };
-    if (req.query.region) filter.region = req.query.region;
-    const orders = await db.find('orders', { filter, sort: { createdAt: -1 }, limit: 200 });
-    res.json({ orders, total: orders.length });
+    const rows = await pgOrders.listByUser(zid, { limit: 200 });
+    const orders = rows.map(r => {
+      const meta = r.metadata || {};
+      const addr = r.shipping_address || {};
+      return {
+        _id: r.id,
+        orderId: r.order_no,
+        zid: r.zid,
+        status: r.status,
+        subtotal: Number(r.subtotal),
+        shippingFee: Number(r.shipping_fee),
+        couponDiscount: Number(r.discount),
+        totalAmount: Number(r.total),
+        currency: r.currency,
+        payMethod: meta.pay_method || '',
+        provider: meta.provider || '',
+        brand: meta.brand || '',
+        region: meta.region || (req.query.region || ''),
+        stripeSessionId: meta.stripe_session_id || '',
+        checkoutUrl: meta.checkout_url || '',
+        memberName: addr.memberName || '',
+        phone: addr.phone || '',
+        deliveryAddress: addr.text || '',
+        items: (r.items || []).map(it => ({
+          productId: it.sku_id, name: it.title, price: Number(it.unit_price),
+          quantity: it.qty, ...(it.snapshot || {}),
+        })),
+        createdAt: r.created_at,
+        paidAt: r.paid_at,
+      };
+    });
+    const filtered = req.query.region ? orders.filter(o => o.region === req.query.region) : orders;
+    res.json({ orders: filtered, total: filtered.length });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
