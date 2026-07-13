@@ -105,6 +105,24 @@ function PaymentContent() {
   const exchangeRate = rates[currency] || FALLBACK_RATES[currency];
   const fmt = (amt: number) => formatCurrency(amt, currency, exchangeRate);
 
+  // [payment] Stripe success 回跳:自动 confirm 并跳 /orders
+  useEffect(() => {
+    const status = searchParams.get('status');
+    const sessionId = searchParams.get('session_id');
+    const orderId = searchParams.get('orderId');
+    if (status === 'success' && orderId) {
+      fetch(`${API}/payment/confirm-stripe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ sessionId, orderId }),
+      }).catch(() => {}).finally(() => {
+        try { localStorage.removeItem('flower_cart'); } catch {}
+        setTimeout(() => { window.location.href = '/orders'; }, 800);
+      });
+    }
+  }, [searchParams]);
+
   // Live refetch from /api/user/address so newly-saved rows show without needing profile refresh
   useEffect(() => {
     const zid = (user as any)?.id || (user as any)?.zid;

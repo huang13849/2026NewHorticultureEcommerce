@@ -120,8 +120,10 @@ export default function OrdersPage() {
     }
   };
 
-  const totalAmount = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-  const totalItems = orders.reduce((sum, o) => sum + (o.items || []).reduce((s, i) => s + (i.quantity || 1), 0), 0);
+  const paidOrders = orders.filter(o => o.status === 'paid' || o.status === 'mock_paid');
+  const totalAmount = paidOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+  const totalItems = paidOrders.reduce((sum, o) => sum + (o.items || []).reduce((s, i) => s + (i.quantity || 1), 0), 0);
+  const paidCount = paidOrders.length;
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-stone-50 to-white text-stone-900 pb-24">
@@ -159,7 +161,7 @@ export default function OrdersPage() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-2xl border border-stone-200 bg-white p-4 text-center">
-            <p className="text-2xl font-black text-emerald-700">{orders.length}</p>
+            <p className="text-2xl font-black text-emerald-700">{paidCount}</p>
             <p className="text-xs text-stone-400 mt-1">订单数</p>
           </div>
           <div className="rounded-2xl border border-stone-200 bg-white p-4 text-center">
