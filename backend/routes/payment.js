@@ -13,6 +13,8 @@ const router = express.Router();
 const db = require('../lib/db');
 const pgOrders = require('../lib/pgOrders');
 const loginService = require('../services/login-service');
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || 'flower-shop-secret-2024';
 
 const axios = require('axios');
 const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL || 'http://100.96.54.109:3008';
@@ -256,6 +258,17 @@ router.post('/checkout', async (req, res) => {
       const sess = await loginService.readSession(req);
       if (sess && sess.user && sess.user.zid) { currentZid = sess.user.zid; currentBrand = sess.user.brand || ''; }
     } catch (_) {}
+    if (!currentZid) {
+      try {
+        const cookieHdr = req.headers.cookie || '';
+        const m = /(?:^|;\s*)flower_token=([^;]+)/.exec(cookieHdr);
+        const tok = m ? decodeURIComponent(m[1]) : (req.headers.authorization||'').replace(/^Bearer\s+/i,'');
+        if (tok) {
+          const dec = jwt.verify(tok, JWT_SECRET);
+          if (dec && dec.zid) { currentZid = dec.zid; currentBrand = dec.brand || currentBrand; }
+        }
+      } catch(e) { console.warn('[checkout] flower_token verify failed:', e.message); }
+    }
     const { items, payMethod = 'stripe', couponCode = '', customer = {}, deliveryAddress = '' } = req.body;
     if (!String(deliveryAddress || '').trim()) return res.status(400).json({ error: '请先填写收货地址' });
     const provider = PROVIDERS[payMethod];
