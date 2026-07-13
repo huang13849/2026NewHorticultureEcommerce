@@ -39,6 +39,8 @@ const REGION = process.env.NEXT_PUBLIC_REGION || '';
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
   pending: { label: '待支付', color: 'bg-amber-100 text-amber-700' },
+  canceled: { label: '已取消', color: 'bg-stone-200 text-stone-600' },
+  canceled_timeout: { label: '超时自动取消', color: 'bg-stone-200 text-stone-600' },
   mock_paid: { label: '已支付', color: 'bg-emerald-100 text-emerald-700' },
   paid: { label: '已支付', color: 'bg-emerald-100 text-emerald-700' },
   shipped: { label: '已发货', color: 'bg-blue-100 text-blue-700' },
@@ -184,7 +186,9 @@ export default function OrdersPage() {
         ) : (
           <div className="space-y-3">
             {orders.map(order => {
-              const statusInfo = STATUS_MAP[order.status] || STATUS_MAP.pending;
+              const isTimedOut = order.status === 'pending' && order.createdAt && (Date.now() - new Date(order.createdAt).getTime() > 30 * 60 * 1000);
+              const effectiveStatus = isTimedOut ? 'canceled_timeout' : order.status;
+              const statusInfo = STATUS_MAP[effectiveStatus] || STATUS_MAP.pending;
               return (
                 <div key={order._id || order.orderId} className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
                   {/* Header: orderId + status + time */}

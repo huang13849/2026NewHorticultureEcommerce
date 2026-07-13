@@ -21,6 +21,16 @@ async function currentUser(req) {
       if (decoded && decoded.zid) return { zid: decoded.zid, phone: decoded.phone, nickname: decoded.nickname, brand: decoded.brand };
     } catch (_) {}
   }
+  // [user] flower_token cookie fallback（跨域 SSO 场景 sid 常缺）
+  try {
+    const cookieHdr = req.headers.cookie || '';
+    const m = /(?:^|;\s*)flower_token=([^;]+)/.exec(cookieHdr);
+    if (m) {
+      const tok = decodeURIComponent(m[1]);
+      const decoded = jwt.verify(tok, JWT_SECRET);
+      if (decoded && decoded.zid) return { zid: decoded.zid, phone: decoded.phone, nickname: decoded.nickname, brand: decoded.brand };
+    }
+  } catch (_) {}
   return null;
 }
 async function requireUser(req, res) {

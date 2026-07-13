@@ -313,7 +313,7 @@ router.post('/checkout', async (req, res) => {
       form.set('ui_mode', 'hosted');
       form.append('payment_method_types[]', 'card');
       form.set('success_url', `${SITE_URL}/payment?status=success&session_id={CHECKOUT_SESSION_ID}&orderId=${orderId}`);
-      form.set('cancel_url', `${SITE_URL}/payment?status=cancel&orderId=${orderId}`);
+      form.set('cancel_url', `${SITE_URL}/cart?canceled=${orderId}`);
       form.set('metadata[orderId]', orderId);
       if (quote.couponCode) form.set('metadata[couponCode]', quote.couponCode);
       // Stripe Checkout charges the final payable amount as one order line so coupon/shipping math matches our quote exactly.

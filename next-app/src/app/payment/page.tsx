@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useRegion } from '@/lib/region-context';
 import { resolveMinioUrl } from '@/lib/imageUrl';
 import { useSearchParams, useRouter } from 'next/navigation';
 import TabBar from '../TabBar';
@@ -48,6 +49,22 @@ const REGION = process.env.NEXT_PUBLIC_REGION || ''; // 'cn' | 'global' | '' (de
 const IS_CN = REGION === 'cn';
 const IS_GLOBAL = REGION === 'global';
 
+type CurrencyCode = 'CNY' | 'USD' | 'EUR' | 'JPY' | 'SAR';
+const REGION_CURRENCY: Record<string, CurrencyCode> = {
+  cn: 'CNY', us: 'USD', eu: 'EUR', jp: 'JPY', sa: 'SAR',
+};
+const FALLBACK_RATES: Record<CurrencyCode, number> = { CNY: 1, USD: 0.138, EUR: 0.127, JPY: 21.5, SAR: 0.52 };
+const CURRENCY_LOCALE: Record<CurrencyCode, string> = { CNY: 'zh-CN', USD: 'en-US', EUR: 'de-DE', JPY: 'ja-JP', SAR: 'ar-SA' };
+function formatCurrency(cnyAmount: number, currency: CurrencyCode, rate: number): string {
+  const converted = cnyAmount * rate;
+  return new Intl.NumberFormat(CURRENCY_LOCALE[currency], {
+    style: 'currency', currency,
+    maximumFractionDigits: currency === 'JPY' ? 0 : 2,
+    minimumFractionDigits: currency === 'JPY' ? 0 : 2,
+  }).format(converted);
+}
+
+
 function PaymentContent() {
   const { t } = useI18n();
   const { user, loading: authLoading } = useAuth();
@@ -74,6 +91,19 @@ function PaymentContent() {
   const [addressForm, setAddressForm] = useState<Address>(EMPTY_ADDRESS);
   const [savingAddress, setSavingAddress] = useState(false);
   const [addressMessage, setAddressMessage] = useState('');
+
+  // [payment] currency hook
+  const { region } = useRegion();
+  const currency: CurrencyCode = REGION_CURRENCY[region?.code || (IS_CN ? 'cn' : 'us')] || (IS_CN ? 'CNY' : 'USD');
+  const [rates, setRates] = useState<Record<CurrencyCode, number>>(FALLBACK_RATES);
+  useEffect(() => {
+    fetch(`${API}/currency/rates?base=CNY`, { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d && d.rates) setRates({ ...FALLBACK_RATES, ...d.rates }); })
+      .catch(() => {});
+  }, []);
+  const exchangeRate = rates[currency] || FALLBACK_RATES[currency];
+  const fmt = (amt: number) => formatCurrency(amt, currency, exchangeRate);
 
   // Live refetch from /api/user/address so newly-saved rows show without needing profile refresh
   useEffect(() => {
@@ -425,7 +455,7 @@ function PaymentContent() {
             </div>
             <div className="text-right">
               <p className="text-xs text-stone-400">{t('payment.total')}</p>
-              <p className="text-2xl font-black text-emerald-700">¥{totalAmount.toFixed(2)}</p>
+              <p className="text-2xl font-black text-emerald-700">{fmt(totalAmount)}</p>
             </div>
           </div>
 
@@ -440,7 +470,7 @@ function PaymentContent() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate">{p.name}</p>
-                    <p className="text-xs text-stone-400">¥{p.price.toFixed(2)} · 小计 ¥{(p.price * (p.quantity || 1)).toFixed(2)}</p>
+                    <p className="text-xs text-stone-400">{fmt(p.price)} · 小计 {fmt(p.price * (p.quantity || 1))}</p>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <button type="button" onClick={() => setQty(p.id, (p.quantity || 1) - 1)} className="w-7 h-7 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30" disabled={(p.quantity || 1) <= 1} aria-label="decrease">−</button>
@@ -585,7 +615,7 @@ function PaymentContent() {
             <div className="text-4xl mb-2">✅</div>
             <p className="font-bold text-emerald-800">{t('payment.orderCreated')}</p>
             <p className="text-xs text-emerald-700 mt-1">{t('payment.orderNumber')}：{orderId}</p>
-            <p className="text-sm font-bold text-emerald-800 mt-2">{t('payment.amountDue')}：¥{totalAmount.toFixed(2)}</p>
+            <p className="text-sm font-bold text-emerald-800 mt-2">{t('payment.amountDue')}：{fmt(totalAmount)}</p>
             {message && <p className="text-xs text-emerald-700 mt-2">{message}</p>}
             {wechatCodeUrl && <img src={wechatCodeUrl} alt={t('payment.wechatPay')} className="mx-auto mt-3 w-48 h-48 rounded-xl border" />}
             <button
@@ -610,7 +640,7 @@ function PaymentContent() {
           <div className="max-w-5xl mx-auto px-6 md:px-10 py-3 flex items-center justify-between">
             <div>
               <span className="text-xs text-stone-500">{t('payment.total')}: </span>
-              <span className="text-xl font-bold text-emerald-700">¥{totalAmount.toFixed(2)}</span>
+              <span className="text-xl font-bold text-emerald-700">{fmt(totalAmount)}</span>
             </div>
             <button onClick={handlePay} disabled={products.length === 0 || !hasPayableAddress || payStatus === 'creating' || payStatus === 'redirecting'} className={`px-6 md:px-8 py-3 rounded-xl text-sm font-bold transition-colors ${products.length > 0 && hasPayableAddress ? 'bg-emerald-700 text-white hover:bg-emerald-800' : 'bg-stone-200 text-stone-400 cursor-not-allowed'}`}>
               {!hasPayableAddress ? t('payment.fillAddressToPay') : payStatus === 'creating' ? t('payment.creating') : payStatus === 'redirecting' ? t('payment.redirecting') : t('payment.payWith', { method: paymentMethods.find(x => x.key === payMethod)?.name || t('payment.payNow') })}
