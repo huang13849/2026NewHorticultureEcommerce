@@ -127,21 +127,12 @@ router.delete('/orders/:orderId', async (req, res) => {
   const u = await requireUser(req, res); if (!u) return;
   try {
     const pgOrders = require('../lib/pgOrders');
-    const db = require('../lib/db');
     const { orderId } = req.params;
-    // PG: cancel (soft-delete via status)
     const pgOrder = await pgOrders.findByOrderNo(orderId);
-    let deletedPgId = null;
-    if (pgOrder) {
-      if (pgOrder.zid !== u.zid) return res.status(404).json({ error: 'order_not_found_or_not_yours' });
-      const upd = await pgOrders.updateOrderStatus(pgOrder.order_no, { status: 'cancelled', cancelledAt: new Date().toISOString() });
-      deletedPgId = upd ? upd.id : null;
-    }
-    // Mongo: hard delete legacy row if present
-    const mongoOrder = await db.findOne('orders', { orderId, zid: u.zid });
-    if (mongoOrder) await db.remove('orders', mongoOrder._id);
-    if (!pgOrder && !mongoOrder) return res.status(404).json({ error: 'order_not_found_or_not_yours' });
-    res.json({ ok: true, deletedId: deletedPgId || (mongoOrder && mongoOrder._id), orderId });
+    if (!pgOrder) return res.status(404).json({ error: 'order_not_found_or_not_yours' });
+    if (pgOrder.zid !== u.zid) return res.status(404).json({ error: 'order_not_found_or_not_yours' });
+    const upd = await pgOrders.updateOrderStatus(pgOrder.order_no, { status: 'cancelled', cancelledAt: new Date().toISOString() });
+    res.json({ ok: true, deletedId: upd ? upd.id : pgOrder.id, orderId });
   } catch (e) {
     console.error('[DELETE /user/orders]', e.message);
     res.status(500).json({ error: 'db_error', detail: e.message });

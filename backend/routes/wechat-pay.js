@@ -18,6 +18,7 @@ const express = require('express');
 const crypto = require('crypto');
 const router = express.Router();
 const db = require('../lib/db');
+const pgOrders = require('../lib/pgOrders');
 
 // ===== 配置 =====
 const WX_APP_ID = process.env.WECHAT_APP_ID || 'wx1670cc892b5373b8';
@@ -268,8 +269,39 @@ router.post('/order', async (req, res) => {
       paidAt: null,
     };
 
-    // 存入 MongoDB
-    await db.create('orders', order);
+    // 存入 PostgreSQL (plant_collector.orders)
+    try {
+      await pgOrders.createOrder({
+        zid: openid ? ('wechat:' + openid) : 'wechat-guest',
+        orderNo: order.orderId,
+        subtotal: order.totalAmount,
+        shippingFee: 0,
+        discount: 0,
+        total: order.totalAmount,
+        currency: 'CNY',
+        shippingAddress: order.deliveryAddress ? { text: order.deliveryAddress, memberName: order.memberName || '', phone: order.phone || '' } : null,
+        source: 'wechat-pay',
+        originSite: req.get('host') || null,
+        metadata: {
+          pay_method: order.payMethod || 'wechat',
+          pay_scene: order.payScene || '',
+          openid: openid || '',
+          region: 'cn',
+        },
+        items: (order.items || []).map(it => ({
+          sku_id: it.productId || '',
+          title: it.name || '',
+          qty: it.quantity || 1,
+          unit_price: Number(it.price || 0),
+          subtotal: Number(it.price || 0) * Number(it.quantity || 1),
+          snapshot: it,
+        })),
+        status: order.status || 'pending',
+      });
+    } catch (e) {
+      console.error('[wechat-pay] PG createOrder failed:', e.message);
+      return res.status(500).json({ error: 'pg_write_failed', detail: e.message });
+    }
 
     // 判断是否走真实微信支付
     if (payMethod === 'wechat' && IS_CONFIGURED) {
@@ -359,14 +391,13 @@ router.post('/notify', express.raw({ type: '*/*' }), async (req, res) => {
       const orderId = decrypted.out_trade_no;
       const transactionId = decrypted.transaction_id;
 
-      // 更新订单状态
-      const order = await db.findOne('orders', { orderId });
+      // 更新订单状态 (PG)
+      const order = await pgOrders.findByOrderNo(orderId);
       if (order && order.status !== 'paid') {
-        await db.update('orders', order._id, {
+        await pgOrders.updateOrderStatus(orderId, {
           status: 'paid',
           paidAt: new Date().toISOString(),
-          transactionId,
-          payInfo: decrypted,
+          metadata: { transaction_id: transactionId, pay_info: decrypted },
         });
         console.log(`[WechatPay] 订单 ${orderId} 支付成功, 交易号: ${transactionId}`);
       }
@@ -384,24 +415,24 @@ router.post('/notify', express.raw({ type: '*/*' }), async (req, res) => {
 router.post('/pay/:orderId', async (req, res) => {
   try {
     const { orderId } = req.params;
-    const order = await db.findOne('orders', { orderId });
+    const order = await pgOrders.findByOrderNo(orderId);
     if (!order) return res.status(404).json({ error: '订单不存在' });
     if (order.status === 'paid') return res.json({ message: '订单已支付', order });
 
-    const updated = await db.update('orders', order._id, {
+    const updated = await pgOrders.updateOrderStatus(orderId, {
       status: 'paid',
       paidAt: new Date().toISOString(),
-      transactionId: `MOCK${Date.now()}`,
+      metadata: { transaction_id: `MOCK${Date.now()}` },
     });
 
     res.json({
       message: '模拟支付成功',
       order: {
-        orderId: updated.orderId || order.orderId,
-        totalAmount: updated.totalAmount || order.totalAmount,
-        payMethod: updated.payMethod || order.payMethod,
+        orderId: updated.order_no,
+        totalAmount: Number(updated.total),
+        payMethod: (updated.metadata || {}).pay_method || 'wechat',
         status: 'paid',
-        paidAt: updated.paidAt,
+        paidAt: updated.paid_at,
       },
     });
   } catch (err) {
@@ -412,7 +443,7 @@ router.post('/pay/:orderId', async (req, res) => {
 // ===== API: 查询订单 =====
 router.get('/order/:orderId', async (req, res) => {
   try {
-    const order = await db.findOne('orders', { orderId: req.params.orderId });
+    const order = await pgOrders.findByOrderNo(req.params.orderId);
     if (!order) return res.status(404).json({ error: '订单不存在' });
     res.json({ order });
   } catch (err) {
@@ -436,7 +467,7 @@ router.get('/query/:orderId', async (req, res) => {
   try {
     if (!IS_CONFIGURED) {
       // 模拟模式：直接查本地
-      const order = await db.findOne('orders', { orderId: req.params.orderId });
+      const order = await pgOrders.findByOrderNo(req.params.orderId);
       if (!order) return res.status(404).json({ error: '订单不存在' });
       return res.json({ trade_state: order.status === 'paid' ? 'SUCCESS' : 'NOTPAY', order });
     }
@@ -456,14 +487,14 @@ router.get('/query/:orderId', async (req, res) => {
       timeout: 10000,
     });
 
-    // 如果支付成功，更新本地订单
+    // 如果支付成功，更新本地订单 (PG)
     if (resp.data.trade_state === 'SUCCESS') {
-      const order = await db.findOne('orders', { orderId: req.params.orderId });
+      const order = await pgOrders.findByOrderNo(req.params.orderId);
       if (order && order.status !== 'paid') {
-        await db.update('orders', order._id, {
+        await pgOrders.updateOrderStatus(req.params.orderId, {
           status: 'paid',
           paidAt: new Date().toISOString(),
-          transactionId: resp.data.transaction_id,
+          metadata: { transaction_id: resp.data.transaction_id },
         });
       }
     }
@@ -477,10 +508,9 @@ router.get('/query/:orderId', async (req, res) => {
 // ===== API: 用户订单列表 =====
 router.get('/orders', async (req, res) => {
   try {
-    const orders = await db.find('orders', {
-      sort: JSON.stringify({ createdAt: -1 }),
-    });
-    res.json({ orders, total: orders.length });
+    // NOTE: previously listed all Mongo orders unauthenticated (admin only). Now returns empty by design;
+    // use /user/orders (auth) for user list, or admin dashboard for full list via api-gateway /api/pg/orders.
+    res.status(410).json({ error: 'gone', hint: 'use /api/user/orders (authenticated)' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
