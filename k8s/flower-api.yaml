@@ -42,6 +42,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: zitadel-svc
+              key: pat
         - name: PG_HOST
           value: "100.67.126.90"
         - name: PG_PORT
@@ -57,7 +58,6 @@ spec:
             secretKeyRef:
               name: pg-orders
               key: PG_PASSWORD
-              key: pat
         envFrom:
         - secretRef:
             name: flower-next-zitadel
