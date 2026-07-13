@@ -61,21 +61,6 @@ function PaymentContent() {
     }
   }, [authLoading, user, router]);
 
-  if (authLoading) {
-    return (
-      <main className="min-h-screen bg-stone-50 flex items-center justify-center">
-        <p className="text-stone-400">{t('common.loading')}</p>
-      </main>
-    );
-  }
-
-  if (!user) {
-    return (
-      <main className="min-h-screen bg-stone-50 flex items-center justify-center">
-        <p className="text-stone-400">{t('payment.pleaseLogin')}</p>
-      </main>
-    );
-  }
   const fromCart = searchParams.get('from') === 'cart';
 
   const [products, setProducts] = useState<PayProduct[]>([]);
@@ -400,6 +385,21 @@ function PaymentContent() {
       setMessage(err.message || t('payment.createOrderFailed'));
     }
   };
+
+  if (authLoading) {
+    return (
+      <main className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <p className="text-stone-400">{t('common.loading')}</p>
+      </main>
+    );
+  }
+  if (!user) {
+    return (
+      <main className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <p className="text-stone-400">{t('payment.pleaseLogin')}</p>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-stone-50 to-white text-stone-900 pb-24">
