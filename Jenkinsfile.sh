@@ -278,6 +278,22 @@ if [ -n "$POD_LA" ]; then
   fi
 fi
 
+
+echo "======= [5.12/5] user profiles backed by PostgreSQL (plant_collector.user_profiles) ======="
+POD=$(kubectl -n new-ecommerce get pod --no-headers -l app=flower-api | awk '$3=="Running"{print $1; exit}')
+if [ -n "$POD" ]; then
+  if kubectl -n new-ecommerce logs "$POD" --tail=200 2>&1 | grep -q '\[pgProfiles\]'; then
+    echo "  OK  flower-api pod $POD loaded pgProfiles module"
+  else
+    echo "  WARN flower-api pod $POD missing [pgProfiles] init log — will lazy-load on first hit"
+  fi
+fi
+# Count rows via node-in-pod (idempotent, read-only)
+if [ -n "$POD" ]; then
+  ROWS=$(kubectl -n new-ecommerce exec "$POD" -- sh -lc 'cd /app && node -e "const p=require(\"./lib/pgProfiles\"); (async()=>{ const r=await p._writePool.query(\"SELECT count(*)::int AS c FROM plant_collector.user_profiles\"); console.log(r.rows[0].c); await p._writePool.end(); })()"' 2>&1 | tail -1)
+  echo "  INFO plant_collector.user_profiles row count: $ROWS"
+fi
+
 echo "======= [6/5] GitHub 同步策略 ======="
 # 默认不自动推 github (gitea 是主 CI 源, github 只在大版本发布时手动同步)
 # 需要触发 github + CF Pages rebuild 时: PUSH_GITHUB=1 bash Jenkinsfile.sh

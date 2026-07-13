@@ -67,6 +67,10 @@ router.put('/address', async (req, res) => {
     const list = await userProfileService.upsertAddress(u.zid, {
       name: b.name, phone: b.phone,
       province: b.province, city: b.city, district: b.district, detail: b.detail,
+      postalCode: b.postalCode || '', country: b.country || 'CN',
+      latitude:  (b.latitude  != null && b.latitude  !== '') ? Number(b.latitude)  : null,
+      longitude: (b.longitude != null && b.longitude !== '') ? Number(b.longitude) : null,
+      geoSource: b.geoSource || (b.latitude != null && b.latitude !== '' ? 'manual' : null),
       isDefault: !!b.isDefault, id: b.id,
     });
     res.json({ message: 'address_updated', address: list });
@@ -87,6 +91,22 @@ router.post('/address/:id/default', async (req, res) => {
     const list = await userProfileService.setDefaultAddress(u.zid, req.params.id);
     res.json({ message: 'default_set', address: list });
   } catch (e) { console.error('[POST /user/address/:id/default]', e.message); res.status(500).json({ error: 'db_error', detail: e.message }); }
+});
+
+// PATCH /user/address/:id/geo — manually attach lat/lng (client can geocode via OSM in-browser)
+router.patch('/address/:id/geo', async (req, res) => {
+  const u = await requireUser(req, res); if (!u) return;
+  try {
+    const b = req.body || {};
+    if (b.latitude == null || b.longitude == null) return res.status(400).json({ error: 'missing_lat_lng' });
+    const lat = Number(b.latitude), lng = Number(b.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return res.status(400).json({ error: 'invalid_lat_lng' });
+    if (Math.abs(lat) > 90 || Math.abs(lng) > 180)    return res.status(400).json({ error: 'out_of_range' });
+    const list = await userProfileService.setAddressGeo(u.zid, req.params.id, {
+      latitude: lat, longitude: lng, geoSource: b.geoSource || 'manual',
+    });
+    res.json({ message: 'geo_updated', address: list });
+  } catch (e) { console.error('[PATCH /user/address/:id/geo]', e.message); res.status(500).json({ error: 'db_error', detail: e.message }); }
 });
 
 
@@ -156,6 +176,51 @@ router.put('/cart', async (req, res) => {
     await userProfileService.patchProfile(u.zid, { cart });
     res.json({ ok: true, cart });
   } catch (e) { res.status(500).json({ error: 'db_error', detail: e.message }); }
+});
+
+
+
+// -----------------------------------------------------------------------------
+// INTERNAL: cross-service upsert
+// Called by peony-alliance/mobile-auth-service after Zitadel register to make
+// sure the OneID + PG profile row exists.
+// Auth: X-API-Key header must match INTERNAL_API_KEY (fallback: ***REMOVED_API_KEY***).
+// -----------------------------------------------------------------------------
+router.post('/_internal/upsert-profile', async (req, res) => {
+  const expected = process.env.INTERNAL_API_KEY || '***REMOVED_API_KEY***';
+  if (req.headers['x-api-key'] !== expected) return res.status(401).json({ error: 'bad_key' });
+  const b = req.body || {};
+  if (!b.zid) return res.status(400).json({ error: 'missing_zid' });
+  try {
+    const created = await userProfileService.upsertFromLogin({
+      zid: b.zid,
+      loginName: b.loginName || b.phone || '',
+      nickname:  b.nickname || '',
+      orgId:     b.orgId || '',
+      brand:     b.brand || 'peony',
+      zitadelInstance: b.zitadelInstance || b.brand || 'peony',
+      sourceProject:   b.sourceProject   || 'peony-alliance',
+      userType:  b.userType   || 'peony_wholesaler',
+      phone:     b.phone      || '',
+      email:     b.email      || '',
+      gender:    b.gender     || '',
+      realName:  b.realName   || '',
+      tags:      Array.isArray(b.tags) ? b.tags : [],
+      metadata:  b.metadata   || {},
+    });
+    // Additional whitelist fields
+    if (b.gender || b.realName || b.tags) {
+      await userProfileService.patchProfile(b.zid, {
+        ...(b.gender ? { gender: b.gender } : {}),
+        ...(b.realName ? { realName: b.realName } : {}),
+        ...(Array.isArray(b.tags) && b.tags.length ? { tags: b.tags } : {}),
+      });
+    }
+    res.json({ ok: true, profile: created });
+  } catch (e) {
+    console.error('[POST /user/_internal/upsert-profile]', e.message);
+    res.status(500).json({ error: 'db_error', detail: e.message });
+  }
 });
 
 module.exports = router;
