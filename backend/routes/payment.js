@@ -297,6 +297,7 @@ router.post('/checkout', async (req, res) => {
     if (payMethod === 'stripe' && stripeConfigured) {
       const form = new URLSearchParams();
       form.set('mode', 'payment');
+      form.set('ui_mode', 'hosted');
       form.append('payment_method_types[]', 'card');
       form.set('success_url', `${SITE_URL}/payment?status=success&session_id={CHECKOUT_SESSION_ID}&orderId=${orderId}`);
       form.set('cancel_url', `${SITE_URL}/payment?status=cancel&orderId=${orderId}`);
