@@ -53,6 +53,13 @@ const nextConfig: NextConfig = {
               { source: '/api/mongo/:path*', destination: `${API_GATEWAY_URL}/api/mongo/:path*` },
               { source: '/api/seo/:path*', destination: `${SEO_SERVICE_URL}/api/seo/:path*` },
               { source: '/api/analytics/:path*', destination: `${SEO_SERVICE_URL}/api/analytics/:path*` },
+              // flower-api auth endpoints must NOT hit the NextAuth [...nextauth] catch-all.
+              // These read the .horiculture.club/.horiculture.space cookies for cross-site SSO.
+              { source: '/api/auth/me-flower', destination: `${FLOWER_API_URL}/api/auth/me-flower` },
+              { source: '/api/auth/cross-issue', destination: `${FLOWER_API_URL}/api/auth/cross-issue` },
+              { source: '/api/auth/cross-consume', destination: `${FLOWER_API_URL}/api/auth/cross-consume` },
+              { source: '/api/auth/logout-flower', destination: `${FLOWER_API_URL}/api/auth/logout-flower` },
+              { source: '/api/auth/sso-callback', destination: `${FLOWER_API_URL}/api/auth/sso-callback` },
             ],
             afterFiles: [],
             fallback: [
