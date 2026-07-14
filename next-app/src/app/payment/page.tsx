@@ -410,6 +410,9 @@ function PaymentContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           payMethod,
+          currency,
+          exchangeRate,
+          locale: currency === 'CNY' ? 'zh' : 'en',
           customer: { name: selectedAddress.name || user?.nickname || '', phone: selectedAddress.phone || user?.phone || '' },
           deliveryAddress: deliveryAddressText,
           items: products.map(p => ({ productId: p.id, name: p.name, price: p.price, quantity: p.quantity || 1, image: p.image })),

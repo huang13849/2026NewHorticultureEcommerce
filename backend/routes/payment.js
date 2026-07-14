@@ -269,7 +269,10 @@ router.post('/checkout', async (req, res) => {
         }
       } catch(e) { console.warn('[checkout] flower_token verify failed:', e.message); }
     }
-    const { items, payMethod = 'stripe', couponCode = '', customer = {}, deliveryAddress = '' } = req.body;
+    const { items, payMethod = 'stripe', couponCode = '', customer = {}, deliveryAddress = '', currency: reqCurrency = 'CNY', exchangeRate: reqRate = 1, locale: reqLocale = 'zh' } = req.body;
+    const stripeCurrency = String(reqCurrency || 'CNY').toLowerCase();
+    const stripeLocale = String(reqLocale || 'zh').toLowerCase();
+    const rate = Number(reqRate) > 0 ? Number(reqRate) : 1;
     if (!String(deliveryAddress || '').trim()) return res.status(400).json({ error: '请先填写收货地址' });
     const provider = PROVIDERS[payMethod];
     if (!provider) return res.status(400).json({ error: '不支持的支付方式' });
@@ -318,10 +321,20 @@ router.post('/checkout', async (req, res) => {
       if (quote.couponCode) form.set('metadata[couponCode]', quote.couponCode);
       // Stripe Checkout charges the final payable amount as one order line so coupon/shipping math matches our quote exactly.
       form.set('line_items[0][quantity]', '1');
-      form.set('line_items[0][price_data][currency]', 'cny');
-      form.set('line_items[0][price_data][product_data][name]', `花伴商城订单 ${orderId}`);
-      form.set('line_items[0][price_data][product_data][description]', `商品小计 ¥${quote.subtotal} + 运费 ¥${quote.shippingFee} - 优惠 ¥${quote.couponDiscount}`);
-      form.set('line_items[0][price_data][unit_amount]', String(Math.max(1, Math.round(quote.totalAmount * 100))));
+      form.set('line_items[0][price_data][currency]', stripeCurrency);
+      form.set('locale', stripeLocale === 'en' || stripeLocale === 'en-us' ? 'en' : 'auto');
+      const isZeroDecimal = ['jpy','krw','vnd','clp','pyg','ugx'].includes(stripeCurrency);
+      const nameLoc = stripeCurrency === 'cny' ? `花伴商城订单 ${orderId}` : `Horticulture Order ${orderId}`;
+      const symbol = stripeCurrency === 'cny' ? '¥' : (stripeCurrency === 'usd' ? '$' : stripeCurrency.toUpperCase()+' ');
+      const conv = (v) => stripeCurrency === 'cny' ? v : v * rate;
+      const fmtDesc = (v) => isZeroDecimal ? String(Math.round(conv(v))) : conv(v).toFixed(2);
+      const descLoc = stripeCurrency === 'cny'
+        ? `商品小计 ¥${quote.subtotal} + 运费 ¥${quote.shippingFee} - 优惠 ¥${quote.couponDiscount}`
+        : `Subtotal ${symbol}${fmtDesc(quote.subtotal)} + Shipping ${symbol}${fmtDesc(quote.shippingFee)} - Discount ${symbol}${fmtDesc(quote.couponDiscount)}`;
+      form.set('line_items[0][price_data][product_data][name]', nameLoc);
+      form.set('line_items[0][price_data][product_data][description]', descLoc);
+      const unit = isZeroDecimal ? Math.max(1, Math.round(conv(quote.totalAmount))) : Math.max(1, Math.round(conv(quote.totalAmount) * 100));
+      form.set('line_items[0][price_data][unit_amount]', String(unit));
       const sessionRes = await axios.post('https://api.stripe.com/v1/checkout/sessions', form, {
         auth: { username: process.env.STRIPE_SECRET_KEY, password: '' },
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
