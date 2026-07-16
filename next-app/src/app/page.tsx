@@ -266,7 +266,6 @@ export default function HomePage() {
             </div>
             <div className="hidden md:flex items-center gap-6 text-xs text-stone-500 font-medium">
               <a href="/map" className="hover:text-emerald-700 transition-colors">{t('nav.map')}</a>
-              <a href="/shop" className="hover:text-emerald-700 transition-colors">商店</a>
             </div>
             <div className="flex items-center gap-2">
               <RegionSwitch />
@@ -562,54 +561,7 @@ export default function HomePage() {
             </div>
             {region.code === 'cn' && (
               <div className="mt-8 pt-6 border-t border-stone-200/60 flex flex-col items-center gap-3">
-                <div className="text-[13px] font-medium text-stone-700 tracking-wide">
-                  <a
-                    href="https://beian.miit.gov.cn"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-emerald-700 transition-colors inline-flex items-center gap-1.5"
-                  >
-                    <span>🇨🇳</span>
-                    <span>京ICP备2026007606号-2</span>
-                  </a>
-                </div>
-                <a
-                  href="https://beian.miit.gov.cn"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[11px] text-stone-400 hover:text-emerald-700 transition-colors"
-                >
-                  信息产业部备案管理系统 · beian.miit.gov.cn ↗
-                </a>
-                <div className="mt-3 w-full max-w-3xl rounded-2xl border border-emerald-200/60 bg-gradient-to-r from-emerald-50/80 via-white/60 to-amber-50/80 backdrop-blur-sm p-4 shadow-sm">
-                  <div className="flex items-center justify-between gap-3 mb-3">
-                    <div>
-                      <div className="text-[11px] text-emerald-700 font-bold tracking-[0.3em] uppercase">Collectors Board</div>
-                      <div className="text-sm font-bold text-stone-800">收藏家 · 分区导览</div>
-                    </div>
-                    <a href="/profile" className="text-[11px] text-emerald-700 hover:underline font-medium">进入我的收藏 →</a>
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {[
-                      { href: '/shop', icon: '🌸', title: '收藏家 · 商店', desc: '中式园林精选' },
-                      { href: '/map', icon: '🗺', title: '收藏家 · 地图', desc: '地图选购、按产地淘' },
-                      { href: '/auction', icon: '🌳', title: '收藏家 · 苗木拍', desc: '名贵苗木拍卖' },
-                      { href: '/reverse-auction', icon: '🌷', title: '收藏家 · 鲜花拍', desc: '鲜花反向拍卖' },
-                    ].map(b => (
-                      <a
-                        key={b.href}
-                        href={b.href}
-                        className="group rounded-xl border border-white/70 bg-white/80 px-3 py-2.5 hover:border-emerald-300 hover:bg-emerald-50/70 transition-all hover:-translate-y-0.5 shadow-sm hover:shadow"
-                      >
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="text-lg">{b.icon}</span>
-                          <span className="text-xs font-bold text-stone-800 group-hover:text-emerald-700">{b.title}</span>
-                        </div>
-                        <div className="text-[10px] text-stone-400 leading-tight">{b.desc}</div>
-                      </a>
-                    ))}
-                  </div>
-                </div>
+                
               </div>
             )}
           </div>
