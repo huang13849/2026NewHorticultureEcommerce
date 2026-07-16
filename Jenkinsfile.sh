@@ -20,8 +20,8 @@ declare -A SVC_CTX=(
 )
 for svc in "${!SVC_CTX[@]}"; do
   ctx="${SVC_CTX[$svc]}"
-  IMG="100.76.15.64:5001/$svc:$COMMIT_SHA"
-  IMG_LATEST="100.76.15.64:5001/$svc:latest"
+  IMG="100.96.54.109:5001/$svc:$COMMIT_SHA"
+  IMG_LATEST="100.96.54.109:5001/$svc:latest"
   echo "-- Building $svc ($IMG) --"
   docker build --build-arg CACHE_BUST="$COMMIT_SHA" -t "$IMG" -t "$IMG_LATEST" -f "$ctx/Dockerfile" "$ctx"
   docker push "$IMG"
@@ -29,8 +29,8 @@ for svc in "${!SVC_CTX[@]}"; do
 done
 
 echo "-- Building flower-next-la (Dockerfile.la, 国际版 LA/horiculture.space) --"
-IMG_LA="100.76.15.64:5001/flower-next:la-$COMMIT_SHA"
-IMG_LA_LATEST="100.76.15.64:5001/flower-next:la-latest"
+IMG_LA="100.96.54.109:5001/flower-next:la-$COMMIT_SHA"
+IMG_LA_LATEST="100.96.54.109:5001/flower-next:la-latest"
 docker build --build-arg CACHE_BUST="$COMMIT_SHA" -t "$IMG_LA" -t "$IMG_LA_LATEST" -f next-app/Dockerfile.la next-app
 docker push "$IMG_LA"
 docker push "$IMG_LA_LATEST"
@@ -38,10 +38,10 @@ docker push "$IMG_LA_LATEST"
 echo "======= [3/5] 部署到 k3s ======="
 kubectl apply -f k8s/
 for svc in "${!SVC_CTX[@]}"; do
-  kubectl -n new-ecommerce set image deployment/$svc $svc=100.76.15.64:5001/$svc:$COMMIT_SHA
+  kubectl -n new-ecommerce set image deployment/$svc $svc=100.96.54.109:5001/$svc:$COMMIT_SHA
 done
-kubectl -n new-ecommerce set image deployment/flower-next-la flower-next=100.76.15.64:5001/flower-next:la-$COMMIT_SHA
-kubectl -n new-ecommerce set image deployment/flower-api-la flower-api=100.76.15.64:5001/flower-api:$COMMIT_SHA
+kubectl -n new-ecommerce set image deployment/flower-next-la flower-next=100.96.54.109:5001/flower-next:la-$COMMIT_SHA
+kubectl -n new-ecommerce set image deployment/flower-api-la flower-api=100.96.54.109:5001/flower-api:$COMMIT_SHA
 kubectl -n new-ecommerce delete pod -l app=flower-api-la --ignore-not-found
 # Recreate 策略下老 pod 释放 hostPort 后新 pod 才能起, 显式 delete pod 加速
 kubectl -n new-ecommerce delete pod -l app=flower-next-la --ignore-not-found
