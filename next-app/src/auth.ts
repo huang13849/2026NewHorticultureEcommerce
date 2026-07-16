@@ -16,6 +16,7 @@ interface ClientPair {
   clientId: string;
   clientSecret: string;
   brand: 'club' | 'space' | 'la';
+  issuer: string;
 }
 
 async function pickClient(): Promise<ClientPair> {
@@ -32,6 +33,7 @@ async function pickClient(): Promise<ClientPair> {
       brand: 'la' as unknown as 'space',
       clientId: process.env.LA_CLIENT_ID || '',
       clientSecret: process.env.LA_CLIENT_SECRET || '',
+      issuer: process.env.LA_ISSUER || ZITADEL_ISSUER,
     };
   }
   const isClub = host.includes('horiculture.club');
@@ -40,12 +42,14 @@ async function pickClient(): Promise<ClientPair> {
       brand: 'club',
       clientId: process.env.CLUB_CLIENT_ID || '',
       clientSecret: process.env.CLUB_CLIENT_SECRET || '',
+      issuer: process.env.CLUB_ISSUER || 'https://id-shopclub.horiculture.club',
     };
   }
   return {
     brand: 'space',
     clientId: process.env.SPACE_CLIENT_ID || '',
     clientSecret: process.env.SPACE_CLIENT_SECRET || '',
+    issuer: process.env.SPACE_ISSUER || ZITADEL_ISSUER,
   };
 }
 
@@ -69,7 +73,7 @@ async function exchangeFlowerToken(idToken: string): Promise<{ token: string; us
 }
 
 const authConfig = async (): Promise<NextAuthConfig> => {
-  const { clientId, clientSecret, brand } = await pickClient();
+  const { clientId, clientSecret, brand, issuer } = await pickClient();
 
   return {
     trustHost: true,
@@ -79,17 +83,18 @@ const authConfig = async (): Promise<NextAuthConfig> => {
         id: 'zitadel',
         name: 'Zitadel',
         type: 'oidc',
-        issuer: ZITADEL_ISSUER,
+        issuer,
         clientId,
-        clientSecret,
+        clientSecret: clientSecret || undefined,
         checks: ['pkce', 'state'],
+        client: { token_endpoint_auth_method: clientSecret ? 'client_secret_basic' : 'none' },
         authorization: {
           params: {
             scope: 'openid profile email phone offline_access',
             ui_locales: 'zh-CN',
           },
         },
-        wellKnown: `${ZITADEL_ISSUER}/.well-known/openid-configuration`,
+        wellKnown: `${issuer}/.well-known/openid-configuration`,
         idToken: true,
         profile(profile: Record<string, unknown>) {
           return {
