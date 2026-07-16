@@ -10,8 +10,9 @@ stringData:
   NEXTAUTH_SECRET: "***REMOVED_NEXTAUTH_SECRET***"
   AUTH_SECRET: "***REMOVED_NEXTAUTH_SECRET***"
   # club-web (horiculture.club, 中文)
-  CLUB_CLIENT_ID: "380222397556523217"
-  CLUB_CLIENT_SECRET: "***REMOVED_CLUB_CLIENT_SECRET***"
+  CLUB_CLIENT_ID: "382022444505956510"
+  CLUB_CLIENT_SECRET: ""
+  CLUB_ISSUER: "https://id-shopclub.horiculture.club"
   # space-web (horiculture.space, 英文)
   SPACE_CLIENT_ID: "380222566284984529"
   SPACE_CLIENT_SECRET: "***REMOVED_SPACE_CLIENT_SECRET***"
@@ -66,7 +67,7 @@ spec:
         - name: ZITADEL_ISSUER
           value: "https://id.horiculture.club"
         - name: ZITADEL_CLUB_WEB_CLIENT_ID
-          value: "380222397556523217"
+          value: "382022444505956510"
         - name: ZITADEL_CLUB_WEB_REDIRECT_URI
           value: "https://horiculture.club/api/auth/callback/zitadel"
         - name: FLOWER_API_URL
