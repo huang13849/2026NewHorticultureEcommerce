@@ -33,19 +33,35 @@ export default function AuthMenuButton({ className = '', dark = false, loginRedi
     // 国际版：点"登录"直接触发 Zitadel SSO，不落到本地 phone+code 页面。
     if (isInternationalHost()) {
       return (
-        <button
-          type="button"
-          onClick={() => { void startSSO(redirect); }}
-          className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-xs font-bold transition-colors ${shell} ${className}`}
-        >
-          <span>🔐</span><span>{t('common.login')}</span>
-        </button>
+        <div className={`flex items-center gap-1.5 ${className}`}>
+          <button
+            type="button"
+            onClick={() => { void startSSO(redirect); }}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-xs font-bold transition-colors ${shell}`}
+          >
+            <span>🔐</span><span>{t('common.login')}</span>
+          </button>
+          <a
+            href={`/register?redirect=${encodeURIComponent(redirect)}`}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition-colors ${dark ? 'border-white/25 bg-white/20 text-white hover:bg-white/30' : 'border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700'}`}
+          >
+            <span>✨</span><span>注册</span>
+          </a>
+        </div>
       );
     }
     return (
-      <a href={loginHref} className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-xs font-bold transition-colors ${shell} ${className}`}>
-        <span>👤</span><span>{t('common.login')}</span>
-      </a>
+      <div className={`flex items-center gap-1.5 ${className}`}>
+        <a href={loginHref} className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-xs font-bold transition-colors ${shell}`}>
+          <span>👤</span><span>{t('common.login')}</span>
+        </a>
+        <a
+          href={`/register?redirect=${encodeURIComponent(redirect)}`}
+          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition-colors ${dark ? 'border-white/25 bg-white/20 text-white hover:bg-white/30' : 'border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700'}`}
+        >
+          <span>✨</span><span>注册</span>
+        </a>
+      </div>
     );
   }
 
