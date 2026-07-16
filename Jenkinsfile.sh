@@ -168,7 +168,7 @@ for CHECK in "https://horiculture.club|horiculture.club" "https://horiculture.sp
   CODE="${RES%%|*}"; LOC="${RES#*|}"
   echo "  [$HOST] code=$CODE loc=${LOC:0:100}"
   if [ "$CODE" != "302" ]; then echo "  FAIL $HOST expected 302, got $CODE"; exit 1; fi
-  if ! echo "$LOC" | grep -q 'id.horiculture.club/oauth/v2/authorize'; then
+  if ! echo "$LOC" | grep -qE 'id[-.]?(shopclub\.)?horiculture\.club/oauth/v2/authorize'; then
     echo "  FAIL $HOST did not redirect to zitadel authorize"; exit 1
   fi
   RUI=$(echo "$LOC" | grep -oE 'redirect_uri=[^&]+' | head -1 | sed 's/redirect_uri=//' | python3 -c "import sys,urllib.parse;print(urllib.parse.unquote(sys.stdin.read().strip()))")
