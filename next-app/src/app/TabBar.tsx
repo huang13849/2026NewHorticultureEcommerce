@@ -29,6 +29,16 @@ export default function TabBar() {
   const visibleTabs = isCN ? tabs.filter(tb => tb.href === '/') : tabs;
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-t border-stone-200/60">
+      {isCN && (
+        <div className="max-w-6xl mx-auto flex flex-col items-center justify-center py-1.5 gap-0.5 border-b border-stone-200/40">
+          <a href="https://beian.miit.gov.cn" target="_blank" rel="noreferrer" className="text-[10px] text-stone-500 hover:text-emerald-700 transition-colors inline-flex items-center gap-1">
+            <span>🇨🇳</span><span>京ICP备2026007606号-2</span>
+          </a>
+          <a href="https://beian.miit.gov.cn" target="_blank" rel="noreferrer" className="text-[9px] text-stone-400 hover:text-emerald-700 transition-colors">
+            信息产业部备案管理系统 · beian.miit.gov.cn ↗
+          </a>
+        </div>
+      )}
       <div className="max-w-6xl mx-auto flex justify-around items-center h-14">
         {visibleTabs.map(tab => {
           const active = pathname === tab.href || (tab.href !== '/' && pathname.startsWith(tab.href));
