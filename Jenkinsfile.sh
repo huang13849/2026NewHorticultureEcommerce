@@ -166,8 +166,7 @@ for CHECK in "https://horiculture.club/|horiculture.club" "https://horiculture.s
 done
 echo "  OK  club/space homepages isolated (no cross-domain redirect, no cross-issue refs)"
 
-echo "======= [5.7/5] OIDC login redirect_uri test (advisory) ======="
-if ! (
+echo "======= [5.7/5] OIDC login redirect_uri test ======="
 # 5.7: NextAuth signin -> Zitadel authorize URL, 校验 redirect_uri 指向自身顶级域, 不出现原始 IP
 for CHECK in "https://horiculture.club|horiculture.club" "https://horiculture.space|horiculture.space"; do
   BASE="${CHECK%|*}"; HOST="${CHECK##*|}"
@@ -198,9 +197,6 @@ for CHECK in "https://horiculture.club|horiculture.club" "https://horiculture.sp
   rm -f "$JAR"
 done
 echo "  OK  both /api/auth/signin/zitadel produce correct https://<host>/api/auth/callback/zitadel redirect_uri"
-); then
-  echo "  WARN 5.7 signin test failed - id-shopclub cert / discovery pre-existing issue, non-blocking for school deploy"
-fi
 
 echo "======= [5.8/5] password login (Zitadel v2 sessions -> Redis sid) ======="
 for BASE in "https://horiculture.club" "https://horiculture.space"; do
