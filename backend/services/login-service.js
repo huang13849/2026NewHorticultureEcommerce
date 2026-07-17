@@ -104,8 +104,10 @@ function parseCookies(header) {
 async function zitadelCreateSession({ issuer, pat, instanceHost }, loginNameOrCheck, password) {
   const useSys = !!instanceHost && !!sysJwt();
   const authTok = useSys ? sysJwt() : pat;
-  const effIssuer = instanceHost ? `https://${instanceHost}` : issuer;
+  const internalBase = process.env.ZITADEL_INTERNAL_URL || 'http://zitadel.identity.svc.cluster.local:8080';
+  const effIssuer = instanceHost ? internalBase : issuer;
   const headers = { Authorization: `Bearer ${authTok}`, 'Content-Type': 'application/json' };
+  if (instanceHost) { headers['x-forwarded-host'] = instanceHost; headers['x-forwarded-proto'] = 'https'; }
   // Accept string loginName OR object { userId } for direct userId lookup
   const userCheck = typeof loginNameOrCheck === 'object' && loginNameOrCheck
     ? loginNameOrCheck
@@ -121,8 +123,10 @@ async function zitadelCreateSession({ issuer, pat, instanceHost }, loginNameOrCh
 async function zitadelReadSession({ issuer, pat, instanceHost }, sessionId) {
   const useSys = !!instanceHost && !!sysJwt();
   const authTok = useSys ? sysJwt() : pat;
-  const effIssuer = instanceHost ? `https://${instanceHost}` : issuer;
+  const internalBase = process.env.ZITADEL_INTERNAL_URL || 'http://zitadel.identity.svc.cluster.local:8080';
+  const effIssuer = instanceHost ? internalBase : issuer;
   const headers = { Authorization: `Bearer ${authTok}` };
+  if (instanceHost) { headers['x-forwarded-host'] = instanceHost; headers['x-forwarded-proto'] = 'https'; }
   const resp = await axios.get(`${effIssuer}/v2/sessions/${sessionId}`, { headers, timeout: 8000, validateStatus: () => true });
   return resp;
 }
@@ -130,8 +134,10 @@ async function zitadelReadSession({ issuer, pat, instanceHost }, sessionId) {
 async function zitadelDeleteSession({ issuer, pat, instanceHost }, sessionId) {
   const useSys = !!instanceHost && !!sysJwt();
   const authTok = useSys ? sysJwt() : pat;
-  const effIssuer = instanceHost ? `https://${instanceHost}` : issuer;
+  const internalBase = process.env.ZITADEL_INTERNAL_URL || 'http://zitadel.identity.svc.cluster.local:8080';
+  const effIssuer = instanceHost ? internalBase : issuer;
   const headers = { Authorization: `Bearer ${authTok}` };
+  if (instanceHost) { headers['x-forwarded-host'] = instanceHost; headers['x-forwarded-proto'] = 'https'; }
   const resp = await axios.delete(`${effIssuer}/v2/sessions/${sessionId}`, { headers, timeout: 8000, validateStatus: () => true });
   return resp;
 }
