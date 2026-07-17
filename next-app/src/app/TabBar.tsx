@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useI18n } from '@/lib/i18n/context';
-import { useEffect, useState } from 'react';
+import { useRegion } from '@/lib/region-context';
 
 const tabs = [
   { href: '/', labelKey: 'tabbar.collector', emoji: '🌿' },
@@ -14,28 +14,11 @@ const tabs = [
   { href: '/profile', labelKey: 'tabbar.mine', emoji: '👤' },
 ];
 
-function isCNHost(host: string) {
-  return host.includes('horiculture.club') || host.includes('106.12.91.182') || host.startsWith('100.96.54.109') || host.startsWith('localhost') || host.startsWith('127.');
-}
-
-// SSR-safe first-frame CN detection via html[data-region] attribute set in layout.tsx
-function initialIsCN(): boolean {
-  if (typeof document !== 'undefined') {
-    const attr = document.documentElement.getAttribute('data-region');
-    if (attr === 'cn') return true;
-    if (attr === 'intl') return false;
-    return isCNHost(window.location.hostname);
-  }
-  return false;
-}
-
 export default function TabBar() {
   const pathname = usePathname();
   const { t } = useI18n();
-  const [isCN, setIsCN] = useState<boolean>(initialIsCN);
-  useEffect(() => {
-    setIsCN(isCNHost(window.location.hostname));
-  }, []);
+  const { region } = useRegion();
+  const isCN = region.code === 'cn';
   const visibleTabs = isCN ? tabs.filter(tb => tb.href === '/') : tabs;
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-t border-stone-200/60">
