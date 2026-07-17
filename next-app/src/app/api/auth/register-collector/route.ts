@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
   };
   // _import 强制要求 email 字段, 无邮箱时合成一个基于手机号的
   const effectiveEmail = email || (canonicalPhone.replace(/[^0-9]/g,'') + '@sms.horiculture.local');
-  (createBody as { email?: unknown }).email = { email: effectiveEmail, isEmailVerified: !!email };
+  (createBody as { email?: unknown }).email = { email: effectiveEmail, isEmailVerified: true };
   let created;
   try {
     created = await zitadelPost('/management/v1/users/human/_import', createBody, SHOPCLUB_HOST);
