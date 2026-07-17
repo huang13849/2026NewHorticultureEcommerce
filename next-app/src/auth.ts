@@ -40,14 +40,14 @@ async function pickClient(): Promise<ClientPair> {
   if (isClub) {
     return {
       brand: 'club',
-      clientId: process.env.CLUB_CLIENT_ID || '',
+      clientId: process.env.CLUB_CLIENT_ID || process.env.ZITADEL_CLUB_WEB_CLIENT_ID || '',
       clientSecret: process.env.CLUB_CLIENT_SECRET || '',
       issuer: process.env.CLUB_ISSUER || 'https://id-shopclub.horiculture.club',
     };
   }
   return {
     brand: 'space',
-    clientId: process.env.SPACE_CLIENT_ID || '',
+    clientId: process.env.SPACE_CLIENT_ID || process.env.ZITADEL_SPACE_WEB_CLIENT_ID || '',
     clientSecret: process.env.SPACE_CLIENT_SECRET || '',
     issuer: process.env.SPACE_ISSUER || ZITADEL_ISSUER,
   };
