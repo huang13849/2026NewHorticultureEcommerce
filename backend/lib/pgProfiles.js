@@ -6,7 +6,7 @@ const { Pool } = require('pg');
 
 const WRITE_HOST = process.env.PG_HOST || '100.67.126.90';
 const WRITE_PORT = parseInt(process.env.PG_PORT || '5432', 10);
-const READ_HOSTS = (process.env.PG_READ_HOSTS || '100.127.141.83:5433,100.76.15.64:5432')
+const READ_HOSTS = (process.env.PG_READ_HOSTS || '100.127.141.83:5433')
   .split(',').map(s => s.trim()).filter(Boolean).map(hp => {
     const [h, p] = hp.split(':'); return { host: h, port: parseInt(p || '5432', 10) };
   });
@@ -17,9 +17,38 @@ const PWD   = process.env.PG_PASSWORD || '';
 const writePool = new Pool({ host: WRITE_HOST, port: WRITE_PORT, database: DB, user: USER, password: PWD, max: 5 });
 const readPools = READ_HOSTS.map(({host,port}) => new Pool({ host, port, database: DB, user: USER, password: PWD, max: 5 }));
 let rrIdx = 0;
+// Track read hosts that recently failed → skip them for 60s to avoid 500 on request
+const readDeadUntil = new Array(readPools.length).fill(0);
 function pickReadPool() {
   if (!readPools.length) return writePool;
-  const p = readPools[rrIdx % readPools.length]; rrIdx++; return p;
+  const now = Date.now();
+  for (let i = 0; i < readPools.length; i++) {
+    const idx = (rrIdx + i) % readPools.length;
+    if (readDeadUntil[idx] <= now) {
+      rrIdx = idx + 1;
+      const p = readPools[idx];
+      // Wrap query so ECONNREFUSED / network errors mark host dead + retry on writePool
+      if (!p._wrapped) {
+        const origQuery = p.query.bind(p);
+        p.query = async (...args) => {
+          try { return await origQuery(...args); }
+          catch (e) {
+            const msg = String(e && e.message || '');
+            if (/ECONNREFUSED|ETIMEDOUT|EHOSTUNREACH|connect ENETUNREACH|Connection terminated/.test(msg)) {
+              readDeadUntil[idx] = Date.now() + 60000;
+              console.warn();
+              return writePool.query(...args);
+            }
+            throw e;
+          }
+        };
+        p._wrapped = true;
+      }
+      return p;
+    }
+  }
+  // All read hosts dead → use write pool
+  return writePool;
 }
 
 console.log(`[pgProfiles] write=${WRITE_HOST}:${WRITE_PORT}, read=${READ_HOSTS.map(r=>r.host+':'+r.port).join(',')||'(fallback→write)'}`);

@@ -52,7 +52,7 @@ spec:
         - name: PG_USER
           value: "postgres"
         - name: PG_READ_HOSTS
-          value: "100.127.141.83:5433,100.76.15.64:5432"
+          value: "100.127.141.83:5433"
         - name: PG_PASSWORD
           valueFrom:
             secretKeyRef:
