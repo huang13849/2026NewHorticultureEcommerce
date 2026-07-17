@@ -796,5 +796,31 @@
       "sub": "Welcome to Peony Alliance. Your badge grows with your contribution.",
       "enter": "Enter Alliance"
     }
+  },
+  "auth": {
+    "brandTitle": "Plant Collector · Since 2006",
+    "loginSubtitle": "Sign in to view orders, favorites and supply-chain",
+    "registerTitle": "Become a Plant Collector",
+    "registerSubtitle": "After signup you are auto-tagged into the Plant Collector tier",
+    "registerOk": "Signup successful! Please sign in.",
+    "tabPhone": "Phone",
+    "tabEmail": "Email",
+    "labelPhone": "Phone number",
+    "labelEmail": "Email",
+    "labelPassword": "Password",
+    "labelFirstName": "First name",
+    "labelLastName": "Last name",
+    "phonePlaceholder": "e.g. +1 415 555 0100",
+    "emailPlaceholder": "you@example.com",
+    "pwdHint": "At least 8 chars, mixing letters and numbers",
+    "optional": "optional",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "errInvalidCreds": "Invalid username or password",
+    "errMissing": "Please fill all required fields",
+    "errExists": "This account is already registered, please sign in",
+    "errWeakPwd": "Password too weak (min 8 chars, letters + numbers)",
+    "errInvalidPhone": "Invalid phone number format",
+    "errGeneric": "Operation failed"
   }
 }

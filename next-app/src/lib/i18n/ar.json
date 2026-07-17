@@ -795,5 +795,31 @@
       "sub": "Welcome to Peony Alliance. Your badge grows with your contribution.",
       "enter": "Enter Alliance"
     }
+  },
+  "auth": {
+    "brandTitle": "جامع النباتات · منذ 2006",
+    "loginSubtitle": "سجّل الدخول لعرض الطلبات والمفضلة",
+    "registerTitle": "كن جامع نباتات",
+    "registerSubtitle": "بعد التسجيل يتم إضافة وسم \"جامع النباتات\" تلقائياً",
+    "registerOk": "تم التسجيل بنجاح! يرجى تسجيل الدخول.",
+    "tabPhone": "الهاتف",
+    "tabEmail": "البريد",
+    "labelPhone": "رقم الهاتف",
+    "labelEmail": "البريد الإلكتروني",
+    "labelPassword": "كلمة المرور",
+    "labelFirstName": "الاسم الأول",
+    "labelLastName": "اسم العائلة",
+    "phonePlaceholder": "مثال +966 5x xxx xxxx",
+    "emailPlaceholder": "you@example.com",
+    "pwdHint": "8 أحرف على الأقل، مع أرقام وحروف",
+    "optional": "اختياري",
+    "noAccount": "ليس لديك حساب؟",
+    "hasAccount": "لديك حساب بالفعل؟",
+    "errInvalidCreds": "بيانات دخول غير صحيحة",
+    "errMissing": "يرجى ملء جميع الحقول",
+    "errExists": "هذا الحساب مسجل بالفعل",
+    "errWeakPwd": "كلمة المرور ضعيفة (8 خانات على الأقل، أرقام وحروف)",
+    "errInvalidPhone": "صيغة الهاتف غير صحيحة",
+    "errGeneric": "فشل العملية"
   }
 }

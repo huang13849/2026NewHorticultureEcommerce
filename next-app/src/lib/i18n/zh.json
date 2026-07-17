@@ -796,5 +796,31 @@
       "sub": "您已加入芍药联盟,徽章将随您的贡献成长",
       "enter": "进入芍药联盟"
     }
+  },
+  "auth": {
+    "brandTitle": "植物收藏家 · 林草二十年",
+    "loginSubtitle": "登录以查看订单、收藏与共享供应链",
+    "registerTitle": "成为植物收藏家",
+    "registerSubtitle": "注册后自动加入「植物收藏家」标签体系",
+    "registerOk": "注册成功！请前往登录。",
+    "tabPhone": "手机号",
+    "tabEmail": "邮箱",
+    "labelPhone": "手机号",
+    "labelEmail": "邮箱",
+    "labelPassword": "密码",
+    "labelFirstName": "姓",
+    "labelLastName": "名",
+    "phonePlaceholder": "例如 13800138000 或 +86 138 0000 0000",
+    "emailPlaceholder": "you@example.com",
+    "pwdHint": "至少 8 位，含字母和数字",
+    "optional": "选填",
+    "noAccount": "还没有账号？",
+    "hasAccount": "已有账号？",
+    "errInvalidCreds": "用户名或密码错误",
+    "errMissing": "请填写所有必填字段",
+    "errExists": "该账号已注册，请直接登录",
+    "errWeakPwd": "密码强度不够（至少 8 位，含字母数字）",
+    "errInvalidPhone": "手机号格式不正确",
+    "errGeneric": "操作失败"
   }
 }

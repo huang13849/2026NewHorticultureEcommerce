@@ -50,40 +50,58 @@ async function zitadelPost(path: string, body: unknown, host: string) {
 }
 
 export async function POST(req: NextRequest) {
-  let email = '', password = '', firstName = '', lastName = '', redirect = '/';
+  let email = '', phone = '', password = '', firstName = '', lastName = '', redirect = '/', lang = 'zh';
   const ct = req.headers.get('content-type') || '';
   const isFormPost = ct.includes('urlencoded') || ct.includes('multipart');
 
   if (isFormPost) {
     const fd = await req.formData();
     email = String(fd.get('email') || '').trim();
+    phone = String(fd.get('phone') || '').trim();
     password = String(fd.get('password') || '');
     firstName = String(fd.get('firstName') || '').trim();
     lastName = String(fd.get('lastName') || '').trim();
     redirect = String(fd.get('redirect') || '/');
+    lang = String(fd.get('lang') || 'zh');
   } else {
     const b = await req.json().catch(() => ({}));
     email = String(b.email || '').trim();
+    phone = String(b.phone || '').trim();
     password = String(b.password || '');
     firstName = String(b.firstName || '').trim();
     lastName = String(b.lastName || '').trim();
     redirect = String(b.redirect || '/');
+    lang = String(b.lang || 'zh');
   }
+  // Normalize phone: strip spaces/dashes/parens, keep leading +
+  const normPhone = phone.replace(/[\s\-()]/g, '');
+  const hasPhone = /^\+?[0-9]{7,15}$/.test(normPhone);
+  // If phone is a plain CN mobile (11 digits starting with 1), auto-prefix +86
+  const canonicalPhone = hasPhone
+    ? (normPhone.startsWith('+') ? normPhone
+      : /^1[3-9]\d{9}$/.test(normPhone) ? `+86${normPhone}`
+      : `+${normPhone}`)
+    : '';
 
   const bail = (err: string) => isFormPost
     ? NextResponse.redirect(new URL(`/register?error=${err}&redirect=${encodeURIComponent(redirect)}`, req.url), { status: 303 })
     : NextResponse.json({ error: err }, { status: 400 });
 
-  if (!email || !password || !firstName || !lastName) return bail('missing');
+  if (!password || !firstName || !lastName) return bail('missing');
+  if (!canonicalPhone) return bail('invalid_phone');
   if (password.length < 8 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) return bail('weak_password');
 
-  // 1) Create user in Shop Club instance
-  const createBody = {
-    userName: email,
-    profile: { firstName, lastName, displayName: `${firstName} ${lastName}`, preferredLanguage: 'zh' },
-    email: { email, isEmailVerified: true },
+  // 1) Create user in Shop Club instance (userName = phone as primary identifier)
+  // Zitadel loginName includes userName + email + phone → user can log in with any of them.
+  const createBody: Record<string, unknown> = {
+    userName: canonicalPhone,
+    profile: { firstName, lastName, displayName: `${firstName} ${lastName}`, preferredLanguage: lang },
+    phone: { phone: canonicalPhone, isPhoneVerified: true },
     password: { password, changeRequired: false },
   };
+  if (email) {
+    (createBody as { email?: unknown }).email = { email, isEmailVerified: true };
+  }
   let created;
   try {
     created = await zitadelPost('/management/v1/users/human/_import', createBody, SHOPCLUB_HOST);
@@ -106,7 +124,8 @@ export async function POST(req: NextRequest) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        email, source: 'shopclub-register', instance: 'shopclub',
+        email: email || undefined, phone: canonicalPhone,
+        source: 'shopclub-register', instance: 'shopclub',
         zitadelUserId: userId, tags: ['植物收藏家'],
       }),
     });
