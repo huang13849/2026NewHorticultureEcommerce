@@ -100,14 +100,14 @@ function parseCookies(header) {
 async function zitadelCreateSession({ issuer, pat, instanceHost }, loginNameOrCheck, password) {
   const useSys = !!instanceHost && !!sysJwt();
   const authTok = useSys ? sysJwt() : pat;
+  const effIssuer = instanceHost ? `https://${instanceHost}` : issuer;
   const headers = { Authorization: `Bearer ${authTok}`, 'Content-Type': 'application/json' };
-  if (instanceHost) { headers['x-forwarded-host'] = instanceHost; headers['x-forwarded-proto'] = 'https'; }
   // Accept string loginName OR object { userId } for direct userId lookup
   const userCheck = typeof loginNameOrCheck === 'object' && loginNameOrCheck
     ? loginNameOrCheck
     : { loginName: loginNameOrCheck };
   const resp = await axios.post(
-    `${issuer}/v2/sessions`,
+    `${effIssuer}/v2/sessions`,
     { checks: { user: userCheck, password: { password } } },
     { headers, timeout: 10000, validateStatus: () => true }
   );
@@ -117,18 +117,18 @@ async function zitadelCreateSession({ issuer, pat, instanceHost }, loginNameOrCh
 async function zitadelReadSession({ issuer, pat, instanceHost }, sessionId) {
   const useSys = !!instanceHost && !!sysJwt();
   const authTok = useSys ? sysJwt() : pat;
+  const effIssuer = instanceHost ? `https://${instanceHost}` : issuer;
   const headers = { Authorization: `Bearer ${authTok}` };
-  if (instanceHost) { headers['x-forwarded-host'] = instanceHost; headers['x-forwarded-proto'] = 'https'; }
-  const resp = await axios.get(`${issuer}/v2/sessions/${sessionId}`, { headers, timeout: 8000, validateStatus: () => true });
+  const resp = await axios.get(`${effIssuer}/v2/sessions/${sessionId}`, { headers, timeout: 8000, validateStatus: () => true });
   return resp;
 }
 
 async function zitadelDeleteSession({ issuer, pat, instanceHost }, sessionId) {
   const useSys = !!instanceHost && !!sysJwt();
   const authTok = useSys ? sysJwt() : pat;
+  const effIssuer = instanceHost ? `https://${instanceHost}` : issuer;
   const headers = { Authorization: `Bearer ${authTok}` };
-  if (instanceHost) { headers['x-forwarded-host'] = instanceHost; headers['x-forwarded-proto'] = 'https'; }
-  const resp = await axios.delete(`${issuer}/v2/sessions/${sessionId}`, { headers, timeout: 8000, validateStatus: () => true });
+  const resp = await axios.delete(`${effIssuer}/v2/sessions/${sessionId}`, { headers, timeout: 8000, validateStatus: () => true });
   return resp;
 }
 
