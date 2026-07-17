@@ -45,7 +45,7 @@ export default function AuthMenuButton({ className = '', dark = false, loginRedi
             href={`/register?redirect=${encodeURIComponent(redirect)}`}
             className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition-colors ${dark ? 'border-white/25 bg-white/20 text-white hover:bg-white/30' : 'border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700'}`}
           >
-            <span>✨</span><span>注册</span>
+            <span>✨</span><span>{t('common.register')}</span>
           </a>
         </div>
       );
@@ -59,7 +59,7 @@ export default function AuthMenuButton({ className = '', dark = false, loginRedi
           href={`/register?redirect=${encodeURIComponent(redirect)}`}
           className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition-colors ${dark ? 'border-white/25 bg-white/20 text-white hover:bg-white/30' : 'border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700'}`}
         >
-          <span>✨</span><span>注册</span>
+          <span>✨</span><span>{t('common.register')}</span>
         </a>
       </div>
     );
