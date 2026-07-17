@@ -31,6 +31,33 @@ async function fetchSession(): Promise<SessionShape | null> {
   }
 }
 
+// 后端 sid cookie session (通过 /login 表单 POST /api/session/password-login-form 登录)
+// 前端要能感知这条通道, 否则 guest 登录后 header 依然显示未登录按钮 + 无处退出.
+async function fetchSessionMe(): Promise<User | null> {
+  try {
+    const r = await fetch('/api/session/me', { credentials: 'include' });
+    if (!r.ok) return null;
+    const j = await r.json();
+    const u = j && j.user;
+    if (!u) return null;
+    const role = String(u.role || 'user');
+    const isSuperAdmin = role === 'super_admin' || !!u.isSuperAdmin;
+    const isAdmin = isSuperAdmin || role === 'admin' || !!u.isAdmin;
+    const shaped: User = {
+      id: String(u.zid || ''),
+      phone: String(u.phone || u.loginName || ''),
+      nickname: String(u.nickname || u.loginName || 'User'),
+      avatar: u.avatar || '',
+      role,
+      isAdmin,
+      isSuperAdmin,
+    };
+    return shaped;
+  } catch {
+    return null;
+  }
+}
+
 // 跨站 SSO 兜底: 直接问 flower-api /api/auth/me-flower 读取 .horiculture.club/.horiculture.space
 // cookie flower_token, 命中即视为登录, 不需要重跳 NextAuth OIDC.
 async function fetchMeFlower(): Promise<User | null> {
@@ -88,7 +115,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
 
     async function boot() {
-      // Step 1: 先探 me-flower (读 .horiculture.club/.horiculture.space cookie).
+      // Step 0: 先探后端 sid cookie session (guest / phone / email 表单登录都落这条通道).
+      const sidUser = await fetchSessionMe();
+      if (cancelled) return;
+      if (sidUser) {
+        setUser(sidUser);
+        if (!cancelled) setLoading(false);
+        return;
+      }
+
+      // Step 1: 再探 me-flower (读 .horiculture.club/.horiculture.space cookie).
       // 命中就直接登录, 兼容 peony/tropical/space 上的跨站 SSO. 没命中再走 NextAuth.
       const flowerUser = await fetchMeFlower();
       if (cancelled) return;
@@ -152,6 +188,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch {}
         try {
           await fetch('/api/auth/sso-logout', { method: 'POST', credentials: 'include' });
+        } catch {}
+        try {
+          // 清后端 sid cookie session (form-login / guest 登录都走这条)
+          await fetch('/api/session/logout', { method: 'POST', credentials: 'include' });
         } catch {}
         // 强制刷新, 让服务端根据被清掉的 cookie 重新渲染
         try { window.location.assign('/'); } catch {}
