@@ -166,7 +166,9 @@ async function passwordLogin(req, { loginName, password }) {
   } catch (e) { console.warn('[login-service:pg-lookup]', e.message); }
 
   const check = userIdFromPg ? { userId: userIdFromPg } : loginName;
-  const resp = await zitadelCreateSession(cfg, check, password);
+  // Only route to shop-club instance if PG has zid mapping; else use primary (for guest etc.)
+  const effCfg = userIdFromPg ? cfg : { ...cfg, instanceHost: '' };
+  const resp = await zitadelCreateSession(effCfg, check, password);
   if (resp.status !== 201 && resp.status !== 200) {
     const err = (resp.data && (resp.data.message || resp.data.error)) || `zitadel HTTP ${resp.status}`;
     const e = new Error(err);
