@@ -93,6 +93,15 @@ spec:
         envFrom:
         - secretRef:
             name: flower-next-zitadel
+        volumeMounts:
+        - name: system-key
+          mountPath: /system-key
+          readOnly: true
+      volumes:
+      - name: system-key
+        secret:
+          secretName: zitadel-system-key
+          defaultMode: 0444
 ---
 apiVersion: v1
 kind: Service
