@@ -90,18 +90,19 @@ export async function POST(req: NextRequest) {
     : NextResponse.json({ error: err }, { status: 400 });
 
   if (!password || !firstName || !lastName) return bail('missing');
-  if (!canonicalPhone) return bail('invalid_phone');
+  if (!canonicalPhone && !email) return bail('need_phone_or_email');
   if (password.length < 8 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) return bail('weak_password');
 
   // 1) Create user in Shop Club instance (userName = phone as primary identifier)
   // Zitadel loginName includes userName + email + phone → user can log in with any of them.
+  const effectiveUserName = canonicalPhone || email;
   const createBody: Record<string, unknown> = {
-    userName: canonicalPhone,
+    userName: effectiveUserName,
     profile: { firstName, lastName, displayName: `${firstName} ${lastName}`, preferredLanguage: lang },
-    phone: { phone: canonicalPhone, isPhoneVerified: true },
     password: password, passwordChangeRequired: false,
   };
-  // _import 强制要求 email 字段, 无邮箱时合成一个基于手机号的
+  if (canonicalPhone) (createBody as { phone?: unknown }).phone = { phone: canonicalPhone, isPhoneVerified: true };
+  // _import 强制要求 email; 无邮箱时用手机号合成
   const effectiveEmail = email || (canonicalPhone.replace(/[^0-9]/g,'') + '@sms.horiculture.local');
   (createBody as { email?: unknown }).email = { email: effectiveEmail, isEmailVerified: true };
   let created;
@@ -120,7 +121,24 @@ export async function POST(req: NextRequest) {
   let userId = '';
   try { userId = JSON.parse(created.text)?.userId || ''; } catch {}
 
-  // 2) Auto-tag as "植物收藏家" in user-management system (best effort)
+  // 2) Upsert PG user_profiles (phone/email -> zid mapping for login lookup)
+  if (userId) {
+    try {
+      const backendUrl = process.env.FLOWER_API_URL || 'http://flower-api.new-ecommerce.svc.cluster.local:3010';
+      await fetch(, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.INTERNAL_API_KEY || '***REMOVED_API_KEY***' },
+        body: JSON.stringify({
+          zid: userId, loginName: canonicalPhone || email,
+          nickname: .trim(),
+          brand: 'club', zitadelInstance: 'shopclub', sourceProject: 'shopclub-register',
+          userType: 'plant_collector', phone: canonicalPhone, email: email || '',
+        }),
+      });
+    } catch (e) { console.warn('[register-collector] profile upsert failed', e); }
+  }
+
+  // 3) Auto-tag as "植物收藏家" in user-management system (best effort)
   try {
     await fetch(`${USER_MGMT_URL}/api/users/tag-by-email`, {
       method: 'POST',

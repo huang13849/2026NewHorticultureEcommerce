@@ -97,14 +97,18 @@ function parseCookies(header) {
 }
 
 // --- Zitadel v2 session API ---
-async function zitadelCreateSession({ issuer, pat, instanceHost }, loginName, password) {
+async function zitadelCreateSession({ issuer, pat, instanceHost }, loginNameOrCheck, password) {
   const useSys = !!instanceHost && !!sysJwt();
   const authTok = useSys ? sysJwt() : pat;
   const headers = { Authorization: `Bearer ${authTok}`, 'Content-Type': 'application/json' };
   if (instanceHost) { headers['x-forwarded-host'] = instanceHost; headers['x-forwarded-proto'] = 'https'; }
+  // Accept string loginName OR object { userId } for direct userId lookup
+  const userCheck = typeof loginNameOrCheck === 'object' && loginNameOrCheck
+    ? loginNameOrCheck
+    : { loginName: loginNameOrCheck };
   const resp = await axios.post(
     `${issuer}/v2/sessions`,
-    { checks: { user: { loginName }, password: { password } } },
+    { checks: { user: userCheck, password: { password } } },
     { headers, timeout: 10000, validateStatus: () => true }
   );
   return resp;
@@ -151,7 +155,18 @@ async function passwordLogin(req, { loginName, password }) {
   const cfg = brandConfig(brand);
   if (!cfg.pat) throw new Error(`no PAT for brand ${brand}`);
 
-  const resp = await zitadelCreateSession(cfg, loginName, password);
+  // Try PG user_profiles lookup first (Shop Club instance text-search is buggy)
+  let userIdFromPg = '';
+  try {
+    const pgProfiles = require('../lib/pgProfiles');
+    if (pgProfiles.getByLoginName) {
+      const prof = await pgProfiles.getByLoginName(loginName);
+      if (prof && prof.zid) userIdFromPg = prof.zid;
+    }
+  } catch (e) { console.warn('[login-service:pg-lookup]', e.message); }
+
+  const check = userIdFromPg ? { userId: userIdFromPg } : loginName;
+  const resp = await zitadelCreateSession(cfg, check, password);
   if (resp.status !== 201 && resp.status !== 200) {
     const err = (resp.data && (resp.data.message || resp.data.error)) || `zitadel HTTP ${resp.status}`;
     const e = new Error(err);

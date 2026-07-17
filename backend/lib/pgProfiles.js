@@ -135,6 +135,26 @@ async function getByZid(zid, opts) {
   return p;
 }
 
+async function getByLoginName(loginName) {
+  if (!loginName) return null;
+  const rp = pickReadPool();
+  // Match by phone, email, or login_name column (whichever exists)
+  const q = `SELECT * FROM plant_collector.user_profiles
+             WHERE phone=$1 OR email=$1 OR login_name=$1 OR one_id=$1
+             LIMIT 1`;
+  try {
+    const r = await rp.query(q, [loginName]);
+    if (r.rows.length) return rowToProfile(r.rows[0]);
+  } catch (e) {
+    // column may not exist -> fallback to just phone/email
+    try {
+      const r2 = await rp.query('SELECT * FROM plant_collector.user_profiles WHERE phone=$1 OR email=$1 LIMIT 1', [loginName]);
+      if (r2.rows.length) return rowToProfile(r2.rows[0]);
+    } catch {}
+  }
+  return null;
+}
+
 async function getByOneId(oneId) {
   const rp = pickReadPool();
   const r = await rp.query('SELECT * FROM plant_collector.user_profiles WHERE one_id=$1', [oneId]);
@@ -344,7 +364,7 @@ async function setAddressGeo(zid, addrId, { latitude, longitude, geoSource }) {
 }
 
 module.exports = {
-  getByZid, getByOneId, upsertFromLogin, patchProfile,
+  getByZid, getByOneId, getByLoginName, upsertFromLogin, patchProfile,
   listAddresses, upsertAddress, deleteAddress, setDefaultAddress, setAddressGeo,
   _writePool: writePool,
 };
