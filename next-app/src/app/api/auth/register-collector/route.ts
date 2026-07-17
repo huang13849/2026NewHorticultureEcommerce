@@ -125,12 +125,12 @@ export async function POST(req: NextRequest) {
   if (userId) {
     try {
       const backendUrl = process.env.FLOWER_API_URL || 'http://flower-api.new-ecommerce.svc.cluster.local:3010';
-      await fetch(, {
+      await fetch(backendUrl + '/api/user/_internal/upsert-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.INTERNAL_API_KEY || '***REMOVED_API_KEY***' },
         body: JSON.stringify({
           zid: userId, loginName: canonicalPhone || email,
-          nickname: .trim(),
+          nickname: (firstName + ' ' + lastName).trim(),
           brand: 'club', zitadelInstance: 'shopclub', sourceProject: 'shopclub-register',
           userType: 'plant_collector', phone: canonicalPhone, email: email || '',
         }),
