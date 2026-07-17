@@ -181,7 +181,7 @@ async function passwordLogin(req, { loginName, password }) {
   const zSessionId = resp.data.sessionId;
   const zToken = resp.data.sessionToken;
 
-  const detail = await zitadelReadSession(cfg, zSessionId);
+  const detail = await zitadelReadSession(effCfg, zSessionId);
   const zUser = (detail.data && detail.data.session && detail.data.session.factors && detail.data.session.factors.user) || {};
 
   const user = {
