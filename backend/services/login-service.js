@@ -157,17 +157,19 @@ async function passwordLogin(req, { loginName, password }) {
 
   // Try PG user_profiles lookup first (Shop Club instance text-search is buggy)
   let userIdFromPg = '';
+  let profInstance = '';
   try {
     const pgProfiles = require('../lib/pgProfiles');
     if (pgProfiles.getByLoginName) {
       const prof = await pgProfiles.getByLoginName(loginName);
-      if (prof && prof.zid) userIdFromPg = prof.zid;
+      if (prof && prof.zid) { userIdFromPg = prof.zid; profInstance = prof.zitadelInstance || ''; }
     }
   } catch (e) { console.warn('[login-service:pg-lookup]', e.message); }
 
   const check = userIdFromPg ? { userId: userIdFromPg } : loginName;
-  // Only route to shop-club instance if PG has zid mapping; else use primary (for guest etc.)
-  const effCfg = userIdFromPg ? cfg : { ...cfg, instanceHost: '' };
+  // Route to shop-club instance only if PG says this user is a shop-club user
+  const isShopclub = profInstance === 'shopclub';
+  const effCfg = isShopclub ? cfg : { ...cfg, instanceHost: '' };
   const resp = await zitadelCreateSession(effCfg, check, password);
   if (resp.status !== 201 && resp.status !== 200) {
     const err = (resp.data && (resp.data.message || resp.data.error)) || `zitadel HTTP ${resp.status}`;
