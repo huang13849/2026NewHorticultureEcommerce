@@ -44,6 +44,7 @@ async function zitadelPost(path: string, body: unknown, host: string) {
       'Content-Type': 'application/json',
       'x-forwarded-host': host,
       'x-forwarded-proto': 'https',
+      'x-zitadel-orgid': process.env.ZITADEL_SHOPCLUB_ORG_ID || '382005470828757108',
     },
     body: JSON.stringify(body),
   });
