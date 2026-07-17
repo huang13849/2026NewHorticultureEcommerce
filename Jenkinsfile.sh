@@ -29,19 +29,33 @@ for svc in "${!SVC_CTX[@]}"; do
 done
 
 echo "-- Building flower-next-la (Dockerfile.la, 国际版 LA/horiculture.space) --"
+# LA 节点 (k8s.node1) containerd 只信任 Mac Mini registry (100.76.15.64:5001),
+# 所以既推本地 registry (备份/其他节点用) 也推 Mac Mini registry (LA 节点用).
+LA_REGISTRY="100.76.15.64:5001"
 IMG_LA="100.96.54.109:5001/flower-next:la-$COMMIT_SHA"
 IMG_LA_LATEST="100.96.54.109:5001/flower-next:la-latest"
-docker build --build-arg CACHE_BUST="$COMMIT_SHA" -t "$IMG_LA" -t "$IMG_LA_LATEST" -f next-app/Dockerfile.la next-app
+IMG_LA_MACMINI="$LA_REGISTRY/flower-next:la-$COMMIT_SHA"
+IMG_LA_MACMINI_LATEST="$LA_REGISTRY/flower-next:la-latest"
+docker build --build-arg CACHE_BUST="$COMMIT_SHA"   -t "$IMG_LA" -t "$IMG_LA_LATEST"   -t "$IMG_LA_MACMINI" -t "$IMG_LA_MACMINI_LATEST"   -f next-app/Dockerfile.la next-app
 docker push "$IMG_LA"
 docker push "$IMG_LA_LATEST"
+docker push "$IMG_LA_MACMINI"
+docker push "$IMG_LA_MACMINI_LATEST"
 
 echo "======= [3/5] 部署到 k3s ======="
 kubectl apply -f k8s/
 for svc in "${!SVC_CTX[@]}"; do
   kubectl -n new-ecommerce set image deployment/$svc $svc=100.96.54.109:5001/$svc:$COMMIT_SHA
 done
-kubectl -n new-ecommerce set image deployment/flower-next-la flower-next=100.96.54.109:5001/flower-next:la-$COMMIT_SHA
-kubectl -n new-ecommerce set image deployment/flower-api-la flower-api=100.96.54.109:5001/flower-api:$COMMIT_SHA
+# LA 节点镜像同步到 Mac Mini registry (LA 节点唯一能拉的仓库)
+LA_REGISTRY="100.76.15.64:5001"
+echo "-- Mirror flower-api -> Mac Mini registry (for LA node) --"
+docker tag "100.96.54.109:5001/flower-api:$COMMIT_SHA" "$LA_REGISTRY/flower-api:$COMMIT_SHA"
+docker tag "100.96.54.109:5001/flower-api:$COMMIT_SHA" "$LA_REGISTRY/flower-api:la-latest"
+docker push "$LA_REGISTRY/flower-api:$COMMIT_SHA"
+docker push "$LA_REGISTRY/flower-api:la-latest"
+kubectl -n new-ecommerce set image deployment/flower-next-la flower-next=$LA_REGISTRY/flower-next:la-$COMMIT_SHA
+kubectl -n new-ecommerce set image deployment/flower-api-la flower-api=$LA_REGISTRY/flower-api:$COMMIT_SHA
 kubectl -n new-ecommerce delete pod -l app=flower-api-la --ignore-not-found
 # Recreate 策略下老 pod 释放 hostPort 后新 pod 才能起, 显式 delete pod 加速
 kubectl -n new-ecommerce delete pod -l app=flower-next-la --ignore-not-found
