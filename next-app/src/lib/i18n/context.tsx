@@ -78,9 +78,9 @@ export function I18nProvider({ children, initialLang }: { children: ReactNode; i
 
   const t = useCallback((key: string, params?: Record<string, string | number>): string => {
     const val = resolve(dictionaries[lang], key)
-      || resolve(dictionaries.en, key)
-      || resolve(dictionaries.zh, key);
-    if (!val) return key;
+      ?? resolve(dictionaries.en, key)
+      ?? resolve(dictionaries.zh, key);
+    if (val === undefined || val === null) return key;
     if (!params) return val;
     return Object.entries(params).reduce(
       (s, [k, v]) => s.replace(new RegExp(`\\{${k}\\}`, 'g'), String(v)),
