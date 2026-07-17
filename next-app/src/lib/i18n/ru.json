@@ -795,5 +795,31 @@
       "sub": "Welcome to Peony Alliance. Your badge grows with your contribution.",
       "enter": "Enter Alliance"
     }
+  },
+  "auth": {
+    "brandTitle": "Коллекционер растений · С 2006",
+    "loginSubtitle": "Войдите, чтобы увидеть заказы и избранное",
+    "registerTitle": "Стать коллекционером растений",
+    "registerSubtitle": "После регистрации автоматически добавляется тег «Коллекционер»",
+    "registerOk": "Регистрация успешна! Пожалуйста, войдите.",
+    "tabPhone": "Телефон",
+    "tabEmail": "Эл. почта",
+    "labelPhone": "Номер телефона",
+    "labelEmail": "Эл. почта",
+    "labelPassword": "Пароль",
+    "labelFirstName": "Имя",
+    "labelLastName": "Фамилия",
+    "phonePlaceholder": "например +7 900 123 4567",
+    "emailPlaceholder": "you@example.com",
+    "pwdHint": "Не менее 8 символов, буквы и цифры",
+    "optional": "необязательно",
+    "noAccount": "Нет аккаунта?",
+    "hasAccount": "Уже есть аккаунт?",
+    "errInvalidCreds": "Неверные данные для входа",
+    "errMissing": "Заполните все обязательные поля",
+    "errExists": "Этот аккаунт уже зарегистрирован",
+    "errWeakPwd": "Пароль слишком слабый (мин 8 симв., буквы + цифры)",
+    "errInvalidPhone": "Неверный формат телефона",
+    "errGeneric": "Ошибка"
   }
 }

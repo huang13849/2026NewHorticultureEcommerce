@@ -795,5 +795,31 @@
       "sub": "Welcome to Peony Alliance. Your badge grows with your contribution.",
       "enter": "Enter Alliance"
     }
+  },
+  "auth": {
+    "brandTitle": "Collectionneur de plantes · Depuis 2006",
+    "loginSubtitle": "Connectez-vous pour voir vos commandes et favoris",
+    "registerTitle": "Devenir collectionneur de plantes",
+    "registerSubtitle": "Après l'inscription, l'étiquette « collectionneur » est ajoutée automatiquement",
+    "registerOk": "Inscription réussie ! Veuillez vous connecter.",
+    "tabPhone": "Téléphone",
+    "tabEmail": "E-mail",
+    "labelPhone": "Numéro de téléphone",
+    "labelEmail": "E-mail",
+    "labelPassword": "Mot de passe",
+    "labelFirstName": "Prénom",
+    "labelLastName": "Nom",
+    "phonePlaceholder": "ex. +33 6 12 34 56 78",
+    "emailPlaceholder": "vous@exemple.com",
+    "pwdHint": "Min. 8 caractères, lettres et chiffres",
+    "optional": "optionnel",
+    "noAccount": "Pas encore de compte ?",
+    "hasAccount": "Déjà un compte ?",
+    "errInvalidCreds": "Identifiants invalides",
+    "errMissing": "Veuillez remplir tous les champs requis",
+    "errExists": "Ce compte existe déjà, veuillez vous connecter",
+    "errWeakPwd": "Mot de passe trop faible (8 car. min, lettres + chiffres)",
+    "errInvalidPhone": "Format de téléphone invalide",
+    "errGeneric": "Échec de l'opération"
   }
 }

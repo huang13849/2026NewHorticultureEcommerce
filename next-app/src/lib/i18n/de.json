@@ -795,5 +795,31 @@
       "sub": "Welcome to Peony Alliance. Your badge grows with your contribution.",
       "enter": "Enter Alliance"
     }
+  },
+  "auth": {
+    "brandTitle": "Pflanzensammler · Seit 2006",
+    "loginSubtitle": "Anmelden, um Bestellungen und Favoriten zu sehen",
+    "registerTitle": "Pflanzensammler werden",
+    "registerSubtitle": "Nach der Anmeldung wirst du automatisch dem Pflanzensammler-Tag zugeordnet",
+    "registerOk": "Registrierung erfolgreich! Bitte anmelden.",
+    "tabPhone": "Telefon",
+    "tabEmail": "E-Mail",
+    "labelPhone": "Telefonnummer",
+    "labelEmail": "E-Mail",
+    "labelPassword": "Passwort",
+    "labelFirstName": "Vorname",
+    "labelLastName": "Nachname",
+    "phonePlaceholder": "z. B. +49 30 12345678",
+    "emailPlaceholder": "du@beispiel.com",
+    "pwdHint": "Mindestens 8 Zeichen, Buchstaben und Zahlen",
+    "optional": "optional",
+    "noAccount": "Noch kein Konto?",
+    "hasAccount": "Bereits ein Konto?",
+    "errInvalidCreds": "Ungültige Anmeldedaten",
+    "errMissing": "Bitte alle Pflichtfelder ausfüllen",
+    "errExists": "Dieses Konto existiert bereits, bitte anmelden",
+    "errWeakPwd": "Passwort zu schwach (min. 8 Zeichen, Buchstaben + Zahlen)",
+    "errInvalidPhone": "Ungültiges Telefonformat",
+    "errGeneric": "Fehler"
   }
 }

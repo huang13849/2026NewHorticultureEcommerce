@@ -795,5 +795,31 @@
       "sub": "Welcome to Peony Alliance. Your badge grows with your contribution.",
       "enter": "Enter Alliance"
     }
+  },
+  "auth": {
+    "brandTitle": "植物コレクター · 2006年より",
+    "loginSubtitle": "ログインして注文とお気に入りを表示",
+    "registerTitle": "植物コレクターに登録",
+    "registerSubtitle": "登録すると自動で「植物コレクター」タグが付与されます",
+    "registerOk": "登録が完了しました！ログインしてください。",
+    "tabPhone": "電話番号",
+    "tabEmail": "メール",
+    "labelPhone": "電話番号",
+    "labelEmail": "メール",
+    "labelPassword": "パスワード",
+    "labelFirstName": "名",
+    "labelLastName": "姓",
+    "phonePlaceholder": "例: +81 90 1234 5678",
+    "emailPlaceholder": "you@example.com",
+    "pwdHint": "8文字以上、英数字を含む",
+    "optional": "任意",
+    "noAccount": "アカウントをお持ちでない方",
+    "hasAccount": "すでにアカウントをお持ちの方",
+    "errInvalidCreds": "ユーザー名またはパスワードが違います",
+    "errMissing": "必須項目を入力してください",
+    "errExists": "このアカウントは既に登録されています",
+    "errWeakPwd": "パスワードが弱すぎます（8文字以上、英数字）",
+    "errInvalidPhone": "電話番号の形式が正しくありません",
+    "errGeneric": "操作に失敗しました"
   }
 }
