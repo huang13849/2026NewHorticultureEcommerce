@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
     userName: canonicalPhone,
     profile: { firstName, lastName, displayName: `${firstName} ${lastName}`, preferredLanguage: lang },
     phone: { phone: canonicalPhone, isPhoneVerified: true },
-    password: { password, changeRequired: false },
+    password: password, passwordChangeRequired: false,
   };
   if (email) {
     (createBody as { email?: unknown }).email = { email, isEmailVerified: true };
