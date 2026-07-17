@@ -186,7 +186,8 @@ async function passwordLogin(req, { loginName, password }) {
     tropical: 'id-tropical.horiculture.club',
     plantshare: 'id-plantshare.horiculture.club',
   };
-  const targetHost = brandInstanceMap[profInstance] || cfg.instanceHost || '';
+  // Only route to instance-host if PG says the user lives there; otherwise fall through to main issuer
+  const targetHost = brandInstanceMap[profInstance] || '';
   const effCfg = targetHost ? { ...cfg, instanceHost: targetHost } : { ...cfg, instanceHost: '' };
   const resp = await zitadelCreateSession(effCfg, check, password);
   if (resp.status !== 201 && resp.status !== 200) {
