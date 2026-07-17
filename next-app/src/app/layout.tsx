@@ -58,7 +58,7 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const { lang, region } = await pickInitialDefaults();
   return (
-    <html lang={lang === 'zh' ? 'zh-CN' : 'en'}>
+    <html lang={lang === 'zh' ? 'zh-CN' : 'en'} data-region={region}>
       <body className="bg-white text-stone-900 min-h-screen antialiased">
         <Providers initialLang={lang} initialRegion={region}>
           <SeoTracker />
