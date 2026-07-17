@@ -9,6 +9,15 @@ export const runtime = 'nodejs';
 const KEY_PATH = process.env.ZITADEL_SYSTEM_KEY_PATH || '/system-key/systemuser.key';
 const ZITADEL_URL = process.env.ZITADEL_URL || 'http://zitadel.identity.svc.cluster.local:8080';
 const SHOPCLUB_HOST = 'id-shopclub.horiculture.club';
+const BRAND_INSTANCE: Record<string, { host: string; orgId: string; tag: string; source: string }> = {
+  club:       { host: 'id-shopclub.horiculture.club',  orgId: process.env.ZITADEL_SHOPCLUB_ORG_ID    || '382005470828757108', tag: '植物收藏家', source: 'shopclub-register' },
+  space:      { host: 'id-shopclub.horiculture.club',  orgId: process.env.ZITADEL_SHOPCLUB_ORG_ID    || '382005470828757108', tag: '海外收藏家', source: 'shopclub-register' },
+  shopclub:   { host: 'id-shopclub.horiculture.club',  orgId: process.env.ZITADEL_SHOPCLUB_ORG_ID    || '382005470828757108', tag: '植物收藏家', source: 'shopclub-register' },
+  school:     { host: 'id-school.horiculture.club',    orgId: process.env.ZITADEL_SCHOOL_ORG_ID      || '',                     tag: '金匠人学员', source: 'school-register' },
+  peony:      { host: 'id-peony.horiculture.club',     orgId: process.env.ZITADEL_PEONY_ORG_ID       || '',                     tag: '芍药联盟',   source: 'peony-register' },
+  tropical:   { host: 'id-tropical.horiculture.club',  orgId: process.env.ZITADEL_TROPICAL_ORG_ID    || '',                     tag: '热植联盟',   source: 'tropical-register' },
+  plantshare: { host: 'id-plantshare.horiculture.club',orgId: process.env.ZITADEL_PLANTSHARE_ORG_ID  || '',                     tag: '植物共享',   source: 'plantshare-register' },
+};
 const AUD = 'http://id.horiculture.club:443';
 const USER_MGMT_URL = process.env.USER_MGMT_URL || 'http://api-gateway.supply-chain.svc.cluster.local:8080';
 
@@ -44,7 +53,7 @@ async function zitadelPost(path: string, body: unknown, host: string) {
       'Content-Type': 'application/json',
       'x-forwarded-host': host,
       'x-forwarded-proto': 'https',
-      'x-zitadel-orgid': process.env.ZITADEL_SHOPCLUB_ORG_ID || '382005470828757108',
+      'x-zitadel-orgid': (globalThis as any).__ZOID__ || process.env.ZITADEL_SHOPCLUB_ORG_ID || '382005470828757108',
     },
     body: JSON.stringify(body),
   });
@@ -74,6 +83,7 @@ export async function POST(req: NextRequest) {
     lastName = String(b.lastName || '').trim();
     redirect = String(b.redirect || '/');
     lang = String(b.lang || 'zh');
+    (globalThis as any).__BRAND__ = String(b.brand || 'club');
   }
   // Normalize phone: strip spaces/dashes/parens, keep leading +
   const normPhone = phone.replace(/[\s\-()]/g, '');
@@ -107,7 +117,10 @@ export async function POST(req: NextRequest) {
   (createBody as { email?: unknown }).email = { email: effectiveEmail, isEmailVerified: true };
   let created;
   try {
-    created = await zitadelPost('/management/v1/users/human/_import', createBody, SHOPCLUB_HOST);
+        const brand = (globalThis as any).__BRAND__ || 'club';
+    const target = BRAND_INSTANCE[brand] || BRAND_INSTANCE.club;
+    (globalThis as any).__ZOID__ = target.orgId;
+    created = await zitadelPost('/management/v1/users/human/_import', createBody, target.host);
   } catch (e: any) {
     console.error('[register-collector] jwt/network error', e?.message);
     if (String(e?.message).includes('systemuser_key_unavailable')) return bail('service_unavailable');
@@ -131,7 +144,13 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           zid: userId, loginName: canonicalPhone || email,
           nickname: (firstName + ' ' + lastName).trim(),
-          brand: 'club', zitadelInstance: 'shopclub', sourceProject: 'shopclub-register',
+          brand: (globalThis as any).__BRAND__ || 'club',
+          zitadelInstance: ((globalThis as any).__BRAND__ === 'school') ? 'school'
+            : ((globalThis as any).__BRAND__ === 'peony') ? 'peony'
+            : ((globalThis as any).__BRAND__ === 'tropical') ? 'tropical'
+            : ((globalThis as any).__BRAND__ === 'plantshare') ? 'plantshare'
+            : 'shopclub',
+          sourceProject: (BRAND_INSTANCE[(globalThis as any).__BRAND__ || 'club'] || BRAND_INSTANCE.club).source,
           userType: 'plant_collector', phone: canonicalPhone, email: email || '',
         }),
       });
@@ -145,8 +164,12 @@ export async function POST(req: NextRequest) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email: email || undefined, phone: canonicalPhone,
-        source: 'shopclub-register', instance: 'shopclub',
-        zitadelUserId: userId, tags: ['植物收藏家'],
+        source: (BRAND_INSTANCE[(globalThis as any).__BRAND__ || 'club'] || BRAND_INSTANCE.club).source,
+        instance: ((globalThis as any).__BRAND__ === 'school') ? 'school'
+          : ((globalThis as any).__BRAND__ === 'peony') ? 'peony'
+          : ((globalThis as any).__BRAND__ === 'tropical') ? 'tropical'
+          : 'shopclub',
+        zitadelUserId: userId, tags: [(BRAND_INSTANCE[(globalThis as any).__BRAND__ || 'club'] || BRAND_INSTANCE.club).tag],
       }),
     });
   } catch (e) {

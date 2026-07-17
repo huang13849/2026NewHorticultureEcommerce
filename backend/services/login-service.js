@@ -74,6 +74,10 @@ function brandConfig(brand) {
   const instanceHost = process.env[`ZITADEL_INSTANCE_HOST_${brand.toUpperCase()}`]
     || (brand === 'club' ? 'id-shopclub.horiculture.club'
        : brand === 'space' ? 'id-shopclub.horiculture.club'
+       : brand === 'school' ? 'id-school.horiculture.club'
+       : brand === 'peony' ? 'id-peony.horiculture.club'
+       : brand === 'tropical' ? 'id-tropical.horiculture.club'
+       : brand === 'plantshare' ? 'id-plantshare.horiculture.club'
        : '');
   return { brand, issuer, pat, clientId, instanceHost };
 }
@@ -168,8 +172,16 @@ async function passwordLogin(req, { loginName, password }) {
 
   const check = userIdFromPg ? { userId: userIdFromPg } : loginName;
   // Route to shop-club instance only if PG says this user is a shop-club user
-  const isShopclub = profInstance === 'shopclub';
-  const effCfg = isShopclub ? cfg : { ...cfg, instanceHost: '' };
+  // Route session to the Zitadel instance the user actually lives in
+  const brandInstanceMap = {
+    shopclub: 'id-shopclub.horiculture.club',
+    school:   'id-school.horiculture.club',
+    peony:    'id-peony.horiculture.club',
+    tropical: 'id-tropical.horiculture.club',
+    plantshare: 'id-plantshare.horiculture.club',
+  };
+  const targetHost = brandInstanceMap[profInstance] || cfg.instanceHost || '';
+  const effCfg = targetHost ? { ...cfg, instanceHost: targetHost } : { ...cfg, instanceHost: '' };
   const resp = await zitadelCreateSession(effCfg, check, password);
   if (resp.status !== 201 && resp.status !== 200) {
     const err = (resp.data && (resp.data.message || resp.data.error)) || `zitadel HTTP ${resp.status}`;
