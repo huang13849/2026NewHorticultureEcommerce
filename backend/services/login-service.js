@@ -8,7 +8,28 @@
 
 const axios = require('axios');
 const crypto = require('crypto');
+const fs = require('fs');
 const redis = require('redis');
+
+// Systemuser JWT — cross-instance auth (like register-collector uses)
+const SYS_KEY_PATH = process.env.ZITADEL_SYSTEM_KEY_PATH || '/system-key/systemuser.key';
+function _b64u(b){return Buffer.from(b).toString('base64').replace(/=+$/,'').replace(/\+/g,'-').replace(/\//g,'_');}
+let _sysKey = null;
+function readSysKey() {
+  if (_sysKey) return _sysKey;
+  try { _sysKey = fs.readFileSync(SYS_KEY_PATH, 'utf8'); return _sysKey; } catch(e) { return null; }
+}
+function sysJwt() {
+  const pem = readSysKey();
+  if (!pem) return null;
+  const now = Math.floor(Date.now()/1000);
+  const h = _b64u(JSON.stringify({alg:'RS256',typ:'JWT'}));
+  const p = _b64u(JSON.stringify({iss:'systemuser',sub:'systemuser',aud:'http://id.horiculture.club:443',iat:now,exp:now+300}));
+  const s = crypto.createSign('RSA-SHA256');
+  s.update(h+'.'+p);
+  const sig = _b64u(s.sign(pem));
+  return h+'.'+p+'.'+sig;
+}
 
 const SESSION_TTL_SEC = parseInt(process.env.SESSION_TTL_SEC || String(30 * 24 * 3600), 10);
 const REDIS_URL = process.env.REDIS_URL || 'redis://100.96.54.109:6379';
@@ -49,7 +70,12 @@ function brandConfig(brand) {
     : brand === 'space'
       ? (process.env.SPACE_CLIENT_ID || process.env.ZITADEL_SPACE_WEB_CLIENT_ID)
       : (process.env.CLUB_CLIENT_ID || process.env.ZITADEL_CLUB_WEB_CLIENT_ID);
-  return { brand, issuer, pat, clientId };
+  // Per-brand Zitadel instance host (shop-club users live in id-shopclub.horiculture.club)
+  const instanceHost = process.env[`ZITADEL_INSTANCE_HOST_${brand.toUpperCase()}`]
+    || (brand === 'club' ? 'id-shopclub.horiculture.club'
+       : brand === 'space' ? 'id-shopclub.horiculture.club'
+       : '');
+  return { brand, issuer, pat, clientId, instanceHost };
 }
 
 function cookieDomainFor(host) {
@@ -71,34 +97,34 @@ function parseCookies(header) {
 }
 
 // --- Zitadel v2 session API ---
-async function zitadelCreateSession({ issuer, pat }, loginName, password) {
+async function zitadelCreateSession({ issuer, pat, instanceHost }, loginName, password) {
+  const useSys = !!instanceHost && !!sysJwt();
+  const authTok = useSys ? sysJwt() : pat;
+  const headers = { Authorization: `Bearer ${authTok}`, 'Content-Type': 'application/json' };
+  if (instanceHost) { headers['x-forwarded-host'] = instanceHost; headers['x-forwarded-proto'] = 'https'; }
   const resp = await axios.post(
     `${issuer}/v2/sessions`,
     { checks: { user: { loginName }, password: { password } } },
-    {
-      headers: { Authorization: `Bearer ${pat}`, 'Content-Type': 'application/json' },
-      timeout: 10000,
-      validateStatus: () => true,
-    }
+    { headers, timeout: 10000, validateStatus: () => true }
   );
   return resp;
 }
 
-async function zitadelReadSession({ issuer, pat }, sessionId) {
-  const resp = await axios.get(`${issuer}/v2/sessions/${sessionId}`, {
-    headers: { Authorization: `Bearer ${pat}` },
-    timeout: 8000,
-    validateStatus: () => true,
-  });
+async function zitadelReadSession({ issuer, pat, instanceHost }, sessionId) {
+  const useSys = !!instanceHost && !!sysJwt();
+  const authTok = useSys ? sysJwt() : pat;
+  const headers = { Authorization: `Bearer ${authTok}` };
+  if (instanceHost) { headers['x-forwarded-host'] = instanceHost; headers['x-forwarded-proto'] = 'https'; }
+  const resp = await axios.get(`${issuer}/v2/sessions/${sessionId}`, { headers, timeout: 8000, validateStatus: () => true });
   return resp;
 }
 
-async function zitadelDeleteSession({ issuer, pat }, sessionId) {
-  const resp = await axios.delete(`${issuer}/v2/sessions/${sessionId}`, {
-    headers: { Authorization: `Bearer ${pat}` },
-    timeout: 8000,
-    validateStatus: () => true,
-  });
+async function zitadelDeleteSession({ issuer, pat, instanceHost }, sessionId) {
+  const useSys = !!instanceHost && !!sysJwt();
+  const authTok = useSys ? sysJwt() : pat;
+  const headers = { Authorization: `Bearer ${authTok}` };
+  if (instanceHost) { headers['x-forwarded-host'] = instanceHost; headers['x-forwarded-proto'] = 'https'; }
+  const resp = await axios.delete(`${issuer}/v2/sessions/${sessionId}`, { headers, timeout: 8000, validateStatus: () => true });
   return resp;
 }
 
