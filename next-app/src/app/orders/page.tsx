@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { resolveMinioUrl } from '@/lib/imageUrl';
 import TabBar from '../TabBar';
 
@@ -66,6 +67,8 @@ function getPayIcon(payMethod: string, provider?: string): string {
 }
 
 export default function OrdersPage() {
+  const searchParams = useSearchParams();
+  const newOrderId = searchParams?.get('new') || '';
   const [region, setRegion] = useState<Region>(REGION === 'cn' ? 'cn' : 'global');
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -132,6 +135,15 @@ export default function OrdersPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-6 md:px-10 py-6 space-y-5">
+        {newOrderId && (
+          <div className="rounded-2xl border border-emerald-300 bg-emerald-50 px-5 py-4 flex items-center gap-3 shadow-sm">
+            <span className="text-2xl">✅</span>
+            <div className="flex-1">
+              <p className="font-bold text-emerald-800 text-sm">下单成功！</p>
+              <p className="text-xs text-emerald-700 mt-0.5">采购单号 <span className="font-mono">{newOrderId}</span>。我们会尽快联系您确认发货并线下收款。</p>
+            </div>
+          </div>
+        )}
         {/* Region Toggle — 国内/国际 */}
         <div className="flex justify-center">
           <div className="inline-flex rounded-2xl border border-stone-200 bg-white p-1 shadow-sm">
@@ -192,7 +204,7 @@ export default function OrdersPage() {
               const effectiveStatus = isTimedOut ? 'canceled_timeout' : order.status;
               const statusInfo = STATUS_MAP[effectiveStatus] || STATUS_MAP.pending;
               return (
-                <div key={order._id || order.orderId} className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+                <div key={order._id || order.orderId} className={`rounded-2xl border bg-white p-4 shadow-sm ${order.orderId === newOrderId ? "border-emerald-400 ring-2 ring-emerald-200" : "border-stone-200"}`}>
                   {/* Header: orderId + status + time */}
                   <div className="flex items-start justify-between mb-3">
                     <div>
