@@ -820,6 +820,10 @@
     "errExists": "Ce compte existe déjà, veuillez vous connecter",
     "errWeakPwd": "Mot de passe trop faible (8 car. min, lettres + chiffres)",
     "errInvalidPhone": "Format de téléphone invalide",
-    "errGeneric": "Échec de l'opération"
+    "errGeneric": "Échec de l'opération",
+    "labelPwdConfirm": "Confirmer le mot de passe",
+    "errPwdMismatch": "Les mots de passe ne correspondent pas",
+    "submitting": "Envoi…",
+    "goLogin": "Se connecter"
   }
 }

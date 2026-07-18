@@ -821,6 +821,10 @@
     "errExists": "This account is already registered, please sign in",
     "errWeakPwd": "Password too weak (min 8 chars, letters + numbers)",
     "errInvalidPhone": "Invalid phone number format",
-    "errGeneric": "Operation failed"
+    "errGeneric": "Operation failed",
+    "labelPwdConfirm": "Confirm password",
+    "errPwdMismatch": "Passwords do not match",
+    "submitting": "Submitting…",
+    "goLogin": "Go to login"
   }
 }

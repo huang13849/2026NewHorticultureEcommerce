@@ -820,6 +820,10 @@
     "errExists": "Dieses Konto existiert bereits, bitte anmelden",
     "errWeakPwd": "Passwort zu schwach (min. 8 Zeichen, Buchstaben + Zahlen)",
     "errInvalidPhone": "Ungültiges Telefonformat",
-    "errGeneric": "Fehler"
+    "errGeneric": "Fehler",
+    "labelPwdConfirm": "Passwort bestätigen",
+    "errPwdMismatch": "Passwörter stimmen nicht überein",
+    "submitting": "Wird gesendet…",
+    "goLogin": "Zum Login"
   }
 }
