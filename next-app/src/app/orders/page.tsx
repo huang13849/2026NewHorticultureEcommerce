@@ -69,6 +69,13 @@ function getPayIcon(payMethod: string, provider?: string): string {
 export default function OrdersPage() {
   const searchParams = useSearchParams();
   const newOrderId = searchParams?.get('new') || '';
+  const [isDomestic, setIsDomestic] = useState<boolean>(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const h = window.location.hostname || '';
+      setIsDomestic(h.endsWith('.club') || h === 'localhost' || /^100\./.test(h) || /^192\.168\./.test(h) || /^10\./.test(h));
+    }
+  }, []);
   const [region, setRegion] = useState<Region>(REGION === 'cn' ? 'cn' : 'global');
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,8 +100,8 @@ export default function OrdersPage() {
   };
 
   useEffect(() => {
-    fetchOrders(region);
-  }, [region]);
+    fetchOrders(isDomestic ? 'cn' : region);
+  }, [region, isDomestic]);
 
   const [deletingId, setDeletingId] = useState<string>('');
   const deleteOrder = async (orderId: string) => {
@@ -131,7 +138,7 @@ export default function OrdersPage() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-stone-50 to-white text-stone-900 pb-24">
       <div className="sticky top-0 z-10 bg-white/85 backdrop-blur-xl border-b border-stone-200/60 px-6 py-4">
-        <h1 className="text-lg font-bold text-center">购买订单管理</h1>
+        <h1 className="text-lg font-bold text-center">{isDomestic ? "我的订单" : "购买订单管理"}</h1>
       </div>
 
       <div className="max-w-5xl mx-auto px-6 md:px-10 py-6 space-y-5">
@@ -144,8 +151,8 @@ export default function OrdersPage() {
             </div>
           </div>
         )}
-        {/* Region Toggle — 国内/国际 */}
-        <div className="flex justify-center">
+        {/* Region Toggle — 国内/国际 (仅国际站显示) */}
+        {!isDomestic && <div className="flex justify-center">
           <div className="inline-flex rounded-2xl border border-stone-200 bg-white p-1 shadow-sm">
             <button
               onClick={() => setRegion('cn')}
@@ -168,7 +175,7 @@ export default function OrdersPage() {
               🌍 国际订单
             </button>
           </div>
-        </div>
+        </div>}
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
@@ -194,7 +201,7 @@ export default function OrdersPage() {
         ) : orders.length === 0 ? (
           <div className="p-12 text-center text-stone-400">
             <p className="text-4xl mb-3">📭</p>
-            <p>暂无{region === 'cn' ? '国内' : '国际'}订单</p>
+            <p>暂无{isDomestic ? '' : (region === 'cn' ? '国内' : '国际')}订单</p>
             <p className="text-xs mt-2">支付成功后订单将自动出现在这里</p>
           </div>
         ) : (

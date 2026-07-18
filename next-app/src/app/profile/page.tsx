@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/api';
@@ -27,6 +27,27 @@ export default function ProfilePage() {
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
+  const [orderStats, setOrderStats] = useState<{count:number; items:number; total:number}>({count:0, items:0, total:0});
+  const [isDomestic, setIsDomestic] = useState<boolean>(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const h = window.location.hostname || '';
+      setIsDomestic(h.endsWith('.club') || h === 'localhost' || /^100\./.test(h) || /^192\.168\./.test(h) || /^10\./.test(h));
+    }
+  }, []);
+  useEffect(() => {
+    if (!user) return;
+    fetch('/api/user/orders?region=cn', { credentials: 'include', cache: 'no-store' })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (!d?.orders) return;
+        const paid = (d.orders as any[]).filter(o => ['paid','mock_paid','pending_offline'].includes(o.status));
+        const items = paid.reduce((s, o) => s + (o.items||[]).reduce((ss:number,i:any)=>ss+(i.quantity||1),0), 0);
+        const total = paid.reduce((s, o) => s + Number(o.totalAmount || 0), 0);
+        setOrderStats({ count: paid.length, items, total: Math.round(total*100)/100 });
+      })
+      .catch(() => {});
+  }, [(user as any)?.id, (user as any)?.zid]);
 
   const [form, setForm] = useState<Address>({
     name: '', phone: '', province: '', city: '', district: '', detail: '', isDefault: false,
@@ -124,6 +145,30 @@ export default function ProfilePage() {
                 <span className="ml-auto text-emerald-400">→</span>
               </div>
             </button>
+          )}
+
+          {/* 我的订单 — 国内单一列表统计 */}
+          {isDomestic && (
+            <section>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-bold text-stone-900">我的订单</h2>
+                <a href="/orders" className="text-xs text-emerald-700 font-medium">查看全部 →</a>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4 text-center">
+                  <p className="text-2xl font-black text-emerald-700">{orderStats.count}</p>
+                  <p className="text-[10px] text-stone-500 mt-1">订单数</p>
+                </div>
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4 text-center">
+                  <p className="text-2xl font-black text-emerald-700">{orderStats.items}</p>
+                  <p className="text-[10px] text-stone-500 mt-1">商品件数</p>
+                </div>
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4 text-center">
+                  <p className="text-xl font-black text-emerald-700">¥{orderStats.total.toFixed(2)}</p>
+                  <p className="text-[10px] text-stone-500 mt-1">结账总金额</p>
+                </div>
+              </div>
+            </section>
           )}
 
           {/* 功能菜单 */}
