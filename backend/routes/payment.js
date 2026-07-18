@@ -88,7 +88,7 @@ async function syncPurchaseOrder(order) {
     personal_tag: '花伴商城,Stripe',
     payment_order_id: order.orderId,
     payment_channel: order.provider || order.payMethod,
-    region: order.region || (['wechat','alipay'].includes(order.payMethod) ? 'cn' : 'global'),
+    region: order.region || 'cn',
     product_subtotal: order.subtotal,
     shipping_fee: order.shippingFee,
     coupon_code: order.couponCode || '',
@@ -275,6 +275,10 @@ router.post('/checkout', async (req, res) => {
         }
       } catch(e) { console.warn('[checkout] flower_token verify failed:', e.message); }
     }
+    // 按请求 Host 判定归属: .club / 内网 => 国内(cn), 其他(.space 等) => 国际(global)
+    const _host = String(req.get('host') || '').toLowerCase();
+    const isDomesticHost = _host.includes('horiculture.club') || _host.startsWith('100.96.54.109') || _host.startsWith('localhost') || _host.startsWith('127.0.0.1');
+    const orderRegion = isDomesticHost ? 'cn' : 'global';
     const { items, payMethod = 'stripe', couponCode = '', customer = {}, deliveryAddress = '', currency: reqCurrency = 'CNY', exchangeRate: reqRate = 1, locale: reqLocale = 'zh' } = req.body;
     const stripeCurrency = String(reqCurrency || 'CNY').toLowerCase();
     const stripeLocale = String(reqLocale || 'zh').toLowerCase();
@@ -311,7 +315,7 @@ router.post('/checkout', async (req, res) => {
       deliveryAddress,
       zid: currentZid,
       brand: currentBrand,
-      region: ['wechat','alipay'].includes(payMethod) ? 'cn' : 'global',
+      region: orderRegion,
       createdAt: new Date().toISOString(),
       paidAt: provider.configured ? null : new Date().toISOString(),
       checkoutUrl: '',
