@@ -121,6 +121,12 @@ const PROVIDERS = {
     checkoutUrl: process.env.PAYPAL_CHECKOUT_URL || '',
     note: 'Supports PayPal balance and international card payments when configured.',
   },
+  offline: {
+    name: 'Offline',
+    configured: true,
+    checkoutUrl: '',
+    note: 'Domestic offline purchase order: creates order + syncs to purchase-order service, no online payment.',
+  },
   alipay: {
     name: 'Alipay',
     configured: process.env.ALIPAY_ENABLED === 'true' && !!process.env.ALIPAY_CHECKOUT_URL,
@@ -276,6 +282,8 @@ router.post('/checkout', async (req, res) => {
     if (!String(deliveryAddress || '').trim()) return res.status(400).json({ error: '请先填写收货地址' });
     const provider = PROVIDERS[payMethod];
     if (!provider) return res.status(400).json({ error: '不支持的支付方式' });
+    // Offline: domestic .club purchase order (线下收款). Skip all online gateways.
+    const isOffline = payMethod === 'offline';
 
     // Alipay: always allow (mock if not configured)
     const orderItems = await enrichItems(items);
@@ -297,7 +305,7 @@ router.post('/checkout', async (req, res) => {
       currency: 'CNY',
       payMethod,
       provider: provider.name,
-      status: provider.configured ? 'pending' : 'mock_paid',
+      status: isOffline ? 'pending_offline' : (provider.configured ? 'pending' : 'mock_paid'),
       memberName: customer.name || '',
       phone: customer.phone || '',
       deliveryAddress,
@@ -310,7 +318,7 @@ router.post('/checkout', async (req, res) => {
       stripeSessionId: '',
     };
 
-    if (payMethod === 'stripe' && stripeConfigured) {
+    if (!isOffline && payMethod === 'stripe' && stripeConfigured) {
       const form = new URLSearchParams();
       form.set('mode', 'payment');
       form.set('ui_mode', 'hosted');
@@ -344,7 +352,7 @@ router.post('/checkout', async (req, res) => {
       stripeSessionId = sessionRes.data.id;
       order.checkoutUrl = checkoutUrl;
       order.stripeSessionId = stripeSessionId;
-    } else if (provider.configured && provider.checkoutUrl) {
+    } else if (!isOffline && provider.configured && provider.checkoutUrl) {
       order.checkoutUrl = appendCheckoutParams(provider.checkoutUrl, order);
       checkoutUrl = order.checkoutUrl;
     }
@@ -383,7 +391,7 @@ router.post('/checkout', async (req, res) => {
           subtotal: Number(it.price || 0) * Number(it.quantity || 1),
           snapshot: it,
         })),
-        status: provider.configured ? 'pending' : 'mock_paid',
+        status: isOffline ? 'pending_offline' : (provider.configured ? 'pending' : 'mock_paid'),
       });
       order._pgId = pgSaved.id;
     } catch (e) {
@@ -391,8 +399,8 @@ router.post('/checkout', async (req, res) => {
       return res.status(500).json({ error: 'pg_write_failed', detail: e.message });
     }
     // No Mongo mirror — PostgreSQL is the source of truth.
-    if (!provider.configured) {
-      try { await syncPurchaseOrder({ ...order, _id: pgSaved.id }); } catch (e) { console.error('sync mock order failed:', e.message); }
+    if (isOffline || !provider.configured) {
+      try { await syncPurchaseOrder({ ...order, _id: pgSaved.id }); } catch (e) { console.error('sync purchase order failed:', e.message); }
     }
 
     res.json({
@@ -403,8 +411,11 @@ router.post('/checkout', async (req, res) => {
       provider: provider.name,
       status: order.status,
       checkoutUrl,
-      mock: !provider.configured,
-      message: provider.configured ? '支付订单已创建' : `${provider.name} 尚未配置真实收银台，当前为模拟支付成功。`,
+      mock: !isOffline && !provider.configured,
+      offline: isOffline,
+      message: isOffline
+        ? '采购单已创建，我们将尽快联系您确认发货并线下收款'
+        : (provider.configured ? '支付订单已创建' : `${provider.name} 尚未配置真实收银台，当前为模拟支付成功。`),
     });
   } catch (err) {
     res.status(400).json({ error: err.message });

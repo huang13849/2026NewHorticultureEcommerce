@@ -68,6 +68,14 @@ function formatCurrency(cnyAmount: number, currency: CurrencyCode, rate: number)
 function PaymentContent() {
   const { t } = useI18n();
   const { user, loading: authLoading } = useAuth();
+  // 国内域名 horiculture.club: 线下采购单流程 (不走任何在线支付), 国际 .space 保留原支付方式
+  const [isDomestic, setIsDomestic] = useState(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const h = window.location.hostname || '';
+      setIsDomestic(h.includes('horiculture.club') || h === '100.96.54.109' || h === 'localhost' || h === '127.0.0.1');
+    }
+  }, []);
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -363,6 +371,41 @@ function PaymentContent() {
     setPayStatus('creating');
     setMessage('');
 
+    // 国内线下采购单 (horiculture.club): 走 payMethod='offline', 只写订单+同步采购单, 不做任何支付
+    if (isDomestic) {
+      const confirmed = typeof window !== 'undefined'
+        ? window.confirm('确认下单？\n\n下单后我们将尽快联系您确认发货，采用线下收款方式。')
+        : true;
+      if (!confirmed) { setPayStatus('idle'); return; }
+      try {
+        const res = await fetch(`${API}/payment/checkout`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            payMethod: 'offline',
+            currency,
+            exchangeRate,
+            locale: 'zh',
+            customer: { name: selectedAddress.name || user?.nickname || '', phone: selectedAddress.phone || user?.phone || '' },
+            deliveryAddress: deliveryAddressText,
+            items: products.map(p => ({ productId: p.id, name: p.name, price: p.price, quantity: p.quantity || 1, image: p.image })),
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || '下单失败');
+        setOrderId(data.orderId);
+        setPayStatus('success');
+        setMessage(data.message || '采购单已创建，我们将尽快联系您');
+        // 清空购物车 & 跳转订单页
+        try { localStorage.removeItem('flower_cart'); } catch {}
+        setTimeout(() => { router.push(`/orders?new=${encodeURIComponent(data.orderId)}`); }, 1200);
+      } catch (err: any) {
+        setPayStatus('failed');
+        setMessage(err.message || '下单失败，请稍后重试');
+      }
+      return;
+    }
+
     // 微信支付走独立路由
     if (payMethod === 'wechat') {
       try {
@@ -589,6 +632,22 @@ function PaymentContent() {
         </section>
 
         <section className="rounded-3xl border border-stone-200 bg-white p-5 md:p-6 shadow-sm">
+          {isDomestic ? (
+            <div className="space-y-2">
+              <h2 className="text-lg font-bold">下单方式</h2>
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">📋</span>
+                  <div>
+                    <p className="font-bold text-sm text-emerald-800">线下采购单</p>
+                    <p className="text-[12px] text-emerald-700 mt-1 leading-relaxed">
+                      下单后不做在线支付。我们将尽快联系您确认发货，采用线下收款方式。订单会自动保存到"订单管理"。
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (<>
           <h2 className="text-lg font-bold mb-4">{t('payment.selectPaymentMethod')}</h2>
           <div className={`grid gap-3 ${paymentMethods.length <= 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'}`}>
             {paymentMethods.map(m => {
@@ -629,6 +688,7 @@ function PaymentContent() {
               );
             })}
           </div>
+          </>)}
         </section>
 
         {payStatus === 'success' && (
@@ -640,10 +700,10 @@ function PaymentContent() {
             {message && <p className="text-xs text-emerald-700 mt-2">{message}</p>}
             {wechatCodeUrl && <img src={wechatCodeUrl} alt={t('payment.wechatPay')} className="mx-auto mt-3 w-48 h-48 rounded-xl border" />}
             <button
-              onClick={() => window.open('/order/', '_blank')}
+              onClick={() => router.push(isDomestic ? `/orders?new=${encodeURIComponent(orderId)}` : '/order/')}
               className="mt-4 px-6 py-2.5 rounded-xl bg-emerald-700 text-white text-sm font-bold hover:bg-emerald-800 transition-colors"
             >
-              {t('payment.viewOrder')}
+              {isDomestic ? '查看采购单' : t('payment.viewOrder')}
             </button>
           </section>
         )}
@@ -664,7 +724,7 @@ function PaymentContent() {
               <span className="text-xl font-bold text-emerald-700">{fmt(totalAmount)}</span>
             </div>
             <button onClick={handlePay} disabled={products.length === 0 || !hasPayableAddress || payStatus === 'creating' || payStatus === 'redirecting'} className={`px-6 md:px-8 py-3 rounded-xl text-sm font-bold transition-colors ${products.length > 0 && hasPayableAddress ? 'bg-emerald-700 text-white hover:bg-emerald-800' : 'bg-stone-200 text-stone-400 cursor-not-allowed'}`}>
-              {!hasPayableAddress ? t('payment.fillAddressToPay') : payStatus === 'creating' ? t('payment.creating') : payStatus === 'redirecting' ? t('payment.redirecting') : t('payment.payWith', { method: paymentMethods.find(x => x.key === payMethod)?.name || t('payment.payNow') })}
+              {!hasPayableAddress ? t('payment.fillAddressToPay') : payStatus === 'creating' ? (isDomestic ? '提交中…' : t('payment.creating')) : payStatus === 'redirecting' ? t('payment.redirecting') : (isDomestic ? '确认下单' : t('payment.payWith', { method: paymentMethods.find(x => x.key === payMethod)?.name || t('payment.payNow') }))}
             </button>
           </div>
         </div>
