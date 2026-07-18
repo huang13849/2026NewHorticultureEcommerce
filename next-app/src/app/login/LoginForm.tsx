@@ -1,4 +1,5 @@
 "use client";
+import PlantLoadingOverlay from "@/components/PlantLoadingOverlay";
 import { useState, useRef, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -99,7 +100,9 @@ export default function LoginForm({ s, isRTL, redirect, initialError, initialMod
   }
 
   return (
-    <form onSubmit={onSubmit} dir={isRTL ? 'rtl' : 'ltr'}
+    <>
+      <PlantLoadingOverlay show={submitting} />
+      <form onSubmit={onSubmit} dir={isRTL ? 'rtl' : 'ltr'}
       style={{
         width: '100%', maxWidth: 400, background: '#ffffff', borderRadius: 20,
         padding: '36px 30px',
@@ -201,5 +204,6 @@ export default function LoginForm({ s, isRTL, redirect, initialError, initialMod
         </a>
       </div>
     </form>
+      </>
   );
 }
