@@ -825,6 +825,8 @@
     "labelPwdConfirm": "确认密码",
     "errPwdMismatch": "两次密码不一致",
     "submitting": "提交中…",
-    "goLogin": "前往登录"
+    "goLogin": "前往登录",
+    "loginSubmitting": "登录中…",
+    "pwdOnlyRetry": "密码错误，请重新输入密码"
   }
 }

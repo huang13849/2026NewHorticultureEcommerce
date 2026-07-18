@@ -824,6 +824,8 @@
     "labelPwdConfirm": "Confirmer le mot de passe",
     "errPwdMismatch": "Les mots de passe ne correspondent pas",
     "submitting": "Envoi…",
-    "goLogin": "Se connecter"
+    "goLogin": "Se connecter",
+    "loginSubmitting": "Connexion…",
+    "pwdOnlyRetry": "Mot de passe incorrect. Réessayez."
   }
 }

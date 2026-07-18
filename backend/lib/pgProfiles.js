@@ -138,17 +138,40 @@ async function getByZid(zid, opts) {
 async function getByLoginName(loginName) {
   if (!loginName) return null;
   const rp = pickReadPool();
-  // Match by phone, email, or login_name column (whichever exists)
+  // Build candidate list: original + trimmed + CN mobile ±+86
+  const raw = String(loginName).trim();
+  const nospace = raw.replace(/[\s\-()]/g, '');
+  const candidates = new Set([raw, nospace]);
+  // CN mobile: 11 digits starting with 1[3-9] → also try +86 form and space-inserted form
+  if (/^1[3-9]\d{9}$/.test(nospace)) {
+    candidates.add(`+86${nospace}`);
+    candidates.add(`+86 ${nospace.slice(0,3)} ${nospace.slice(3,7)} ${nospace.slice(7)}`);
+  }
+  // If starts with +86 → also try without prefix
+  if (/^\+86/.test(nospace)) {
+    const bare = nospace.slice(3);
+    candidates.add(bare);
+    if (/^1[3-9]\d{9}$/.test(bare)) {
+      candidates.add(`+86 ${bare.slice(0,3)} ${bare.slice(3,7)} ${bare.slice(7)}`);
+    }
+  }
+  const cands = Array.from(candidates);
+  // Match: exact against phone/email/login_name/one_id, PLUS normalized phone (strip spaces/dashes) equal to any candidate's nospace
+  const nospaceCands = cands.map(v => v.replace(/[\s\-()]/g, ''));
   const q = `SELECT * FROM plant_collector.user_profiles
-             WHERE phone=$1 OR email=$1 OR login_name=$1 OR one_id=$1
+             WHERE phone = ANY($1::text[])
+                OR email = ANY($1::text[])
+                OR login_name = ANY($1::text[])
+                OR one_id = ANY($1::text[])
+                OR regexp_replace(phone, '[\s\-()]', '', 'g') = ANY($2::text[])
              LIMIT 1`;
   try {
-    const r = await rp.query(q, [loginName]);
+    const r = await rp.query(q, [cands, nospaceCands]);
     if (r.rows.length) return rowToProfile(r.rows[0]);
   } catch (e) {
-    // column may not exist -> fallback to just phone/email
+    // Column/regex fallback: minimal
     try {
-      const r2 = await rp.query('SELECT * FROM plant_collector.user_profiles WHERE phone=$1 OR email=$1 LIMIT 1', [loginName]);
+      const r2 = await rp.query('SELECT * FROM plant_collector.user_profiles WHERE phone = ANY($1::text[]) OR email = ANY($1::text[]) LIMIT 1', [cands]);
       if (r2.rows.length) return rowToProfile(r2.rows[0]);
     } catch {}
   }

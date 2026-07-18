@@ -824,6 +824,8 @@
     "labelPwdConfirm": "パスワード確認",
     "errPwdMismatch": "パスワードが一致しません",
     "submitting": "送信中…",
-    "goLogin": "ログインへ"
+    "goLogin": "ログインへ",
+    "loginSubmitting": "ログイン中…",
+    "pwdOnlyRetry": "パスワードが違います。再入力してください。"
   }
 }
