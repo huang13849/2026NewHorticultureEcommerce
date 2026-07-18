@@ -398,7 +398,7 @@ function PaymentContent() {
         setMessage(data.message || '采购单已创建，我们将尽快联系您');
         // 清空购物车 & 跳转订单页
         try { localStorage.removeItem('flower_cart'); } catch {}
-        setTimeout(() => { router.push(`/orders?new=${encodeURIComponent(data.orderId)}`); }, 1200);
+        setTimeout(() => { router.push(`/purchase-order/${encodeURIComponent(data.orderId)}`); }, 1200);
       } catch (err: any) {
         setPayStatus('failed');
         setMessage(err.message || '下单失败，请稍后重试');
@@ -700,7 +700,7 @@ function PaymentContent() {
             {message && <p className="text-xs text-emerald-700 mt-2">{message}</p>}
             {wechatCodeUrl && <img src={wechatCodeUrl} alt={t('payment.wechatPay')} className="mx-auto mt-3 w-48 h-48 rounded-xl border" />}
             <button
-              onClick={() => router.push(isDomestic ? `/orders?new=${encodeURIComponent(orderId)}` : '/order/')}
+              onClick={() => router.push(isDomestic ? `/purchase-order/${encodeURIComponent(orderId)}` : '/order/')}
               className="mt-4 px-6 py-2.5 rounded-xl bg-emerald-700 text-white text-sm font-bold hover:bg-emerald-800 transition-colors"
             >
               {isDomestic ? '查看采购单' : t('payment.viewOrder')}
