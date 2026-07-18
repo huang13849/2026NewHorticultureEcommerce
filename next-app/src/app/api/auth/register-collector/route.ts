@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
   }
   if (created.status >= 400) {
     console.error('[register-collector] create failed', created.status, created.text);
-    if (/already|exists|AlreadyExists/i.test(created.text)) return bail('exists');
+    if (/already|exists|AlreadyExists|已存在|重复/i.test(created.text) || created.status === 409) return bail('exists');
     return bail(`zitadel_${created.status}`);
   }
   let userId = '';
