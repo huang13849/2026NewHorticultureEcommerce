@@ -820,6 +820,10 @@
     "errExists": "Этот аккаунт уже зарегистрирован",
     "errWeakPwd": "Пароль слишком слабый (мин 8 симв., буквы + цифры)",
     "errInvalidPhone": "Неверный формат телефона",
-    "errGeneric": "Ошибка"
+    "errGeneric": "Ошибка",
+    "labelPwdConfirm": "Подтвердите пароль",
+    "errPwdMismatch": "Пароли не совпадают",
+    "submitting": "Отправка…",
+    "goLogin": "Войти"
   }
 }

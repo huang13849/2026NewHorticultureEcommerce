@@ -820,6 +820,10 @@
     "errExists": "このアカウントは既に登録されています",
     "errWeakPwd": "パスワードが弱すぎます（8文字以上、英数字）",
     "errInvalidPhone": "電話番号の形式が正しくありません",
-    "errGeneric": "操作に失敗しました"
+    "errGeneric": "操作に失敗しました",
+    "labelPwdConfirm": "パスワード確認",
+    "errPwdMismatch": "パスワードが一致しません",
+    "submitting": "送信中…",
+    "goLogin": "ログインへ"
   }
 }
