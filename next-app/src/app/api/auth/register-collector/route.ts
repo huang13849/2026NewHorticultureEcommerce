@@ -10,13 +10,13 @@ const KEY_PATH = process.env.ZITADEL_SYSTEM_KEY_PATH || '/system-key/systemuser.
 const ZITADEL_URL = process.env.ZITADEL_URL || 'http://zitadel.identity.svc.cluster.local:8080';
 const SHOPCLUB_HOST = 'id-shopclub.horiculture.club';
 const BRAND_INSTANCE: Record<string, { host: string; orgId: string; tag: string; source: string }> = {
-  club:       { host: 'id-shopclub.horiculture.club',  orgId: process.env.ZITADEL_SHOPCLUB_ORG_ID    || '382005470828757108', tag: '植物收藏家', source: 'shopclub-register' },
-  space:      { host: 'id-shopclub.horiculture.club',  orgId: process.env.ZITADEL_SHOPCLUB_ORG_ID    || '382005470828757108', tag: '海外收藏家', source: 'shopclub-register' },
-  shopclub:   { host: 'id-shopclub.horiculture.club',  orgId: process.env.ZITADEL_SHOPCLUB_ORG_ID    || '382005470828757108', tag: '植物收藏家', source: 'shopclub-register' },
-  school:     { host: 'id-school.horiculture.club',    orgId: process.env.ZITADEL_SCHOOL_ORG_ID      || '',                     tag: '金匠人学员', source: 'school-register' },
-  peony:      { host: 'id-peony.horiculture.club',     orgId: process.env.ZITADEL_PEONY_ORG_ID       || '',                     tag: '芍药联盟',   source: 'peony-register' },
-  tropical:   { host: 'id-tropical.horiculture.club',  orgId: process.env.ZITADEL_TROPICAL_ORG_ID    || '',                     tag: '热植联盟',   source: 'tropical-register' },
-  plantshare: { host: 'id-plantshare.horiculture.club',orgId: process.env.ZITADEL_PLANTSHARE_ORG_ID  || '',                     tag: '植物共享',   source: 'plantshare-register' },
+  club:       { host: 'id-shopclub.horiculture.club',  orgId: process.env.ZITADEL_SHOPCLUB_ORG_ID    || '382005470828757108', tag: '植物收藏家', source: 'shopclub' },
+  space:      { host: 'id-shopclub.horiculture.club',  orgId: process.env.ZITADEL_SHOPCLUB_ORG_ID    || '382005470828757108', tag: '海外收藏家', source: 'shopclub' },
+  shopclub:   { host: 'id-shopclub.horiculture.club',  orgId: process.env.ZITADEL_SHOPCLUB_ORG_ID    || '382005470828757108', tag: '植物收藏家', source: 'shopclub' },
+  school:     { host: 'id-school.horiculture.club',    orgId: process.env.ZITADEL_SCHOOL_ORG_ID      || '',                     tag: '金匠人学员', source: 'edu' },
+  peony:      { host: 'id-peony.horiculture.club',     orgId: process.env.ZITADEL_PEONY_ORG_ID       || '',                     tag: '芍药联盟',   source: 'peony' },
+  tropical:   { host: 'id-tropical.horiculture.club',  orgId: process.env.ZITADEL_TROPICAL_ORG_ID    || '',                     tag: '热植联盟',   source: 'tropical' },
+  plantshare: { host: 'id-plantshare.horiculture.club',orgId: process.env.ZITADEL_PLANTSHARE_ORG_ID  || '',                     tag: '植物共享',   source: 'plant-share' },
 };
 const AUD = 'http://id.horiculture.club:443';
 const USER_MGMT_URL = process.env.USER_MGMT_URL || 'http://api-gateway.supply-chain.svc.cluster.local:8080';
