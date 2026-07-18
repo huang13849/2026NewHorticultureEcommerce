@@ -824,6 +824,8 @@
     "labelPwdConfirm": "Passwort bestätigen",
     "errPwdMismatch": "Passwörter stimmen nicht überein",
     "submitting": "Wird gesendet…",
-    "goLogin": "Zum Login"
+    "goLogin": "Zum Login",
+    "loginSubmitting": "Anmelden…",
+    "pwdOnlyRetry": "Falsches Passwort. Bitte erneut eingeben."
   }
 }

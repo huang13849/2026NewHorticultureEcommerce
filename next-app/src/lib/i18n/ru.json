@@ -824,6 +824,8 @@
     "labelPwdConfirm": "Подтвердите пароль",
     "errPwdMismatch": "Пароли не совпадают",
     "submitting": "Отправка…",
-    "goLogin": "Войти"
+    "goLogin": "Войти",
+    "loginSubmitting": "Вход…",
+    "pwdOnlyRetry": "Неверный пароль. Введите его заново."
   }
 }

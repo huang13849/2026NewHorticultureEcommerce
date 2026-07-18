@@ -825,6 +825,8 @@
     "labelPwdConfirm": "Confirm password",
     "errPwdMismatch": "Passwords do not match",
     "submitting": "Submitting…",
-    "goLogin": "Go to login"
+    "goLogin": "Go to login",
+    "loginSubmitting": "Signing in…",
+    "pwdOnlyRetry": "Wrong password. Please re-enter your password."
   }
 }
