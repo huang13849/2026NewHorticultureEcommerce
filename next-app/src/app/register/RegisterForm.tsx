@@ -2,10 +2,20 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-type T = (k: string) => string;
+type Strings = {
+  registerTitle: string; registerSubtitle: string;
+  labelPhone: string; labelEmail: string; labelFirstName: string; labelLastName: string;
+  labelPassword: string; labelPwdConfirm: string;
+  phonePlaceholder: string; emailPlaceholder: string;
+  pwdHint: string; optional: string;
+  register: string; login: string; hasAccount: string;
+  submitting: string; goLogin: string; registerOk: string;
+  errPwdMismatch: string; errExists: string; errWeakPwd: string;
+  errMissing: string; errInvalidPhone: string; errGeneric: string;
+};
 
-export default function RegisterForm({ t, isRTL, redirect, lang, brand }: {
-  t: T; isRTL: boolean; redirect: string; lang: string; brand: string;
+export default function RegisterForm({ s, isRTL, redirect, lang, brand }: {
+  s: Strings; isRTL: boolean; redirect: string; lang: string; brand: string;
 }) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
@@ -25,10 +35,7 @@ export default function RegisterForm({ t, isRTL, redirect, lang, brand }: {
     const fd = new FormData(e.currentTarget);
     const pwd = String(fd.get('password') || '');
     const pwd2 = String(fd.get('passwordConfirm') || '');
-    if (pwd !== pwd2) {
-      setError(t('auth.errPwdMismatch'));
-      return;
-    }
+    if (pwd !== pwd2) { setError(s.errPwdMismatch); return; }
     setSubmitting(true);
     try {
       const payload = {
@@ -48,22 +55,21 @@ export default function RegisterForm({ t, isRTL, redirect, lang, brand }: {
       if (!res.ok || data.error) {
         const err = data.error || `zitadel_${res.status}`;
         const msg =
-          err === 'exists' ? t('auth.errExists') :
-          err === 'weak_password' ? t('auth.errWeakPwd') :
-          err === 'missing' ? t('auth.errMissing') :
-          err === 'invalid_phone' ? t('auth.errInvalidPhone') :
-          `${t('auth.errGeneric')}: ${err}`;
+          err === 'exists' ? s.errExists :
+          err === 'weak_password' ? s.errWeakPwd :
+          err === 'missing' ? s.errMissing :
+          err === 'invalid_phone' ? s.errInvalidPhone :
+          `${s.errGeneric}: ${err}`;
         setError(msg);
         setSubmitting(false);
         return;
       }
       setOk(true);
-      // 1.2s 后跳登录页 (相对 URL, 浏览器解析)
       setTimeout(() => {
         router.push(`/login?redirect=${encodeURIComponent(redirect)}`);
       }, 1200);
     } catch (e: any) {
-      setError(`${t('auth.errGeneric')}: ${e?.message || 'network'}`);
+      setError(`${s.errGeneric}: ${e?.message || 'network'}`);
       setSubmitting(false);
     }
   }
@@ -78,10 +84,10 @@ export default function RegisterForm({ t, isRTL, redirect, lang, brand }: {
       }}>
       <div style={{ fontSize: 44, marginBottom: 8, textAlign: 'center' }}>🌸</div>
       <div style={{ fontWeight: 800, color: '#047857', fontSize: 18, textAlign: 'center', marginBottom: 4 }}>
-        {t('auth.registerTitle')}
+        {s.registerTitle}
       </div>
       <div style={{ color: '#6b7280', fontSize: 12, textAlign: 'center', marginBottom: 22 }}>
-        {t('auth.registerSubtitle')}
+        {s.registerSubtitle}
       </div>
 
       {error && (
@@ -91,42 +97,42 @@ export default function RegisterForm({ t, isRTL, redirect, lang, brand }: {
       )}
       {ok && (
         <div style={{ background: '#ecfdf5', color: '#047857', border: '1px solid #a7f3d0', borderRadius: 10, padding: '10px 12px', fontSize: 13, marginBottom: 12 }}>
-          🎉 {t('auth.registerOk')} {t('auth.goLogin')}…
+          🎉 {s.registerOk} {s.goLogin}…
         </div>
       )}
 
       <label style={labelStyle}>
-        {t('auth.labelPhone')} <span style={{ color: '#dc2626' }}>*</span>
+        {s.labelPhone} <span style={{ color: '#dc2626' }}>*</span>
       </label>
       <input name="phone" type="tel" required autoComplete="tel" inputMode="tel"
-        placeholder={t('auth.phonePlaceholder')} pattern="^[+0-9\-\s()]{7,20}$"
+        placeholder={s.phonePlaceholder} pattern="^[+0-9\-\s()]{7,20}$"
         disabled={submitting || ok} style={inputStyle} />
 
       <label style={labelStyle}>
-        {t('auth.labelEmail')} <span style={{ color: '#9ca3af', fontSize: 11 }}>({t('auth.optional')})</span>
+        {s.labelEmail} <span style={{ color: '#9ca3af', fontSize: 11 }}>({s.optional})</span>
       </label>
       <input name="email" type="email" autoComplete="email"
-        placeholder={t('auth.emailPlaceholder')}
+        placeholder={s.emailPlaceholder}
         disabled={submitting || ok} style={inputStyle} />
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         <div>
-          <label style={labelStyle}>{t('auth.labelFirstName')}</label>
+          <label style={labelStyle}>{s.labelFirstName}</label>
           <input name="firstName" required disabled={submitting || ok} style={inputStyle} />
         </div>
         <div>
-          <label style={labelStyle}>{t('auth.labelLastName')}</label>
+          <label style={labelStyle}>{s.labelLastName}</label>
           <input name="lastName" required disabled={submitting || ok} style={inputStyle} />
         </div>
       </div>
 
-      <label style={labelStyle}>{t('auth.labelPassword')}</label>
+      <label style={labelStyle}>{s.labelPassword}</label>
       <input name="password" type="password" required minLength={8} autoComplete="new-password"
         disabled={submitting || ok}
         style={{ ...inputStyle, marginBottom: 4 }} />
-      <div style={{ color: '#9ca3af', fontSize: 11, marginBottom: 12 }}>{t('auth.pwdHint')}</div>
+      <div style={{ color: '#9ca3af', fontSize: 11, marginBottom: 12 }}>{s.pwdHint}</div>
 
-      <label style={labelStyle}>{t('auth.labelPwdConfirm')}</label>
+      <label style={labelStyle}>{s.labelPwdConfirm}</label>
       <input name="passwordConfirm" type="password" required minLength={8} autoComplete="new-password"
         disabled={submitting || ok} style={{ ...inputStyle, marginBottom: 18 }} />
 
@@ -139,14 +145,14 @@ export default function RegisterForm({ t, isRTL, redirect, lang, brand }: {
           opacity: (submitting || ok) ? 0.75 : 1,
           boxShadow: '0 8px 24px rgba(16, 185, 129, 0.25)',
         }}>
-        {submitting ? t('auth.submitting') : ok ? t('auth.goLogin') : t('common.register')}
+        {submitting ? s.submitting : ok ? s.goLogin : s.register}
       </button>
 
       <div style={{ marginTop: 14, textAlign: 'center', fontSize: 12, color: '#6b7280' }}>
-        {t('auth.hasAccount')}{' '}
+        {s.hasAccount}{' '}
         <a href={`/login?redirect=${encodeURIComponent(redirect)}`}
           style={{ color: '#047857', textDecoration: 'underline', fontWeight: 600 }}>
-          {t('common.login')}
+          {s.login}
         </a>
       </div>
     </form>
