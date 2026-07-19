@@ -23,8 +23,7 @@
  */
 const mongoose = require('mongoose');
 
-const uri = process.env.MONGO_URI
-  || 'mongodb://admin:Hy%401987921@100.67.126.90:27017/supply_chain?authSource=admin&replicaSet=rs0&readPreference=secondaryPreferred';
+const uri = process.env.MONGO_URI;
 
 async function main() {
   console.log('[optimize-indexes] connecting…');

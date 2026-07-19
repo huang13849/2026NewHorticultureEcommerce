@@ -4,7 +4,8 @@
  */
 const mongoose = require('mongoose');
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://admin:Hy%401987921@100.67.126.90:27017/supply_chain?authSource=admin';
+const MONGO_URI = process.env.MONGO_URI;
+if (!MONGO_URI) { console.error('FATAL: MONGO_URI env not set'); process.exit(2); }
 
 const PlantSchema = new mongoose.Schema({
   name: { type: String, required: true },

@@ -7,15 +7,16 @@ metadata:
 type: Opaque
 stringData:
   # NextAuth session secret (32-byte hex). 生产上请轮换。
-  NEXTAUTH_SECRET: "***REMOVED_NEXTAUTH_SECRET***"
-  AUTH_SECRET: "***REMOVED_NEXTAUTH_SECRET***"
+  NEXTAUTH_SECRET: ""  # security-scan: ignore
+  # 真值走 kubectl create secret / SealedSecret
+  AUTH_SECRET: ""  # security-scan: ignore
   # club-web (horiculture.club, 中文)
   CLUB_CLIENT_ID: "382022444505956510"
   CLUB_CLIENT_SECRET: ""
   CLUB_ISSUER: "https://id-shopclub.horiculture.club"
   # space-web (horiculture.space, 英文)
   SPACE_CLIENT_ID: "380222566284984529"
-  SPACE_CLIENT_SECRET: "***REMOVED_SPACE_CLIENT_SECRET***"
+  SPACE_CLIENT_SECRET: ""  # security-scan: ignore
 ---
 # Zitadel Service User PAT (方案 Z: 后端调 v2 Session API)
 # 由 jenkins-pat.sh 从 ~/.zitadel-svc-pat 生成后 apply, 不直接写在 repo
@@ -27,7 +28,7 @@ metadata:
   namespace: new-ecommerce
 type: Opaque
 data:
-  pat: ZXlKaGJHY2lPaUpCTWpVMlIwTk5TMWNpTENKbGJtTWlPaUpCTWpVMlIwTk5JaXdpYVhZaU9pSnZSRGxYZURoTldVdGZiRk53Uld4S0lpd2lhMmxrSWpvaWIybGtZMHRsZVNJc0luUmhaeUk2SWxKVWFHTndNa281U0V0RVlVbzNWMFpIUlhadlpVRWlmUS53dzVJb1Z3X0Y5UnZaNEZIT3ZfTW1RMC1yMFdGaXR2YjhoRzA1ZUVKT2dJLlRaX1dydTNUX2MtSkk5Z0ouYXVESnFYMFlGT09lZFphT0NPSlZTYXYtWkpScGkybHRWbkltNzMtQUR0eDgxempXNlEuY1NzWXNqb1Z6eXprMkxkX0JTb2kwQQ==
+  pat: ""  # security-scan: ignore  # kubectl edit secret zitadel-svc 单独注入
 ---
 apiVersion: apps/v1
 kind: Deployment
