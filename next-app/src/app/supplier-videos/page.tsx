@@ -33,6 +33,7 @@ interface VideoItem {
 }
 
 function VideoCard({ item, active }: { item: VideoItem; active: boolean }) {
+  const { region } = useRegion();
   const { t } = useI18n();
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
