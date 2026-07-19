@@ -6,6 +6,8 @@ import TabBar from '../TabBar';
 import { useI18n } from '@/lib/i18n/context';
 import LangSwitch from '@/app/components/LangSwitch';
 import PlantHunterLogo from '@/app/components/PlantHunterLogo';
+import { formatPrice } from '@/lib/utils';
+import { useRegion } from '@/lib/region-context';
 
 interface AuctionItem {
   productId: string;
@@ -26,6 +28,7 @@ interface AuctionItem {
 }
 
 export default function AuctionPage() {
+  const { region } = useRegion();
   const { t } = useI18n();
   const [items, setItems] = useState<AuctionItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,7 +88,7 @@ export default function AuctionPage() {
         body: JSON.stringify({ bidderName: bidName, bidderPhone: bidPhone }),
       });
       const data = await res.json();
-      if (res.ok) { setMessage(`竞价成功！当前价 ¥${data.currentPrice}`); fetchItems(); }
+      if (res.ok) { setMessage(`竞价成功！当前价 ${formatPrice(data.currentPrice, region.code)}`); fetchItems(); }
       else { setMessage(data.error || t('auction.bidFailed')); }
     } catch { setMessage(t('common.networkError')); }
     setBidding(null);
@@ -151,8 +154,8 @@ export default function AuctionPage() {
                       {item.specSize && <span>📏{item.specSize}</span>}
                     </div>
                     <div className="flex items-end justify-between mb-3">
-                      <div><p className="text-[10px] text-stone-400">{t('auction.startingPrice')}</p><p className="text-xs text-stone-400 line-through">¥{item.basePrice}</p></div>
-                      <div className="text-right"><p className="text-[10px] text-emerald-700 font-medium">{t('reverseAuction.currentPrice')}</p><p className="text-xl font-bold text-emerald-700">¥{item.currentPrice}</p></div>
+                      <div><p className="text-[10px] text-stone-400">{t('auction.startingPrice')}</p><p className="text-xs text-stone-400 line-through">{formatPrice(item.basePrice, region.code)}</p></div>
+                      <div className="text-right"><p className="text-[10px] text-emerald-700 font-medium">{t('reverseAuction.currentPrice')}</p><p className="text-xl font-bold text-emerald-700">{formatPrice(item.currentPrice, region.code)}</p></div>
                     </div>
                     {item.currentBidder && <p className="text-xs text-stone-500 mb-2">最高出价: {item.currentBidder.name} · {item.bidCount}次出价</p>}
                     {isActive && item.remainingSeconds > 0 && (
@@ -162,13 +165,13 @@ export default function AuctionPage() {
                       </div>
                     )}
                     {isUpcoming && <button onClick={() => handleStartAuction(item.productId)} className="w-full bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-semibold hover:bg-emerald-800 transition-colors">开始拍卖</button>}
-                    {isActive && !isEnded && <button onClick={() => setExpandedId(isExpanded ? null : item.productId)} className="w-full bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-semibold hover:bg-emerald-800 transition-colors">🔨 竞价 +¥{item.bidIncrement}</button>}
-                    {isEnded && item.currentBidder && <Link href={`/payment?auction=${item.productId}`} className="w-full bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-semibold hover:bg-emerald-800 transition-colors block text-center">去支付 ¥{item.currentPrice}</Link>}
+                    {isActive && !isEnded && <button onClick={() => setExpandedId(isExpanded ? null : item.productId)} className="w-full bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-semibold hover:bg-emerald-800 transition-colors">🔨 竞价 +{formatPrice(item.bidIncrement, region.code)}</button>}
+                    {isEnded && item.currentBidder && <Link href={`/payment?auction=${item.productId}`} className="w-full bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-semibold hover:bg-emerald-800 transition-colors block text-center">去支付 {formatPrice(item.currentPrice, region.code)}</Link>}
                     {isExpanded && isActive && (
                       <div className="mt-3 pt-3 border-t border-stone-100 space-y-2">
                         <input type="text" placeholder="您的姓名" value={bidName} onChange={e => setBidName(e.target.value)} className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm text-stone-900 placeholder-stone-400 focus:border-emerald-300 focus:outline-none" />
                         <input type="tel" placeholder={t('login.phonePlaceholder')} value={bidPhone} onChange={e => setBidPhone(e.target.value)} className="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-sm text-stone-900 placeholder-stone-400 focus:border-emerald-300 focus:outline-none" />
-                        <button onClick={() => handleBid(item.productId)} disabled={bidding === item.productId} className="w-full bg-amber-500 text-white py-2 rounded-xl text-xs font-bold disabled:opacity-40 hover:bg-amber-600 transition-colors">{bidding === item.productId ? t('auction.bidding') : `确认出价 ¥${item.currentPrice + item.bidIncrement}`}</button>
+                        <button onClick={() => handleBid(item.productId)} disabled={bidding === item.productId} className="w-full bg-amber-500 text-white py-2 rounded-xl text-xs font-bold disabled:opacity-40 hover:bg-amber-600 transition-colors">{bidding === item.productId ? t('auction.bidding') : `确认出价 ${formatPrice(item.currentPrice + item.bidIncrement, region.code)}`}</button>
                       </div>
                     )}
                   </div>

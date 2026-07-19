@@ -1,5 +1,6 @@
 'use client';
 
+import { formatPrice } from '@/lib/utils';
 const estates = [
   { name: '安国玉簪庄园', area: '1200亩', years: 20, rating: 4.9, volume: '8600万', region: '河北' },
   { name: '神州花卉研究基地', area: '800亩', years: 15, rating: 4.8, volume: '5200万', region: '河北' },
@@ -8,6 +9,7 @@ const estates = [
 ];
 
 export default function EstateShowcase() {
+  const { region } = useRegion();
   return (
     <section className="py-24 px-8">
       <div className="max-w-6xl mx-auto">
@@ -36,7 +38,7 @@ export default function EstateShowcase() {
                 </div>
                 <div>
                   <div className="text-[#6b7280] text-xs mb-1">成交金额</div>
-                  <div className="text-[#2dd4a0] font-bold">¥{e.volume}</div>
+                  <div className="text-[#2dd4a0] font-bold">{formatPrice(e.volume, region.code)}</div>
                 </div>
               </div>
             </div>

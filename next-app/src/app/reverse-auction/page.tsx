@@ -5,6 +5,8 @@ import Link from 'next/link';
 import TabBar from '../TabBar';
 import { useI18n } from '@/lib/i18n/context';
 import PlantHunterLogo from '@/app/components/PlantHunterLogo';
+import { formatPrice } from '@/lib/utils';
+import { useRegion } from '@/lib/region-context';
 
 interface Product {
   _id: string;
@@ -79,6 +81,7 @@ function fmtCountdown(seconds: number) {
 }
 
 export default function ReverseAuctionPage() {
+  const { region } = useRegion();
   const { t } = useI18n();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -203,11 +206,11 @@ export default function ReverseAuctionPage() {
                     <div className="grid grid-cols-2 gap-3 mb-3">
                       <div>
                         <p className="text-[10px] text-stone-400">开盘价</p>
-                        <p className="text-sm text-stone-400 line-through">¥{price.start.toFixed(2)}</p>
+                        <p className="text-sm text-stone-400 line-through">{formatPrice(price.start, region.code)}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-[10px] text-emerald-700 font-medium">当前倒拍价</p>
-                        <p className="text-2xl font-bold text-emerald-700">¥{price.current.toFixed(2)}</p>
+                        <p className="text-2xl font-bold text-emerald-700">{formatPrice(price.current, region.code)}</p>
                       </div>
                     </div>
                     <div className="bg-stone-50 rounded-xl p-3 mb-3 border border-stone-100">
@@ -219,7 +222,7 @@ export default function ReverseAuctionPage() {
                         <div className="h-full bg-gradient-to-r from-emerald-400 to-amber-400 rounded-full transition-all" style={{ width: `${Math.min(100, price.progress * 100)}%` }} />
                       </div>
                       <div className="flex justify-between text-[10px] text-stone-400 mt-2">
-                        <span>已降 ¥{price.dropAmount.toFixed(2)}</span>
+                        <span>已降 {formatPrice(price.dropAmount, region.code)}</span>
                         <span>本轮剩余 {fmtCountdown(price.roundLeft)}</span>
                       </div>
                     </div>
@@ -234,7 +237,7 @@ export default function ReverseAuctionPage() {
                       </div>
                     </div>
                     <button
-                      onClick={() => setMessage(`${titleOf(p)} 已锁定当前倒拍价 ¥${price.current.toFixed(2)}，请联系供应商确认数量。`)}
+                      onClick={() => setMessage(`${titleOf(p)} 已锁定当前倒拍价 ${formatPrice(price.current, region.code)}，请联系供应商确认数量。`)}
                       className="w-full bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-semibold tracking-wide hover:bg-emerald-800 transition-colors"
                     >
                       锁定当前价
