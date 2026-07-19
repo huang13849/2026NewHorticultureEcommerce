@@ -1,6 +1,7 @@
 'use client';
 
 import { formatPrice } from '@/lib/utils';
+import { useRegion } from '@/lib/region-context';
 const estates = [
   { name: '安国玉簪庄园', area: '1200亩', years: 20, rating: 4.9, volume: '8600万', region: '河北' },
   { name: '神州花卉研究基地', area: '800亩', years: 15, rating: 4.8, volume: '5200万', region: '河北' },
