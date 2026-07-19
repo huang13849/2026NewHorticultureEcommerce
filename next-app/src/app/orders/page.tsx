@@ -5,7 +5,6 @@ import { useSearchParams } from 'next/navigation';
 import { resolveMinioUrl } from '@/lib/imageUrl';
 import TabBar from '../TabBar';
 import { formatPrice } from '@/lib/utils';
-import { useRegion } from '@/lib/region-context';
 
 type Region = 'cn' | 'global';
 
@@ -69,7 +68,6 @@ function getPayIcon(payMethod: string, provider?: string): string {
 }
 
 export default function OrdersPage() {
-  const { region } = useRegion();
   const searchParams = useSearchParams();
   const newOrderId = searchParams?.get('new') || '';
   const [isDomestic, setIsDomestic] = useState<boolean>(false);
@@ -191,7 +189,7 @@ export default function OrdersPage() {
             <p className="text-xs text-stone-400 mt-1">商品件数</p>
           </div>
           <div className="rounded-2xl border border-stone-200 bg-white p-4 text-center">
-            <p className="text-2xl font-black text-emerald-700">{formatPrice(totalAmount, region.code)}</p>
+            <p className="text-2xl font-black text-emerald-700">{formatPrice(totalAmount, region === 'cn' ? 'cn' : 'us')}</p>
             <p className="text-xs text-stone-400 mt-1">总金额</p>
           </div>
         </div>
@@ -243,7 +241,7 @@ export default function OrdersPage() {
                           <p className="text-sm font-medium truncate">{item.name}</p>
                           <p className="text-xs text-stone-400">×{item.quantity || 1}</p>
                         </div>
-                        <p className="text-sm font-bold">{formatPrice(item.price * (item.quantity || 1), region.code)}</p>
+                        <p className="text-sm font-bold">{formatPrice(item.price * (item.quantity || 1), region === 'cn' ? 'cn' : 'us')}</p>
                       </div>
                     ))}
                   </div>
@@ -262,7 +260,7 @@ export default function OrdersPage() {
                         </span>
                       )}
                     </div>
-                    <p className="text-base font-black text-emerald-700">{formatPrice(order.totalAmount || 0, region.code)}</p>
+                    <p className="text-base font-black text-emerald-700">{formatPrice(order.totalAmount || 0, region === 'cn' ? 'cn' : 'us')}</p>
                   </div>
                   <div className="pt-3 mt-1 border-t border-stone-100 flex justify-end">
                     <button
