@@ -39,7 +39,7 @@ export default function EstateShowcase() {
                 </div>
                 <div>
                   <div className="text-[#6b7280] text-xs mb-1">成交金额</div>
-                  <div className="text-[#2dd4a0] font-bold">{formatPrice(e.volume, region.code)}</div>
+                  <div className="text-[#2dd4a0] font-bold">{e.volume}</div>
                 </div>
               </div>
             </div>
