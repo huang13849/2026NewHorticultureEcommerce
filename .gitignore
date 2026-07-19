@@ -13,3 +13,10 @@ uploads/
 
 # Cloudflare Pages static export
 next-app/out/
+
+# secrets - 兜底
+*.env
+*.env.*
+*.env.bak
+*.env.example
+!.env.template
