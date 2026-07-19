@@ -11,7 +11,7 @@
  */
 
 const axios = require('axios');
-const API_KEY = '***REMOVED_API_KEY***';
+const API_KEY = process.env.API_KEY || (function(){throw new Error('API_KEY env required')})();
 
 const GATEWAY = process.env.API_GATEWAY_URL || 'http://100.96.54.109:3007';
 const MONGO_BASE = `${GATEWAY}/api/mongo`;
