@@ -6,6 +6,8 @@ import Link from 'next/link';
 import TabBar from '../TabBar';
 import { useI18n } from '@/lib/i18n/context';
 import { useAuth } from '@/lib/auth-context';
+import { formatPrice } from '@/lib/utils';
+import { useRegion } from '@/lib/region-context';
 
 interface CartItem {
   productId: string;
@@ -22,6 +24,7 @@ function cartKeyFor(zid: string | null | undefined) {
 }
 
 export default function CartPage() {
+  const { region } = useRegion();
   const { t } = useI18n();
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -178,7 +181,7 @@ export default function CartPage() {
                   <span className="text-3xl">{item.image}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{item.name}</p>
-                    <p className="text-[#c9a84c] text-sm font-bold">¥{item.price.toFixed(2)}</p>
+                    <p className="text-[#c9a84c] text-sm font-bold">{formatPrice(item.price, region.code)}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button onClick={() => updateQuantity(item.productId, -1)} className="w-7 h-7 rounded border border-[#374151] text-[#9ca3af] flex items-center justify-center text-sm hover:border-[#c9a84c] hover:text-[#c9a84c] transition-colors">−</button>
@@ -194,7 +197,7 @@ export default function CartPage() {
               <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
                 <div>
                   <span className="text-[#9ca3af] text-sm">合计 ({totalItems}件)</span>
-                  <span className="text-[#c9a84c] font-bold text-xl ml-2">¥{totalAmount.toFixed(2)}</span>
+                  <span className="text-[#c9a84c] font-bold text-xl ml-2">{formatPrice(totalAmount, region.code)}</span>
                 </div>
                 <button
                   onClick={goToPayment}

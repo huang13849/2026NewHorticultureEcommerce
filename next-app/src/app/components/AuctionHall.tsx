@@ -2,6 +2,7 @@
 
 import { Product } from '@/lib/api';
 import { formatPrice } from '@/lib/utils';
+import { useRegion } from '@/lib/region-context';
 
 interface Props {
   products: Product[];
@@ -16,6 +17,7 @@ const records = [
 ];
 
 export default function AuctionHall({ products, loading }: Props) {
+  const { region } = useRegion();
   return (
     <section className="py-24 px-8">
       <div className="max-w-6xl mx-auto">
@@ -44,7 +46,7 @@ export default function AuctionHall({ products, loading }: Props) {
                       <div className="text-xs text-[#6b7280] mt-0.5">{p.origin} · {p.sellerName}</div>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <div className="text-gold font-bold">{formatPrice(p.sellPrice || p.price)}</div>
+                      <div className="text-gold font-bold">{formatPrice(p.sellPrice || p.price, region.code)}</div>
                       <div className="text-xs text-[#6b7280]">{p.category}</div>
                     </div>
                   </div>
@@ -65,7 +67,7 @@ export default function AuctionHall({ products, loading }: Props) {
                       <div className="text-xs text-[#6b7280] mt-1">{r.badge} · 认证采购商</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-gold font-bold">¥{r.price.toLocaleString()}</div>
+                      <div className="text-gold font-bold">{formatPrice(r.price, region.code)}</div>
                       <div className="text-xs text-[#6b7280]">{r.time}</div>
                     </div>
                   </div>

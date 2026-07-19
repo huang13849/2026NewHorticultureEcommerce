@@ -8,6 +8,8 @@ import TabBar from '../TabBar';
 import LoginPrompt from '../components/LoginPrompt';
 import { useI18n } from '@/lib/i18n/context';
 import LangSwitch from '@/app/components/LangSwitch';
+import { formatPrice } from '@/lib/utils';
+import { useRegion } from '@/lib/region-context';
 
 interface Address {
   name: string;
@@ -20,6 +22,7 @@ interface Address {
 }
 
 export default function ProfilePage() {
+  const { region } = useRegion();
   const router = useRouter();
   const { user, loading, logout } = useAuth();
   const { t } = useI18n();
@@ -164,7 +167,7 @@ export default function ProfilePage() {
                   <p className="text-[10px] text-stone-500 mt-1">商品件数</p>
                 </div>
                 <div className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4 text-center">
-                  <p className="text-xl font-black text-emerald-700">¥{orderStats.total.toFixed(2)}</p>
+                  <p className="text-xl font-black text-emerald-700">{formatPrice(orderStats.total, region.code)}</p>
                   <p className="text-[10px] text-stone-500 mt-1">结账总金额</p>
                 </div>
               </div>

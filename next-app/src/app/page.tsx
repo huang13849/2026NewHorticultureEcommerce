@@ -6,6 +6,7 @@ import { api, Product } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { useI18n } from '@/lib/i18n/context';
 import { useRegion, type RegionCode } from '@/lib/region-context';
+import { formatPrice } from '@/lib/utils';
 import TabBar from './TabBar';
 import AuthMenuButton from './components/AuthMenuButton';
 import ZitadelAuthBar from './components/ZitadelAuthBar';
@@ -390,7 +391,7 @@ export default function HomePage() {
                         <div className="flex items-center justify-between mt-1.5">
                           {IS_CN
                             ? <span className="text-sm font-bold text-emerald-700">{p.englishTitle || '—'}</span>
-                            : <span className="text-sm font-bold text-emerald-700">¥{Number(price).toFixed(2)}</span>
+                            : <span className="text-sm font-bold text-emerald-700">{formatPrice(price, region.code)}</span>
                           }
                           {p.category && <span className="text-[10px] text-stone-400 bg-stone-50 px-1.5 py-0.5 rounded">{p.category}</span>}
                         </div>

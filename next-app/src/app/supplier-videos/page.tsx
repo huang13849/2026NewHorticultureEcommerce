@@ -4,6 +4,8 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useI18n } from '@/lib/i18n/context';
 import LangSwitch from '@/app/components/LangSwitch';
+import { formatPrice } from '@/lib/utils';
+import { useRegion } from '@/lib/region-context';
 
 const API = process.env.NEXT_PUBLIC_API_URL || "/api";
 
@@ -99,7 +101,7 @@ function VideoCard({ item, active }: { item: VideoItem; active: boolean }) {
         <h2 className="text-lg font-bold leading-tight mb-1 line-clamp-2">{item.title}</h2>
         <p className="text-xs text-white/75 leading-relaxed line-clamp-2 mb-2">{item.description}</p>
         <div className="flex items-center gap-2">
-          {item.price > 0 && <span className="bg-emerald-500 text-white text-sm font-bold px-3 py-1 rounded-full">¥{item.price.toFixed(2)}</span>}
+          {item.price > 0 && <span className="bg-emerald-500 text-white text-sm font-bold px-3 py-1 rounded-full">{formatPrice(item.price, region.code)}</span>}
           {item.category && <span className="bg-white/15 text-white text-[10px] px-2 py-1 rounded-full backdrop-blur">{item.category}</span>}
           {!item.videoUrl && <span className="bg-amber-500/90 text-white text-[10px] px-2 py-1 rounded-full">图片短视频</span>}
         </div>
@@ -207,6 +209,7 @@ function SupplierVideosContent() {
 }
 
 export default function SupplierVideosPage() {
+  const { region } = useRegion();
   const { t } = useI18n();
   return (
     <Suspense fallback={<main className="h-screen bg-black text-white flex items-center justify-center">{t('common.loading')}</main>}>

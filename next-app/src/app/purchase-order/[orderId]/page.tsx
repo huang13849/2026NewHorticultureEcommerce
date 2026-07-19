@@ -4,6 +4,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { resolveMinioUrl } from '@/lib/imageUrl';
+import { formatPrice } from '@/lib/utils';
+import { useRegion } from '@/lib/region-context';
 
 const API = process.env.NEXT_PUBLIC_API_URL || '/api';
 
@@ -34,13 +36,14 @@ interface PgOrder {
   paid_at?: string | null;
 }
 
-function money(v: any) { const n = Number(v || 0); return `¥${n.toFixed(2)}`; }
+function money(v: any, code?: any) { return formatPrice(Number(v || 0), code); }
 function fmtDate(s?: string | null) {
   if (!s) return '';
   try { return new Date(s).toLocaleString('zh-CN', { hour12: false }); } catch { return String(s); }
 }
 
 export default function PurchaseOrderPage() {
+  const { region } = useRegion();
   const params = useParams();
   const router = useRouter();
   const orderId = String((params as any)?.orderId || '');
