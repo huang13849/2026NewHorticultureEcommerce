@@ -163,7 +163,7 @@ async function passwordLogin(req, { loginName, password, brand: forcedBrand }) {
   const host = req.headers.host;
   const brand = forcedBrand || pickBrand(host);
   const cfg = brandConfig(brand);
-  if (!cfg.pat) throw new Error(`no PAT for brand ${brand}`);
+  // PAT check removed: sysJwt() covers cross-instance auth; PAT is now optional.
 
   // Try PG user_profiles lookup first (Shop Club instance text-search is buggy)
   let userIdFromPg = '';
