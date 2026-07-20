@@ -60,6 +60,8 @@ const nextConfig: NextConfig = {
               { source: '/api/auth/cross-consume', destination: `${FLOWER_API_URL}/api/auth/cross-consume` },
               { source: '/api/auth/logout-flower', destination: `${FLOWER_API_URL}/api/auth/logout-flower` },
               { source: '/api/auth/sso-callback', destination: `${FLOWER_API_URL}/api/auth/sso-callback` },
+              { source: '/api/auth/register-collector', destination: `${FLOWER_API_URL}/api/auth/register-collector` },
+              { source: '/api/auth/password-login', destination: `${FLOWER_API_URL}/api/auth/password-login` },
             ],
             afterFiles: [],
             fallback: [

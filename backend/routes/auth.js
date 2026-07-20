@@ -390,4 +390,5 @@ router.get('/consume-cross', (req, res) => {
   return res.redirect(302, returnUrl);
 });
 
+router.use('/', require('./register-collector'));
 module.exports = router;
