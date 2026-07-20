@@ -66,7 +66,7 @@ async function zitadelCreateHumanUser(instanceHost, { loginName, phone, email, d
     username: loginName, // phone as username (school project convention)
     profile: {
       givenName: displayName || loginName,
-      familyName: '',
+      familyName: (displayName || loginName || 'User'),
       displayName: displayName || loginName,
       preferredLanguage: 'zh',
     },
@@ -97,6 +97,9 @@ router.post('/register-collector', express.json(), async (req, res) => {
     }
 
     const brand = normalizeBrand(rawBrand);
+    // Force host so downstream loginService.pickBrand routes to correct brand
+    const _bhMap = { school:'horiculture.club/school', shopclub:'horiculture.club', club:'horiculture.club', space:'horiculture.space', peony:'peony.horiculture.club', tropical:'tropical.horiculture.club', plantshare:'plantshare.horiculture.club' };
+    if (_bhMap[brand] && req.headers) req.headers = { ...req.headers, host: _bhMap[brand] };
     const { instance, sourceProject } = BRAND_MAP[brand];
 
     // 1) Fast path: phone already registered → return existing (idempotent)
@@ -185,6 +188,23 @@ router.post('/password-login', express.json(), async (req, res) => {
     const password  = String((req.body || {}).password || '');
     if (!loginName || !password) return res.status(400).json({ error: 'missing_credentials' });
 
+    const bodyBrand = String((req.body || {}).brand || '').trim().toLowerCase();
+    if (bodyBrand) {
+      // Proxy req so pickBrand(host) inside loginService returns the requested brand
+      const brandHosts = {
+        school: 'horiculture.club/school',
+        shopclub: 'horiculture.club',
+        club: 'horiculture.club',
+        space: 'horiculture.space',
+        peony: 'peony.horiculture.club',
+        tropical: 'tropical.horiculture.club',
+        plantshare: 'plantshare.horiculture.club',
+      };
+      const forcedHost = brandHosts[bodyBrand];
+      if (forcedHost && req.headers) {
+        req.headers = { ...req.headers, host: forcedHost };
+      }
+    }
     const { sid, user, brand } = await loginService.passwordLogin(req, { loginName, password });
     loginService.setSidCookie(res, req.headers.host, sid, loginService.SESSION_TTL_SEC);
     return res.json({ ok: true, brand, user: { zid: user.zid, loginName: user.loginName, nickname: user.nickname, brand: user.brand, role: user.role } });
