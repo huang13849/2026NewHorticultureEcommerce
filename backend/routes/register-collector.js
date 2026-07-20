@@ -20,13 +20,13 @@ const INTERNAL_ZITADEL = process.env.ZITADEL_INTERNAL_URL
   || 'http://zitadel.identity.svc.cluster.local:8080';
 
 const BRAND_MAP = {
-  school:     { instance: 'id-school.horiculture.club',     sourceProject: 'edu' },
-  shopclub:   { instance: 'id-shopclub.horiculture.club',   sourceProject: 'shop-club' },
-  club:       { instance: 'id-shopclub.horiculture.club',   sourceProject: 'shop-club' },
-  space:      { instance: 'id-shopclub.horiculture.club',   sourceProject: 'shop-space' },
-  peony:      { instance: 'id-peony.horiculture.club',      sourceProject: 'peony-alliance' },
-  tropical:   { instance: 'id-tropical.horiculture.club',   sourceProject: 'tropical' },
-  plantshare: { instance: 'id-plantshare.horiculture.club', sourceProject: 'plant-share' },
+  school:     { instance: 'id-school.horiculture.club',     orgId: '381235144436023355', sourceProject: 'edu' },
+  shopclub:   { instance: 'id-shopclub.horiculture.club',   orgId: '382005470828757108', sourceProject: 'shop-club' },
+  club:       { instance: 'id-shopclub.horiculture.club',   orgId: '382005470828757108', sourceProject: 'shop-club' },
+  space:      { instance: 'id-shopclub.horiculture.club',   orgId: '382005470828757108', sourceProject: 'shop-space' },
+  peony:      { instance: 'id-peony.horiculture.club',      orgId: '381066489660244197', sourceProject: 'peony-alliance' },
+  tropical:   { instance: 'id-tropical.horiculture.club',   orgId: '382005472489701492', sourceProject: 'tropical' },
+  plantshare: { instance: 'id-plantshare.horiculture.club', orgId: '381804925585260719', sourceProject: 'plant-share' },
 };
 function normalizeBrand(b) {
   const x = String(b || '').toLowerCase().trim();
@@ -55,7 +55,7 @@ function sysJwt() {
 
 // Create human user via legacy /management/v1/users/human/_import
 // (Same endpoint peony mobile-auth-service uses successfully.)
-async function zitadelImportHuman(instanceHost, { userName, phone, email, firstName, lastName, nickname, password }) {
+async function zitadelImportHuman(instanceHost, orgId, { userName, phone, email, firstName, lastName, nickname, password }) {
   const tok = sysJwt();
   if (!tok) return { ok: false, status: 500, data: { message: 'no_system_key' } };
   const headers = {
@@ -64,6 +64,7 @@ async function zitadelImportHuman(instanceHost, { userName, phone, email, firstN
     'x-forwarded-host': instanceHost,
     'x-forwarded-proto': 'https',
     Host: instanceHost,
+    'x-zitadel-orgid': orgId,
   };
   const body = {
     userName,                                   // must be unique in the instance
@@ -98,7 +99,7 @@ router.post('/register-collector', express.json(), async (req, res) => {
     if (pwStr.length < 8) return res.status(400).json({ error: 'weak_password', detail: 'min 8 chars' });
 
     const brand = normalizeBrand(rawBrand);
-    const { instance, sourceProject } = BRAND_MAP[brand];
+    const { instance, orgId, sourceProject } = BRAND_MAP[brand];
 
     // userName MUST be email-shape when instance policy disallows phone-as-username
     const userName    = phoneStr + '@horiculture.local';
@@ -120,7 +121,7 @@ router.post('/register-collector', express.json(), async (req, res) => {
     } catch (e) { console.warn('[register-collector:pg-precheck]', e.message); }
 
     // Create Zitadel human user in brand's instance
-    const zResp = await zitadelImportHuman(instance, {
+    const zResp = await zitadelImportHuman(instance, orgId, {
       userName,
       phone: phoneStr,
       email: finalEmail,
