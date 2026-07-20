@@ -113,6 +113,7 @@ router.post('/register-collector', express.json(), async (req, res) => {
         try {
           const { sid, user } = await loginService.passwordLogin(req, { loginName: phoneStr, password: pwStr, brand });
           loginService.setSidCookie(res, req.headers.host, sid, loginService.SESSION_TTL_SEC);
+          loginService.setFlowerTokenCookie(res, req.headers.host, loginService.signFlowerToken(user), loginService.SESSION_TTL_SEC);
           return res.json({ ok: true, existed: true, brand, user: { zid: user.zid, loginName: user.loginName, nickname: user.nickname, brand } });
         } catch {
           return res.status(409).json({ error: 'phone_taken' });
@@ -138,6 +139,7 @@ router.post('/register-collector', express.json(), async (req, res) => {
         try {
           const { sid, user } = await loginService.passwordLogin(req, { loginName: phoneStr, password: pwStr, brand });
           loginService.setSidCookie(res, req.headers.host, sid, loginService.SESSION_TTL_SEC);
+          loginService.setFlowerTokenCookie(res, req.headers.host, loginService.signFlowerToken(user), loginService.SESSION_TTL_SEC);
           return res.json({ ok: true, existed: true, brand, user });
         } catch {
           return res.status(409).json({ error: 'exists' });
@@ -168,6 +170,7 @@ router.post('/register-collector', express.json(), async (req, res) => {
     try {
       const { sid, user } = await loginService.passwordLogin(req, { loginName: phoneStr, password: pwStr, brand });
       loginService.setSidCookie(res, req.headers.host, sid, loginService.SESSION_TTL_SEC);
+      loginService.setFlowerTokenCookie(res, req.headers.host, loginService.signFlowerToken(user), loginService.SESSION_TTL_SEC);
       return res.json({ ok: true, brand, user: { zid: user.zid, loginName: user.loginName, nickname: user.nickname, brand } });
     } catch (e) {
       console.warn('[register-collector:auto-login]', e.message);
@@ -188,6 +191,7 @@ router.post('/password-login', express.json(), async (req, res) => {
 
     const { sid, user, brand } = await loginService.passwordLogin(req, { loginName, password, brand: bodyBrand });
     loginService.setSidCookie(res, req.headers.host, sid, loginService.SESSION_TTL_SEC);
+    loginService.setFlowerTokenCookie(res, req.headers.host, loginService.signFlowerToken(user), loginService.SESSION_TTL_SEC);
     return res.json({ ok: true, brand, user: { zid: user.zid, loginName: user.loginName, nickname: user.nickname, brand: user.brand, role: user.role } });
   } catch (e) {
     console.warn('[auth:password-login] fail:', e.message, e.zitadelStatus || '');

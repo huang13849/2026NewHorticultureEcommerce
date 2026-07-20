@@ -10,6 +10,36 @@ const axios = require('axios');
 const crypto = require('crypto');
 const fs = require('fs');
 const redis = require('redis');
+const jwt = require('jsonwebtoken');
+
+const FLOWER_JWT_SECRET = process.env.JWT_SECRET || 'flower-shop-secret-2024';
+
+function signFlowerToken(user) {
+  return jwt.sign({
+    sub: user.zid,
+    zid: user.zid,
+    loginName: user.loginName || '',
+    nickname: user.nickname || '',
+    brand: user.brand || '',
+    role: user.role || 'user',
+    isAdmin: !!user.isAdmin,
+  }, FLOWER_JWT_SECRET, { expiresIn: '30d' });
+}
+
+function appendCookie(res, val) {
+  const prev = res.getHeader('Set-Cookie');
+  if (prev) res.setHeader('Set-Cookie', Array.isArray(prev) ? [...prev, val] : [prev, val]);
+  else res.setHeader('Set-Cookie', val);
+}
+
+function setFlowerTokenCookie(res, host, token, maxAgeSec) {
+  // NOTE: NOT HttpOnly on purpose (some legacy Next.js client-side reads it).
+  const dom = cookieDomainFor(host);
+  const parts = [`flower_token=${token}`, 'Path=/', `Max-Age=${maxAgeSec}`, 'SameSite=Lax'];
+  if (dom) parts.push(`Domain=${dom}`);
+  parts.push('Secure');
+  appendCookie(res, parts.join('; '));
+}
 
 // Systemuser JWT — cross-instance auth (like register-collector uses)
 const SYS_KEY_PATH = process.env.ZITADEL_SYSTEM_KEY_PATH || '/system-key/systemuser.key';
@@ -147,7 +177,7 @@ function setSidCookie(res, host, sid, maxAgeSec) {
   const parts = [`sid=${sid}`, 'Path=/', `Max-Age=${maxAgeSec}`, 'HttpOnly', 'SameSite=Lax'];
   if (dom) parts.push(`Domain=${dom}`);
   parts.push('Secure'); // always Secure — nginx terminates TLS so proto=https
-  res.setHeader('Set-Cookie', parts.join('; '));
+  appendCookie(res, parts.join('; '));
 }
 
 function clearSidCookie(res, host) {
@@ -267,5 +297,7 @@ module.exports = {
   clearSidCookie,
   pickBrand,
   brandConfig,
+  signFlowerToken,
+  setFlowerTokenCookie,
   SESSION_TTL_SEC,
 };
