@@ -70,7 +70,7 @@ async function zitadelCreateHumanUser(instanceHost, { loginName, phone, email, d
       displayName: displayName || loginName,
       preferredLanguage: 'zh',
     },
-    ...(email ? { email: { email, isVerified: false } } : {}),
+    email: { email: (email || (loginName + '@horiculture.local')), isVerified: false },
     ...(phone ? { phone: { phone: phone.startsWith('+') ? phone : '+86' + phone, isVerified: false } } : {}),
     password: { password, changeRequired: false },
   };
