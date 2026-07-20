@@ -159,9 +159,9 @@ function clearSidCookie(res, host) {
 }
 
 // --- Public helpers used by routes ---
-async function passwordLogin(req, { loginName, password }) {
+async function passwordLogin(req, { loginName, password, brand: forcedBrand }) {
   const host = req.headers.host;
-  const brand = pickBrand(host);
+  const brand = forcedBrand || pickBrand(host);
   const cfg = brandConfig(brand);
   if (!cfg.pat) throw new Error(`no PAT for brand ${brand}`);
 

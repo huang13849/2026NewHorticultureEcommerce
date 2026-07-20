@@ -71,7 +71,7 @@ async function zitadelCreateHumanUser(instanceHost, { loginName, phone, email, d
       preferredLanguage: 'zh',
     },
     email: { email: (email || (loginName + '@horiculture.local')), isVerified: false },
-    ...(phone ? { phone: { phone: phone.startsWith('+') ? phone : '+86' + phone, isVerified: false } } : {}),
+    ...(phone ? { phone: { phone: phone.startsWith('+') ? phone : '+86' + phone, isVerified: true } } : {}),
     password: { password, changeRequired: false },
   };
   const resp = await axios.post(`${INTERNAL_ZITADEL}/v2/users/human`, body,
@@ -97,9 +97,6 @@ router.post('/register-collector', express.json(), async (req, res) => {
     }
 
     const brand = normalizeBrand(rawBrand);
-    // Force host so downstream loginService.pickBrand routes to correct brand
-    const _bhMap = { school:'horiculture.club/school', shopclub:'horiculture.club', club:'horiculture.club', space:'horiculture.space', peony:'peony.horiculture.club', tropical:'tropical.horiculture.club', plantshare:'plantshare.horiculture.club' };
-    if (_bhMap[brand] && req.headers) req.headers = { ...req.headers, host: _bhMap[brand] };
     const { instance, sourceProject } = BRAND_MAP[brand];
 
     // 1) Fast path: phone already registered → return existing (idempotent)
@@ -108,7 +105,7 @@ router.post('/register-collector', express.json(), async (req, res) => {
       if (existing && existing.zid) {
         // Try to auto-login with provided password so the client still gets a session.
         try {
-          const { sid, user } = await loginService.passwordLogin(req, { loginName: phoneStr, password: pwStr });
+          const { sid, user } = await loginService.passwordLogin(req, { loginName: phoneStr, password: pwStr, brand });
           loginService.setSidCookie(res, req.headers.host, sid, loginService.SESSION_TTL_SEC);
           return res.json({ ok: true, existed: true, brand, user: { zid: user.zid, loginName: user.loginName, nickname: user.nickname, brand } });
         } catch {
@@ -134,7 +131,7 @@ router.post('/register-collector', express.json(), async (req, res) => {
         try {
           const existing = await pgProfiles.getByLoginName(phoneStr);
           if (existing && existing.zid) {
-            const { sid, user } = await loginService.passwordLogin(req, { loginName: phoneStr, password: pwStr });
+            const { sid, user } = await loginService.passwordLogin(req, { loginName: phoneStr, password: pwStr, brand });
             loginService.setSidCookie(res, req.headers.host, sid, loginService.SESSION_TTL_SEC);
             return res.json({ ok: true, existed: true, brand, user });
           }
@@ -166,7 +163,7 @@ router.post('/register-collector', express.json(), async (req, res) => {
 
     // 4) Auto-login
     try {
-      const { sid, user } = await loginService.passwordLogin(req, { loginName: phoneStr, password: pwStr });
+      const { sid, user } = await loginService.passwordLogin(req, { loginName: phoneStr, password: pwStr, brand });
       loginService.setSidCookie(res, req.headers.host, sid, loginService.SESSION_TTL_SEC);
       return res.json({ ok: true, brand, user: { zid: user.zid, loginName: user.loginName, nickname: user.nickname, brand } });
     } catch (e) {
@@ -188,24 +185,8 @@ router.post('/password-login', express.json(), async (req, res) => {
     const password  = String((req.body || {}).password || '');
     if (!loginName || !password) return res.status(400).json({ error: 'missing_credentials' });
 
-    const bodyBrand = String((req.body || {}).brand || '').trim().toLowerCase();
-    if (bodyBrand) {
-      // Proxy req so pickBrand(host) inside loginService returns the requested brand
-      const brandHosts = {
-        school: 'horiculture.club/school',
-        shopclub: 'horiculture.club',
-        club: 'horiculture.club',
-        space: 'horiculture.space',
-        peony: 'peony.horiculture.club',
-        tropical: 'tropical.horiculture.club',
-        plantshare: 'plantshare.horiculture.club',
-      };
-      const forcedHost = brandHosts[bodyBrand];
-      if (forcedHost && req.headers) {
-        req.headers = { ...req.headers, host: forcedHost };
-      }
-    }
-    const { sid, user, brand } = await loginService.passwordLogin(req, { loginName, password });
+    const bodyBrand = String((req.body || {}).brand || '').trim().toLowerCase() || undefined;
+    const { sid, user, brand } = await loginService.passwordLogin(req, { loginName, password, brand: bodyBrand });
     loginService.setSidCookie(res, req.headers.host, sid, loginService.SESSION_TTL_SEC);
     return res.json({ ok: true, brand, user: { zid: user.zid, loginName: user.loginName, nickname: user.nickname, brand: user.brand, role: user.role } });
   } catch (e) {
