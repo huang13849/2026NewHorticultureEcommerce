@@ -166,14 +166,24 @@ router.post('/register-collector', express.json(), async (req, res) => {
       });
     } catch (e) { console.warn('[register-collector:pg-upsert]', e.message); }
 
-    // Auto-login
-    try {
-      const { sid, user } = await loginService.passwordLogin(req, { loginName: phoneStr, password: pwStr, brand });
-      loginService.setSidCookie(res, req.headers.host, sid, loginService.SESSION_TTL_SEC);
-      loginService.setFlowerTokenCookie(res, req.headers.host, loginService.signFlowerToken(user), loginService.SESSION_TTL_SEC);
-      return res.json({ ok: true, brand, user: { zid: user.zid, loginName: user.loginName, nickname: user.nickname, brand } });
-    } catch (e) {
-      console.warn('[register-collector:auto-login]', e.message);
+    // Auto-login (retry to ride out Zitadel projection lag after _import;
+    // freshly imported users can 404 QUERY-Dfbg2 for ~1-2s before the read model catches up)
+    {
+      let lastErr = null;
+      for (let attempt = 0; attempt < 6; attempt++) {
+        try {
+          const { sid, user } = await loginService.passwordLogin(req, { loginName: phoneStr, password: pwStr, brand });
+          loginService.setSidCookie(res, req.headers.host, sid, loginService.SESSION_TTL_SEC);
+          loginService.setFlowerTokenCookie(res, req.headers.host, loginService.signFlowerToken(user), loginService.SESSION_TTL_SEC);
+          return res.json({ ok: true, brand, user: { zid: user.zid, loginName: user.loginName, nickname: user.nickname, brand } });
+        } catch (e) {
+          lastErr = e;
+          const transient = e.zitadelStatus === 404 || /找不到用户|not be found|QUERY-Dfbg2/.test(String(e.message || ''));
+          if (!transient) break;
+          await new Promise(r => setTimeout(r, 400));
+        }
+      }
+      console.warn('[register-collector:auto-login]', lastErr && lastErr.message);
       return res.json({ ok: true, brand, autoLogin: false, zid });
     }
   } catch (e) {
