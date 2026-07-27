@@ -147,6 +147,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // NextAuth signout + 广播清所有 cookie
       fetch('/api/auth/signout', { method: 'POST', credentials: 'include' }).catch(() => {});
       fetch('/api/auth/sso-logout', { method: 'POST', credentials: 'include' }).catch(() => {});
+      // 联合登出: 顺手清另一个顶级域的 flower_token
+      try {
+        const host = window.location.hostname;
+        const other = host.endsWith('horiculture.club')
+          ? 'https://horiculture.space/api/auth/sso-logout'
+          : (host.endsWith('horiculture.space') ? 'https://horiculture.club/api/auth/sso-logout' : null);
+        if (other) fetch(other, { method: 'POST', credentials: 'include', mode: 'no-cors' }).catch(() => {});
+      } catch {}
     }
   }, []);
 

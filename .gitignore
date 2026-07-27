@@ -13,3 +13,7 @@ uploads/
 
 # Cloudflare Pages static export
 next-app/out/
+
+# backup files
+*.bak-*
+*.bak

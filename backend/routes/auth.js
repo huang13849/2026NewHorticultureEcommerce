@@ -251,11 +251,16 @@ function xbridgeIsSafeReturn(url) {
   }
 }
 
-// 返回请求应该 Set-Cookie 的 domain: 根据 Host 头判断当前站点
-function xbridgeCookieDomain(reqHost) {
-  const h = String(reqHost || '').toLowerCase().split(':')[0];
-  if (h.endsWith('horiculture.club')) return '.horiculture.club';
-  if (h.endsWith('horiculture.space')) return '.horiculture.space';
+// 返回请求应该 Set-Cookie 的 domain: 根据 Host / X-Forwarded-Host 判断当前站点
+// (CF Pages Function 反代时会把 Host 改成 sslip.io, 优先读 X-Forwarded-Host)
+function xbridgeCookieDomain(req) {
+  const raw = String(
+    (req.headers['x-forwarded-host']) ||
+    (req.headers['x-original-host']) ||
+    (req.headers.host) || ''
+  ).toLowerCase().split(',')[0].trim().split(':')[0];
+  if (raw.endsWith('horiculture.club')) return '.horiculture.club';
+  if (raw.endsWith('horiculture.space')) return '.horiculture.space';
   return null;
 }
 
@@ -337,8 +342,8 @@ router.get('/consume-cross', (req, res) => {
     { expiresIn: '30d' }
   );
 
-  // 决定 cookie domain: 根据 Host 头
-  const domain = xbridgeCookieDomain(req.headers.host);
+  // 决定 cookie domain: 根据 X-Forwarded-Host 或 Host 头 (CF Pages 会改 Host)
+  const domain = xbridgeCookieDomain(req);
   if (!domain) return res.status(400).json({ error: 'bad_host' });
 
   // 注意: 跨站 SSO 场景 flower_token cookie 已经是"当前一级域全站可见",
@@ -354,5 +359,45 @@ router.get('/consume-cross', (req, res) => {
   res.setHeader('Set-Cookie', cookieParts.join('; '));
   return res.redirect(302, returnUrl);
 });
+
+
+// ============================================================================
+// POST /auth/sso-logout
+//   清除 flower_token cookie (Domain 按当前站点判断: .horiculture.club / .horiculture.space)
+//   前端 auth-context.tsx logout() 会调用这个;
+//   同时 NextAuth signout 会清 next-auth.session-token.
+// ============================================================================
+router.post('/sso-logout', (req, res) => {
+  const domain = xbridgeCookieDomain(req);
+  const cookieParts = [
+    'flower_token=',
+    'Path=/',
+    'Max-Age=0',
+    'Expires=Thu, 01 Jan 1970 00:00:00 GMT',
+    'SameSite=Lax',
+    'Secure',
+  ];
+  if (domain) cookieParts.splice(1, 0, `Domain=${domain}`);
+  res.setHeader('Set-Cookie', cookieParts.join('; '));
+  return res.json({ ok: true });
+});
+
+// GET 版本用于浏览器地址栏兜底
+router.get('/sso-logout', (req, res) => {
+  const domain = xbridgeCookieDomain(req);
+  const cookieParts = [
+    'flower_token=',
+    'Path=/',
+    'Max-Age=0',
+    'Expires=Thu, 01 Jan 1970 00:00:00 GMT',
+    'SameSite=Lax',
+    'Secure',
+  ];
+  if (domain) cookieParts.splice(1, 0, `Domain=${domain}`);
+  res.setHeader('Set-Cookie', cookieParts.join('; '));
+  const back = xbridgeIsSafeReturn(req.query.return) || '/';
+  return res.redirect(302, back);
+});
+
 
 module.exports = router;
