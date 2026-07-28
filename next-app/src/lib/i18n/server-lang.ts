@@ -11,8 +11,11 @@ import ja from './ja.json';
 import fr from './fr.json';
 import ar from './ar.json';
 import ru from './ru.json';
+
 export type Lang = 'zh' | 'en' | 'de' | 'ja' | 'fr' | 'ar' | 'ru';
+
 const DICTS: Record<Lang, Record<string, unknown>> = { zh, en, de, ja, fr, ar, ru };
+
 export async function pickServerLang(): Promise<Lang> {
   try {
     const h = await headers();
@@ -31,6 +34,7 @@ export async function pickServerLang(): Promise<Lang> {
     return process.env.NEXT_PUBLIC_REGION === 'global' ? 'en' : 'zh';
   }
 }
+
 function resolve(obj: unknown, key: string): string | undefined {
   const parts = key.split('.');
   let val: unknown = obj;
@@ -41,6 +45,7 @@ function resolve(obj: unknown, key: string): string | undefined {
   }
   return typeof val === 'string' ? val : undefined;
 }
+
 export function serverT(lang: Lang) {
   return (key: string, params?: Record<string, string | number>): string => {
     const val = resolve(DICTS[lang], key)

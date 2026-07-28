@@ -31,6 +31,33 @@ async function fetchSession(): Promise<SessionShape | null> {
   }
 }
 
+// 后端 sid cookie session (通过 /login 表单 POST /api/session/password-login-form 登录)
+// 前端要能感知这条通道, 否则 guest 登录后 header 依然显示未登录按钮 + 无处退出.
+async function fetchSessionMe(): Promise<User | null> {
+  try {
+    const r = await fetch('/api/session/me', { credentials: 'include' });
+    if (!r.ok) return null;
+    const j = await r.json();
+    const u = j && j.user;
+    if (!u) return null;
+    const role = String(u.role || 'user');
+    const isSuperAdmin = role === 'super_admin' || !!u.isSuperAdmin;
+    const isAdmin = isSuperAdmin || role === 'admin' || !!u.isAdmin;
+    const shaped: User = {
+      id: String(u.zid || ''),
+      phone: String(u.phone || u.loginName || ''),
+      nickname: String(u.nickname || u.loginName || 'User'),
+      avatar: u.avatar || '',
+      role,
+      isAdmin,
+      isSuperAdmin,
+    };
+    return shaped;
+  } catch {
+    return null;
+  }
+}
+
 // 跨站 SSO 兜底: 直接问 flower-api /api/auth/me-flower 读取 .horiculture.club/.horiculture.space
 // cookie flower_token, 命中即视为登录, 不需要重跳 NextAuth OIDC.
 async function fetchMeFlower(): Promise<User | null> {
@@ -63,20 +90,10 @@ function decodeFlowerToken(token: string): User | null {
   } catch { return null; }
 }
 
-// 跨顶级域 SSO Bridge: space 探 me-flower 401 时, 尝试从 club 拿 ticket (仅一次, 靠 URL 参数打防抖).
-// 只在跨顶级域场景触发 —— 同一顶级域下的 subpath (peony/tropical) 早已经能读到 cookie, 不需要跨.
+// 跨顶级域 SSO Bridge: 已停用. club/space 域名/登录彻底隔离.
+// 保留 cross-issue 后端端点用于其他系统(peony 等), 但前端不再自动跳转.
 function shouldTryXBridge(): { peer: string } | null {
-  if (typeof window === 'undefined') return null;
-  const host = window.location.hostname;
-  const url = new URL(window.location.href);
-  if (url.searchParams.get('__xb') === '1') return null; // 已尝试过, 别循环
-  if (host === 'horiculture.space' || host === 'www.horiculture.space') {
-    return { peer: 'https://horiculture.club' };
-  }
-  if (host === 'horiculture.club' || host === 'www.horiculture.club') {
-    return { peer: 'https://horiculture.space' };
-  }
-  return null;
+  return null; // 隔离国内/国际, 不再跨域桥接
 }
 
 function jumpToXBridge(peer: string): void {
@@ -98,7 +115,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
 
     async function boot() {
-      // Step 1: 先探 me-flower (读 .horiculture.club/.horiculture.space cookie).
+      // Step 0: 先探后端 sid cookie session (guest / phone / email 表单登录都落这条通道).
+      const sidUser = await fetchSessionMe();
+      if (cancelled) return;
+      if (sidUser) {
+        setUser(sidUser);
+        if (!cancelled) setLoading(false);
+        return;
+      }
+
+      // Step 1: 再探 me-flower (读 .horiculture.club/.horiculture.space cookie).
       // 命中就直接登录, 兼容 peony/tropical/space 上的跨站 SSO. 没命中再走 NextAuth.
       const flowerUser = await fetchMeFlower();
       if (cancelled) return;
@@ -144,17 +170,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     if (typeof window !== 'undefined') {
       try { localStorage.removeItem('flower_token'); } catch {}
-      // NextAuth signout + 广播清所有 cookie
-      fetch('/api/auth/signout', { method: 'POST', credentials: 'include' }).catch(() => {});
-      fetch('/api/auth/sso-logout', { method: 'POST', credentials: 'include' }).catch(() => {});
-      // 联合登出: 顺手清另一个顶级域的 flower_token
-      try {
-        const host = window.location.hostname;
-        const other = host.endsWith('horiculture.club')
-          ? 'https://horiculture.space/api/auth/sso-logout'
-          : (host.endsWith('horiculture.space') ? 'https://horiculture.club/api/auth/sso-logout' : null);
-        if (other) fetch(other, { method: 'POST', credentials: 'include', mode: 'no-cors' }).catch(() => {});
-      } catch {}
+      // NextAuth v5 signout 必须带 csrfToken 才能清 session cookie
+      (async () => {
+        try {
+          const r = await fetch('/api/auth/csrf', { credentials: 'include' });
+          const { csrfToken } = await r.json();
+          const body = new URLSearchParams();
+          body.set('csrfToken', csrfToken);
+          body.set('callbackUrl', '/');
+          await fetch('/api/auth/signout', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: body.toString(),
+            redirect: 'manual',
+          });
+        } catch {}
+        try {
+          await fetch('/api/auth/sso-logout', { method: 'POST', credentials: 'include' });
+        } catch {}
+        try {
+          // 清后端 sid cookie session (form-login / guest 登录都走这条)
+          await fetch('/api/session/logout', { method: 'POST', credentials: 'include' });
+        } catch {}
+        // 强制刷新, 让服务端根据被清掉的 cookie 重新渲染
+        try { window.location.assign('/'); } catch {}
+      })();
     }
   }, []);
 

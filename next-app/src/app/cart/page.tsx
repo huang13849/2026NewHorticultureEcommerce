@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import TabBar from '../TabBar';
 import { useI18n } from '@/lib/i18n/context';
 import { useAuth } from '@/lib/auth-context';
-import LangSwitch from '@/app/components/LangSwitch';
+import { formatPrice } from '@/lib/utils';
+import { useRegion } from '@/lib/region-context';
 
 interface CartItem {
   productId: string;
@@ -17,10 +18,17 @@ interface CartItem {
   checked: boolean;
 }
 
+function cartKeyFor(zid: string | null | undefined) {
+  const id = zid ? String(zid) : 'guest';
+  return `flower_cart:${id}`;
+}
+
 export default function CartPage() {
+  const { region } = useRegion();
   const { t } = useI18n();
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const zid = (user as any)?.id || (user as any)?.zid || null;
 
   // Login guard: redirect to login if not authenticated
   useEffect(() => {
@@ -29,14 +37,59 @@ export default function CartPage() {
     }
   }, [authLoading, user, router]);
 
-  if (authLoading) {
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load: prefer server cart; fallback to per-zid localStorage
+  const loadCart = useCallback(async () => {
+    if (typeof window === 'undefined' || !zid) { setLoading(false); return; }
+    setLoading(true);
+    try {
+      const r = await fetch('/api/user/cart', { credentials: 'include', cache: 'no-store' });
+      if (r.ok) {
+        const j = await r.json();
+        if (Array.isArray(j.cart) && j.cart.length) {
+          setCart(j.cart);
+          localStorage.setItem(cartKeyFor(zid), JSON.stringify(j.cart));
+          setLoading(false);
+          return;
+        }
+      }
+    } catch (_) {}
+    // Fallback to local per-user cart
+    try {
+      const saved = localStorage.getItem(cartKeyFor(zid));
+      if (saved) setCart(JSON.parse(saved));
+      else setCart([]);
+    } catch { setCart([]); }
+    setLoading(false);
+  }, [zid]);
+
+  useEffect(() => { loadCart(); }, [loadCart]);
+
+  // Persist to both local (per-user key) and server (debounced-lite)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !zid || loading) return;
+    localStorage.setItem(cartKeyFor(zid), JSON.stringify(cart));
+    // Fire-and-forget server sync
+    const t = setTimeout(() => {
+      fetch('/api/user/cart', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cart }),
+      }).catch(() => {});
+    }, 400);
+    return () => clearTimeout(t);
+  }, [cart, zid, loading]);
+
+  if (authLoading || loading) {
     return (
       <main className="min-h-screen bg-[#0a0e1a] text-white flex items-center justify-center">
         <p className="text-[#6b7280]">加载中…</p>
       </main>
     );
   }
-
   if (!user) {
     return (
       <main className="min-h-screen bg-[#0a0e1a] text-white flex items-center justify-center">
@@ -44,47 +97,25 @@ export default function CartPage() {
       </main>
     );
   }
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('flower_cart');
-      if (saved) {
-        try { setCart(JSON.parse(saved)); } catch {}
-      }
-    }
-    setLoading(false);
-  }, []);
 
   const toggleCheck = (productId: string) => {
     setCart(prev => prev.map(item =>
       item.productId === productId ? { ...item, checked: !item.checked } : item
     ));
   };
-
   const toggleAll = () => {
     const allChecked = cart.every(item => item.checked);
     setCart(prev => prev.map(item => ({ ...item, checked: !allChecked })));
   };
-
   const updateQuantity = (productId: string, delta: number) => {
     setCart(prev => prev.map(item => {
       if (item.productId !== productId) return item;
       return { ...item, quantity: Math.max(1, item.quantity + delta) };
     }));
   };
-
   const removeFromCart = (productId: string) => {
     setCart(prev => prev.filter(item => item.productId !== productId));
   };
-
-  // 持久化
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('flower_cart', JSON.stringify(cart));
-    }
-  }, [cart]);
 
   const checkedItems = cart.filter(item => item.checked);
   const totalAmount = checkedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -92,23 +123,16 @@ export default function CartPage() {
 
   const goToPayment = () => {
     if (checkedItems.length === 0) return;
-    // 保存选中项到 session 用于支付页
-    localStorage.setItem('flower_cart', JSON.stringify(checkedItems));
+    // 保存选中项到 per-user key + legacy key (payment 页读 flower_cart 兼容)
+    const payload = JSON.stringify(checkedItems);
+    localStorage.setItem(cartKeyFor(zid), payload);
+    localStorage.setItem('flower_cart', payload);
     router.push('/payment');
   };
-
-  if (loading) {
-    return (
-      <main className="min-h-screen bg-[#0a0e1a] text-white flex items-center justify-center">
-        <p className="text-[#6b7280]">加载中…</p>
-      </main>
-    );
-  }
 
   return (
     <>
       <main className="min-h-screen bg-[#0a0e1a] text-white pb-32">
-        {/* 导航 */}
         <nav className="sticky top-0 z-50 bg-[#0a0e1a]/90 backdrop-blur-md border-b border-white/5">
           <div className="max-w-2xl mx-auto px-4 h-12 flex items-center gap-3">
             <Link href="/shop" className="text-[#9ca3af] hover:text-white text-sm">← 商店</Link>
@@ -125,7 +149,6 @@ export default function CartPage() {
           </div>
         ) : (
           <>
-            {/* 全选 */}
             <div className="max-w-2xl mx-auto px-4 pt-4">
               <label className="flex items-center gap-2 text-sm text-[#9ca3af] cursor-pointer">
                 <button
@@ -142,7 +165,6 @@ export default function CartPage() {
               </label>
             </div>
 
-            {/* 商品列表 */}
             <div className="max-w-2xl mx-auto px-4 pt-3 space-y-3">
               {cart.map(item => (
                 <div key={item.productId} className="card p-4 flex items-center gap-3">
@@ -159,33 +181,23 @@ export default function CartPage() {
                   <span className="text-3xl">{item.image}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{item.name}</p>
-                    <p className="text-[#c9a84c] text-sm font-bold">¥{item.price.toFixed(2)}</p>
+                    <p className="text-[#c9a84c] text-sm font-bold">{formatPrice(item.price, region.code)}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => updateQuantity(item.productId, -1)}
-                      className="w-7 h-7 rounded border border-[#374151] text-[#9ca3af] flex items-center justify-center text-sm hover:border-[#c9a84c] hover:text-[#c9a84c] transition-colors"
-                    >−</button>
+                    <button onClick={() => updateQuantity(item.productId, -1)} className="w-7 h-7 rounded border border-[#374151] text-[#9ca3af] flex items-center justify-center text-sm hover:border-[#c9a84c] hover:text-[#c9a84c] transition-colors">−</button>
                     <span className="text-sm w-6 text-center">{item.quantity}</span>
-                    <button
-                      onClick={() => updateQuantity(item.productId, 1)}
-                      className="w-7 h-7 rounded border border-[#374151] text-[#9ca3af] flex items-center justify-center text-sm hover:border-[#c9a84c] hover:text-[#c9a84c] transition-colors"
-                    >+</button>
+                    <button onClick={() => updateQuantity(item.productId, 1)} className="w-7 h-7 rounded border border-[#374151] text-[#9ca3af] flex items-center justify-center text-sm hover:border-[#c9a84c] hover:text-[#c9a84c] transition-colors">+</button>
                   </div>
-                  <button
-                    onClick={() => removeFromCart(item.productId)}
-                    className="text-[#6b7280] hover:text-red-400 transition-colors ml-1"
-                  >✕</button>
+                  <button onClick={() => removeFromCart(item.productId)} className="text-[#6b7280] hover:text-red-400 transition-colors ml-1">✕</button>
                 </div>
               ))}
             </div>
 
-            {/* 底部结算栏 */}
             <div className="fixed bottom-16 left-0 right-0 bg-[#111827]/95 backdrop-blur-md border-t border-white/5">
               <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
                 <div>
                   <span className="text-[#9ca3af] text-sm">合计 ({totalItems}件)</span>
-                  <span className="text-[#c9a84c] font-bold text-xl ml-2">¥{totalAmount.toFixed(2)}</span>
+                  <span className="text-[#c9a84c] font-bold text-xl ml-2">{formatPrice(totalAmount, region.code)}</span>
                 </div>
                 <button
                   onClick={goToPayment}

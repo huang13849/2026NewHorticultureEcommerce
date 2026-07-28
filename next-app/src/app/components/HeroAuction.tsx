@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Product } from '@/lib/api';
+import { formatPrice } from '@/lib/utils';
+import { useRegion } from '@/lib/region-context';
 
 interface Props {
   product?: Product;
@@ -9,6 +11,7 @@ interface Props {
 }
 
 export default function HeroAuction({ product, loading }: Props) {
+  const { region } = useRegion();
   const [t, setT] = useState({ h: 0, m: 12, s: 45 });
   const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -74,7 +77,7 @@ export default function HeroAuction({ product, loading }: Props) {
             <div>
               <div className="text-[11px] text-[#6b7280] tracking-[3px] mb-2">当前价格</div>
               <div className="text-4xl lg:text-5xl font-bold text-gold">
-                ¥{typeof price === 'number' ? price.toLocaleString() : price}
+                {typeof price === 'number' ? formatPrice(price, region.code) : price}
               </div>
             </div>
 

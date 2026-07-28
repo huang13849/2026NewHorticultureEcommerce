@@ -40,6 +40,34 @@ spec:
           value: http://100.96.54.109:31007
         - name: PORT
           value: "3010"
+        # === Redis session (2026-07-09) ===
+        - name: REDIS_URL
+          value: "redis://100.96.54.109:31379"
+        - name: ZITADEL_PAT
+          valueFrom:
+            secretKeyRef:
+              name: zitadel-svc
+              key: pat
+        - name: PG_HOST
+          value: "100.67.126.90"
+        - name: PG_PORT
+          value: "5432"
+        - name: PG_DATABASE
+          value: "supply_chain"
+        - name: PG_USER
+          value: "postgres"
+        - name: PG_READ_HOSTS
+          value: "100.127.141.83:5433"
+        - name: PG_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pg-orders
+              key: PG_PASSWORD
+        envFrom:
+        - secretRef:
+            name: flower-next-zitadel
+        - secretRef:
+            name: flower-api-la-payment
         readinessProbe:
           tcpSocket: { port: 3010 }
           initialDelaySeconds: 5

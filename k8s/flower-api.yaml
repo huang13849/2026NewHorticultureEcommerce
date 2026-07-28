@@ -34,6 +34,44 @@ spec:
           value: "380222397556523217"
         - name: ZITADEL_SPACE_WEB_CLIENT_ID
           value: "380222566284984529"
+        # === Redis session (2026-07-09) ===
+        - name: REDIS_URL
+          value: "redis://session-redis.new-ecommerce.svc.cluster.local:6379"
+        # Zitadel service PAT (v2/sessions password-login)
+        - name: ZITADEL_PAT
+          valueFrom:
+            secretKeyRef:
+              name: zitadel-svc
+              key: pat
+        - name: PG_HOST
+          value: "100.67.126.90"
+        - name: PG_PORT
+          value: "5432"
+        - name: PG_DATABASE
+          value: "supply_chain"
+        - name: PG_USER
+          value: "postgres"
+        - name: PG_READ_HOSTS
+          value: "100.127.141.83:5433"
+        - name: PG_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pg-orders
+              key: PG_PASSWORD
+        envFrom:
+        - secretRef:
+            name: flower-next-zitadel
+        - secretRef:
+            name: flower-api-la-payment
+        volumeMounts:
+        - name: system-key
+          mountPath: /system-key
+          readOnly: true
+      volumes:
+      - name: system-key
+        secret:
+          secretName: zitadel-system-key
+          defaultMode: 0444
 ---
 apiVersion: v1
 kind: Service

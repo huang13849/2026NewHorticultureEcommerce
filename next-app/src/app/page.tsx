@@ -6,6 +6,7 @@ import { api, Product } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { useI18n } from '@/lib/i18n/context';
 import { useRegion, type RegionCode } from '@/lib/region-context';
+import { formatPrice } from '@/lib/utils';
 import TabBar from './TabBar';
 import AuthMenuButton from './components/AuthMenuButton';
 import ZitadelAuthBar from './components/ZitadelAuthBar';
@@ -155,21 +156,11 @@ export default function HomePage() {
     setSearchLoading(true);
     setHasSearched(true);
     try {
-      const res = await fetch(`${API}/search/products`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          keyword,
-          limit: 24,
-          regionCode: region.code,
-          lang,
-          source: 'home',
-          userId: user?.id,
-          path: typeof window !== 'undefined' ? window.location.pathname : '/',
-        }),
-      });
+      // ES-backed search via seo-service (/seo/api/search on both sites)
+      const res = await fetch(`/seo/api/search?q=${encodeURIComponent(keyword)}&size=24`);
       const data = await res.json();
-      setSearchResults(data.products || []);
+      const hits = data.hits || [];
+      setSearchResults(hits.map((h: any) => ({ ...h, _id: h.id })));
       setSearchTotal(data.total || 0);
     } catch {
       setSearchResults([]);
@@ -275,10 +266,7 @@ export default function HomePage() {
               <span className="font-semibold tracking-tight text-sm text-stone-900">{t('nav.flowerShop')}</span>
             </div>
             <div className="hidden md:flex items-center gap-6 text-xs text-stone-500 font-medium">
-              <a href="/auction" className="hover:text-emerald-700 transition-colors">{t('nav.auction')}</a>
-              <a href="/reverse-auction" className="hover:text-emerald-700 transition-colors">{t('nav.reverseAuction')}</a>
               <a href="/map" className="hover:text-emerald-700 transition-colors">{t('nav.map')}</a>
-              <a href="/garden" className="hover:text-emerald-700 transition-colors">{t('nav.garden')}</a>
             </div>
             <div className="flex items-center gap-2">
               <RegionSwitch />
@@ -403,7 +391,7 @@ export default function HomePage() {
                         <div className="flex items-center justify-between mt-1.5">
                           {IS_CN
                             ? <span className="text-sm font-bold text-emerald-700">{p.englishTitle || '—'}</span>
-                            : <span className="text-sm font-bold text-emerald-700">¥{Number(price).toFixed(2)}</span>
+                            : <span className="text-sm font-bold text-emerald-700">{formatPrice(price, region.code)}</span>
                           }
                           {p.category && <span className="text-[10px] text-stone-400 bg-stone-50 px-1.5 py-0.5 rounded">{p.category}</span>}
                         </div>
@@ -568,10 +556,15 @@ export default function HomePage() {
                 </a>
                 <div className="rounded-2xl border border-stone-200 bg-white/75 p-4">
                   <div className="text-stone-400 mb-1">{t('home.footer.address')}</div>
-                  <div className="font-semibold text-stone-800">中国北京市丰台区新宫</div>
+                  <div className="font-semibold text-stone-800">{t('home.footer.addressValue')}</div>
                 </div>
               </div>
             </div>
+            {region.code === 'cn' && (
+              <div className="mt-8 pt-6 border-t border-stone-200/60 flex flex-col items-center gap-3">
+                
+              </div>
+            )}
           </div>
         </footer>
       </main>

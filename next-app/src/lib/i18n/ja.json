@@ -7,7 +7,7 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "confirm": "Confirm",
-    "login": "Login",
+    "login": "サインイン",
     "logout": "Logout",
     "back": "Back",
     "submit": "Submit",
@@ -36,7 +36,8 @@
     "download": "Download",
     "confirmDelete": "Confirm delete?",
     "copied": "Copied",
-    "cny": "CNY"
+    "cny": "CNY",
+    "register": "新規登録"
   },
   "nav": {
     "home": "Home",
@@ -248,13 +249,14 @@
       "copyright": "Beijing-Tianjin-Hebei Flower Supply Chain Platform © 2026",
       "phone": "電話",
       "email": "メール",
-      "address": "住所"
+      "address": "住所",
+      "addressValue": "中国 北京市 豊台区 新宮"
     },
     "intelligentSupply": "Intelligent Supply Chain",
     "greenCertSubtitle": "Green Certification · Carbon Credit",
     "step": "Step {n}",
     "searchTitle": "商品検索",
-    "searchSubtitle": "検索語はSEO分析用にPostgreSQLクラスターへ保存されます。",
+    "searchSubtitle": "",
     "searchPlaceholder": "花、苗木、カテゴリ、サプライヤー語句を検索…",
     "searching": "検索中…",
     "clearSearch": "検索をクリア",
@@ -413,7 +415,12 @@
     "province": "都道府県",
     "city": "市区町村",
     "district": "区/県",
-    "detailAddress": "詳細住所：番地、建物名"
+    "detailAddress": "詳細住所：番地、建物名",
+    "addressDeleted": "住所を削除",
+    "defaultSet": "既定に設定",
+    "defaultLabel": "既定",
+    "setDefault": "既定にする",
+    "deleteAddress": "削除"
   },
   "login": {
     "title": "Login",
@@ -667,5 +674,158 @@
     "reverseFlowerAuction": "花の逆オークション",
     "shop": "ショップ",
     "mine": "マイページ"
+  },
+  "peonyRegister": {
+    "title": "Peony Alliance Registration",
+    "subtitle": "China's National Flower · Global Alliance · Phone as ID",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Begin",
+    "submitting": "Blooming…",
+    "submitFailed": "Registration failed",
+    "pwSaveUnsupported": "Your browser cannot auto-save passwords. Please use latest Chrome / Edge / Safari for the best experience.",
+    "pwSaveFailed": "Browser refused to save your password. Please allow autofill and try again.",
+    "footer": "© Peony Alliance",
+    "step1": {
+      "title": "Account & Key",
+      "sub": "Your phone is your username; browser will save the password",
+      "phone": "Phone / Username",
+      "phonePh": "Digits only",
+      "password": "Password",
+      "passwordPh": "At least 6 chars",
+      "confirm": "Confirm Password",
+      "confirmPh": "Must match",
+      "mismatch": "Passwords do not match",
+      "pwSaveAck": "I agree to let my browser save this password. Registration cannot proceed without saving — ensures smooth future logins."
+    },
+    "step2": {
+      "title": "Alliance Branch",
+      "sub": "Which branch do you belong to?"
+    },
+    "step3": {
+      "title": "My Identity",
+      "sub": "Choose your role in this alliance"
+    },
+    "step4": {
+      "title": "Final Details",
+      "sub": "One step from bloom",
+      "positions": "Roles (multi-select)",
+      "entity": "Legal Name",
+      "entityPh": "Company / co-op / nursery name",
+      "province": "Province",
+      "city": "City",
+      "district": "District",
+      "address": "Full Address",
+      "addressPh": "Street · No. · Park",
+      "species": "Main Species",
+      "capacity": "Cultivation (mu)",
+      "capacityPh": "Estimated area",
+      "inviteCode": "Invite Code",
+      "inviteCodePh": "6-char code"
+    },
+    "alliance": {
+      "hq": {
+        "emoji": "🏛",
+        "title": "HQ",
+        "sub": "Heze / Caozhou Peony Garden"
+      },
+      "branch": {
+        "emoji": "🌸",
+        "title": "Branch",
+        "sub": "Heze / Luoyang / Beijing / Yunnan"
+      },
+      "overseas": {
+        "emoji": "🌍",
+        "title": "Overseas User",
+        "sub": "Global peony enthusiasts"
+      },
+      "partner": {
+        "emoji": "🤝",
+        "title": "Overseas Partner",
+        "sub": "International distribution"
+      }
+    },
+    "identity": {
+      "admin": {
+        "emoji": "👑",
+        "title": "Admin",
+        "sub": "Create org · invite members"
+      },
+      "staff": {
+        "emoji": "🧑‍🌾",
+        "title": "Member",
+        "sub": "Join via invite code"
+      }
+    },
+    "position": {
+      "sales": {
+        "emoji": "💐",
+        "label": "Sales"
+      },
+      "operation": {
+        "emoji": "🌱",
+        "label": "Operations"
+      },
+      "info": {
+        "emoji": "📋",
+        "label": "Info Officer"
+      },
+      "aftersales": {
+        "emoji": "💬",
+        "label": "After-sales"
+      }
+    },
+    "species": {
+      "peony": "Peony",
+      "moutan": "Moutan",
+      "cutflower": "Cut Flower",
+      "seedling": "Seedling",
+      "potted": "Potted",
+      "other": "Other"
+    },
+    "badge": {
+      "seedling": "New Bud",
+      "sprout": "Sprout",
+      "rooted": "Rooted",
+      "budding": "Budding",
+      "bloom": "Full Bloom"
+    },
+    "done": {
+      "title": "Registration Complete · New Bud",
+      "sub": "Welcome to Peony Alliance. Your badge grows with your contribution.",
+      "enter": "Enter Alliance"
+    }
+  },
+  "auth": {
+    "brandTitle": "植物コレクター · 2006年より",
+    "loginSubtitle": "ログインして注文とお気に入りを表示",
+    "registerTitle": "植物コレクターに登録",
+    "registerSubtitle": "登録すると自動で「植物コレクター」タグが付与されます",
+    "registerOk": "登録が完了しました！ログインしてください。",
+    "tabPhone": "電話番号",
+    "tabEmail": "メール",
+    "labelPhone": "電話番号",
+    "labelEmail": "メール",
+    "labelPassword": "パスワード",
+    "labelFirstName": "名",
+    "labelLastName": "姓",
+    "phonePlaceholder": "例: +81 90 1234 5678",
+    "emailPlaceholder": "you@example.com",
+    "pwdHint": "8文字以上、英数字を含む",
+    "optional": "任意",
+    "noAccount": "アカウントをお持ちでない方",
+    "hasAccount": "すでにアカウントをお持ちの方",
+    "errInvalidCreds": "ユーザー名またはパスワードが違います",
+    "errMissing": "必須項目を入力してください",
+    "errExists": "このアカウントは既に登録されています",
+    "errWeakPwd": "パスワードが弱すぎます（8文字以上、英数字）",
+    "errInvalidPhone": "電話番号の形式が正しくありません",
+    "errGeneric": "操作に失敗しました",
+    "labelPwdConfirm": "パスワード確認",
+    "errPwdMismatch": "パスワードが一致しません",
+    "submitting": "送信中…",
+    "goLogin": "ログインへ",
+    "loginSubmitting": "ログイン中…",
+    "pwdOnlyRetry": "パスワードが違います。再入力してください。"
   }
 }

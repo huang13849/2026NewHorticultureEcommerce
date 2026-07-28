@@ -14,13 +14,9 @@ export function getProductImage(image: string | undefined): string {
   return `${MINIO_ENDPOINT}/${MINIO_BUCKET}/${image}`;
 }
 
-/**
- * 格式化价格
- */
-export function formatPrice(price: number | undefined): string {
-  if (price == null) return '¥--';
-  return `¥${price.toFixed(2)}`;
-}
+// formatPrice re-exported from ./currency (region-aware)
+export { formatPrice, fetchRates } from './currency';
+export type { CurrencyCode } from './currency';
 
 /**
  * 格式化距离

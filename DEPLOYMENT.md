@@ -242,7 +242,7 @@ docker exec nginx-proxy nginx -s reload
 | 服务 | 位置 | 用途 |
 |---|---|---|
 | MongoDB (supply_chain) | RPi8 100.67.126.90:27017 (master) + RPi4 (slave) | 商品/供应商/经销商/订单 |
-| MongoDB API Gateway | ubun-master 100.96.54.109:3007 | 统一 `/api/mongo/*` 出口, 需要 `x-api-key: flower-app-key-2024` |
+| MongoDB API Gateway | ubun-master 100.96.54.109:3007 | 统一 `/api/mongo/*` 出口, 需要 `x-api-key: ***REMOVED_API_KEY***` |
 | PostgreSQL (primary) | RPi8 100.67.126.90:5432 | supply_chain 库 |
 | PostgreSQL (standby) | Mac Mini 100.76.15.64:5432 | 只读备库 |
 | Redis | ubun-master :6379 | 缓存/session |
@@ -296,7 +296,7 @@ ssh root@106.12.91.182 "docker exec nginx-proxy tail -f /var/log/nginx/access.lo
 ```bash
 # 国内版
 curl -sSI http://106.12.91.182/ | head -5
-curl -sS  http://106.12.91.182/api/mongo/supplier?limit=1 -H 'x-api-key: flower-app-key-2024' | head -c 200
+curl -sS  http://106.12.91.182/api/mongo/supplier?limit=1 -H 'x-api-key: ***REMOVED_API_KEY***' | head -c 200
 
 # 国际版
 curl -sSI https://horiculture.space/ | head -5
@@ -316,7 +316,7 @@ curl -sSI http://100.96.54.109:31000/ | head -5
 | LA VPS SSH | root / f012db38382d13d6 | 209.141.34.146 |
 | Gitea | huangyi / (token in `git remote -v`) | http://100.96.54.109:30330 |
 | Jenkins | admin / admin | http://100.96.54.109:30880 |
-| MongoDB API Gateway | x-api-key: flower-app-key-2024 | HTTP header |
+| MongoDB API Gateway | x-api-key: ***REMOVED_API_KEY*** | HTTP header |
 | k3s kubeconfig | `~/k3s.yaml` | ubuntu-master |
 
 ---

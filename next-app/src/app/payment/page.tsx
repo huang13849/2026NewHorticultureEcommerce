@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useRegion } from '@/lib/region-context';
 import { resolveMinioUrl } from '@/lib/imageUrl';
 import { useSearchParams, useRouter } from 'next/navigation';
 import TabBar from '../TabBar';
@@ -48,9 +49,33 @@ const REGION = process.env.NEXT_PUBLIC_REGION || ''; // 'cn' | 'global' | '' (de
 const IS_CN = REGION === 'cn';
 const IS_GLOBAL = REGION === 'global';
 
+type CurrencyCode = 'CNY' | 'USD' | 'EUR' | 'JPY' | 'SAR';
+const REGION_CURRENCY: Record<string, CurrencyCode> = {
+  cn: 'CNY', us: 'USD', eu: 'EUR', jp: 'JPY', sa: 'SAR',
+};
+const FALLBACK_RATES: Record<CurrencyCode, number> = { CNY: 1, USD: 0.138, EUR: 0.127, JPY: 21.5, SAR: 0.52 };
+const CURRENCY_LOCALE: Record<CurrencyCode, string> = { CNY: 'zh-CN', USD: 'en-US', EUR: 'de-DE', JPY: 'ja-JP', SAR: 'ar-SA' };
+function formatCurrency(cnyAmount: number, currency: CurrencyCode, rate: number): string {
+  const converted = cnyAmount * rate;
+  return new Intl.NumberFormat(CURRENCY_LOCALE[currency], {
+    style: 'currency', currency,
+    maximumFractionDigits: currency === 'JPY' ? 0 : 2,
+    minimumFractionDigits: currency === 'JPY' ? 0 : 2,
+  }).format(converted);
+}
+
+
 function PaymentContent() {
   const { t } = useI18n();
   const { user, loading: authLoading } = useAuth();
+  // 国内域名 horiculture.club: 线下采购单流程 (不走任何在线支付), 国际 .space 保留原支付方式
+  const [isDomestic, setIsDomestic] = useState(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const h = window.location.hostname || '';
+      setIsDomestic(h.includes('horiculture.club') || h === '100.96.54.109' || h === 'localhost' || h === '127.0.0.1');
+    }
+  }, []);
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -61,21 +86,6 @@ function PaymentContent() {
     }
   }, [authLoading, user, router]);
 
-  if (authLoading) {
-    return (
-      <main className="min-h-screen bg-stone-50 flex items-center justify-center">
-        <p className="text-stone-400">{t('common.loading')}</p>
-      </main>
-    );
-  }
-
-  if (!user) {
-    return (
-      <main className="min-h-screen bg-stone-50 flex items-center justify-center">
-        <p className="text-stone-400">{t('payment.pleaseLogin')}</p>
-      </main>
-    );
-  }
   const fromCart = searchParams.get('from') === 'cart';
 
   const [products, setProducts] = useState<PayProduct[]>([]);
@@ -89,6 +99,61 @@ function PaymentContent() {
   const [addressForm, setAddressForm] = useState<Address>(EMPTY_ADDRESS);
   const [savingAddress, setSavingAddress] = useState(false);
   const [addressMessage, setAddressMessage] = useState('');
+
+  // [payment] currency hook
+  const { region } = useRegion();
+  const currency: CurrencyCode = REGION_CURRENCY[region?.code || (IS_CN ? 'cn' : 'us')] || (IS_CN ? 'CNY' : 'USD');
+  const [rates, setRates] = useState<Record<CurrencyCode, number>>(FALLBACK_RATES);
+  useEffect(() => {
+    fetch(`${API}/currency/rates?base=CNY`, { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d && d.rates) setRates({ ...FALLBACK_RATES, ...d.rates }); })
+      .catch(() => {});
+  }, []);
+  const exchangeRate = rates[currency] || FALLBACK_RATES[currency];
+  const fmt = (amt: number) => formatCurrency(amt, currency, exchangeRate);
+
+  // [payment] Stripe success 回跳:自动 confirm 并跳 /orders
+  useEffect(() => {
+    const status = searchParams.get('status');
+    const sessionId = searchParams.get('session_id');
+    const orderId = searchParams.get('orderId');
+    if (status === 'success' && orderId) {
+      fetch(`${API}/payment/confirm-stripe`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ sessionId, orderId }),
+      }).catch(() => {}).finally(() => {
+        try { localStorage.removeItem('flower_cart'); } catch {}
+        setTimeout(() => { window.location.href = '/orders'; }, 800);
+      });
+    }
+  }, [searchParams]);
+
+  // Live refetch from /api/user/address so newly-saved rows show without needing profile refresh
+  useEffect(() => {
+    const zid = (user as any)?.id || (user as any)?.zid;
+    if (!zid) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetch(`${API}/user/address`, { credentials: 'include', cache: 'no-store' });
+        if (!r.ok) return;
+        const j = await r.json();
+        if (cancelled) return;
+        const list = ((j.address as Address[]) || []).filter(isAddressComplete) as Address[];
+        setAddressList(prev => list.length ? list : prev);
+        if (list.length) {
+          const defaultIndex = list.findIndex(a => a.isDefault);
+          const idx = defaultIndex >= 0 ? defaultIndex : 0;
+          setSelectedAddressIndex(idx);
+          setAddressForm({ ...list[idx], isDefault: true });
+        }
+      } catch (_) {}
+    })();
+    return () => { cancelled = true; };
+  }, [(user as any)?.id, (user as any)?.zid]);
 
   useEffect(() => {
     const list = (user?.address || []).filter(isAddressComplete) as Address[];
@@ -118,7 +183,7 @@ function PaymentContent() {
     setAddressMessage('');
   };
 
-  const handleSaveAddress = async () => {
+    const handleSaveAddress = async (): Promise<boolean> => {
     if (!isAddressComplete(addressForm)) {
       setAddressMessage(t('payment.addressRequired'));
       return false;
@@ -137,6 +202,62 @@ function PaymentContent() {
       return false;
     } finally {
       setSavingAddress(false);
+    }
+  };
+
+  const handleDeleteAddress = async (addr: Address) => {
+    try {
+      const id = (addr as any).id;
+      if (!id) return;
+      const res = await fetch(`${API}/user/address/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(typeof window !== 'undefined' && localStorage.getItem('flower_token')
+            ? { Authorization: `Bearer ${localStorage.getItem('flower_token')}` }
+            : {}),
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'delete_failed');
+      const list = (data.address || []).filter(isAddressComplete) as Address[];
+      setAddressList(list);
+      const defaultIdx = list.findIndex(a => a.isDefault);
+      setSelectedAddressIndex(list.length ? (defaultIdx >= 0 ? defaultIdx : 0) : -1);
+      if (list.length && (defaultIdx >= 0 || list[0])) {
+        setAddressForm({ ...(list[defaultIdx >= 0 ? defaultIdx : 0]), isDefault: true });
+      } else {
+        setAddressForm({ ...EMPTY_ADDRESS, name: user?.nickname || '', phone: user?.phone || '' });
+      }
+      setAddressMessage(t('payment.addressDeleted'));
+    } catch (err: any) {
+      setAddressMessage(err.message || t('payment.createOrderFailed'));
+    }
+  };
+
+  const handleSetDefault = async (addr: Address) => {
+    try {
+      const id = (addr as any).id;
+      if (!id) return;
+      const res = await fetch(`${API}/user/address/${id}/default`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(typeof window !== 'undefined' && localStorage.getItem('flower_token')
+            ? { Authorization: `Bearer ${localStorage.getItem('flower_token')}` }
+            : {}),
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'default_failed');
+      const list = (data.address || []).filter(isAddressComplete) as Address[];
+      setAddressList(list);
+      const idx = list.findIndex(a => (a as any).id === id);
+      setSelectedAddressIndex(idx >= 0 ? idx : 0);
+      if (idx >= 0) setAddressForm({ ...list[idx], isDefault: true });
+      setAddressMessage(t('payment.defaultSet'));
+    } catch (err: any) {
+      setAddressMessage(err.message || t('payment.createOrderFailed'));
     }
   };
 
@@ -176,6 +297,38 @@ function PaymentContent() {
 
   const totalAmount = Math.round(products.reduce((sum, p) => sum + p.price * (p.quantity || 1), 0) * 100) / 100;
   const totalItems = products.reduce((sum, p) => sum + (p.quantity || 1), 0);
+
+  // 更新商品数量/移除商品; fromCart 时同步回 localStorage 保持一致
+  const persistCart = (list: PayProduct[]) => {
+    try {
+      if (fromCart && typeof window !== 'undefined') {
+        const raw = localStorage.getItem('flower_cart');
+        const saved = raw ? JSON.parse(raw) : [];
+        const byId = new Map((list || []).map(p => [p.id, p]));
+        const next = saved
+          .filter((i: any) => byId.has(i.productId))
+          .map((i: any) => {
+            const p = byId.get(i.productId)!;
+            return { ...i, quantity: p.quantity || 1, checked: true };
+          });
+        localStorage.setItem('flower_cart', JSON.stringify(next));
+      }
+    } catch {}
+  };
+  const setQty = (id: string, next: number) => {
+    setProducts(prev => {
+      const list = prev.map(p => p.id === id ? { ...p, quantity: Math.max(1, next) } : p);
+      persistCart(list);
+      return list;
+    });
+  };
+  const removeItem = (id: string) => {
+    setProducts(prev => {
+      const list = prev.filter(p => p.id !== id);
+      persistCart(list);
+      return list;
+    });
+  };
 
   // 按部署区域筛选支付方式
   const allPaymentMethods = [
@@ -217,6 +370,41 @@ function PaymentContent() {
     }
     setPayStatus('creating');
     setMessage('');
+
+    // 国内线下采购单 (horiculture.club): 走 payMethod='offline', 只写订单+同步采购单, 不做任何支付
+    if (isDomestic) {
+      const confirmed = typeof window !== 'undefined'
+        ? window.confirm('确认下单？\n\n下单后我们将尽快联系您确认发货，采用线下收款方式。')
+        : true;
+      if (!confirmed) { setPayStatus('idle'); return; }
+      try {
+        const res = await fetch(`${API}/payment/checkout`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            payMethod: 'offline',
+            currency,
+            exchangeRate,
+            locale: 'zh',
+            customer: { name: selectedAddress.name || user?.nickname || '', phone: selectedAddress.phone || user?.phone || '' },
+            deliveryAddress: deliveryAddressText,
+            items: products.map(p => ({ productId: p.id, name: p.name, price: p.price, quantity: p.quantity || 1, image: p.image })),
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || '下单失败');
+        setOrderId(data.orderId);
+        setPayStatus('success');
+        setMessage(data.message || '采购单已创建，我们将尽快联系您');
+        // 清空购物车 & 跳转订单页
+        try { localStorage.removeItem('flower_cart'); } catch {}
+        setTimeout(() => { router.push(`/purchase-order/${encodeURIComponent(data.orderId)}`); }, 1200);
+      } catch (err: any) {
+        setPayStatus('failed');
+        setMessage(err.message || '下单失败，请稍后重试');
+      }
+      return;
+    }
 
     // 微信支付走独立路由
     if (payMethod === 'wechat') {
@@ -265,6 +453,9 @@ function PaymentContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           payMethod,
+          currency,
+          exchangeRate,
+          locale: currency === 'CNY' ? 'zh' : 'en',
           customer: { name: selectedAddress.name || user?.nickname || '', phone: selectedAddress.phone || user?.phone || '' },
           deliveryAddress: deliveryAddressText,
           items: products.map(p => ({ productId: p.id, name: p.name, price: p.price, quantity: p.quantity || 1, image: p.image })),
@@ -288,6 +479,21 @@ function PaymentContent() {
       setMessage(err.message || t('payment.createOrderFailed'));
     }
   };
+
+  if (authLoading) {
+    return (
+      <main className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <p className="text-stone-400">{t('common.loading')}</p>
+      </main>
+    );
+  }
+  if (!user) {
+    return (
+      <main className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <p className="text-stone-400">{t('payment.pleaseLogin')}</p>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-stone-50 to-white text-stone-900 pb-24">
@@ -313,7 +519,7 @@ function PaymentContent() {
             </div>
             <div className="text-right">
               <p className="text-xs text-stone-400">{t('payment.total')}</p>
-              <p className="text-2xl font-black text-emerald-700">¥{totalAmount.toFixed(2)}</p>
+              <p className="text-2xl font-black text-emerald-700">{fmt(totalAmount)}</p>
             </div>
           </div>
 
@@ -328,9 +534,19 @@ function PaymentContent() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate">{p.name}</p>
-                    <p className="text-xs text-stone-400">×{p.quantity || 1}</p>
+                    <p className="text-xs text-stone-400">{fmt(p.price)} · 小计 {fmt(p.price * (p.quantity || 1))}</p>
                   </div>
-                  <p className="text-sm font-bold text-stone-900">¥{(p.price * (p.quantity || 1)).toFixed(2)}</p>
+                  <div className="flex items-center gap-1.5">
+                    <button type="button" onClick={() => setQty(p.id, (p.quantity || 1) - 1)} className="w-7 h-7 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-50 disabled:opacity-30" disabled={(p.quantity || 1) <= 1} aria-label="decrease">−</button>
+                    <input
+                      type="number" min={1}
+                      value={p.quantity || 1}
+                      onChange={e => setQty(p.id, parseInt(e.target.value || '1', 10) || 1)}
+                      className="w-10 text-center text-sm font-bold rounded-lg border border-stone-200 py-1 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                    />
+                    <button type="button" onClick={() => setQty(p.id, (p.quantity || 1) + 1)} className="w-7 h-7 rounded-lg border border-stone-200 text-stone-500 hover:bg-stone-50" aria-label="increase">+</button>
+                    <button type="button" onClick={() => removeItem(p.id)} className="ml-1 text-rose-400 hover:text-rose-600 w-7 h-7 rounded-lg hover:bg-rose-50 text-sm" aria-label="remove">✕</button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -351,18 +567,36 @@ function PaymentContent() {
           {addressList.length > 0 && (
             <div className="space-y-2 mb-4">
               {addressList.map((addr, idx) => (
-                <button
-                  key={`${addr.phone}-${addr.detail}-${idx}`}
-                  type="button"
-                  onClick={() => { setSelectedAddressIndex(idx); setAddressForm({ ...addr, isDefault: true }); setAddressMessage(''); }}
-                  className={`w-full text-left rounded-2xl border p-3 transition-colors ${selectedAddressIndex === idx ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200 bg-white hover:border-stone-300'}`}
+                <div
+                  key={(addr as any).id || `${addr.phone}-${addr.detail}-${idx}`}
+                  className={`rounded-2xl border p-3 transition-colors ${selectedAddressIndex === idx ? 'border-emerald-500 bg-emerald-50' : 'border-stone-200 bg-white hover:border-stone-300'}`}
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-bold">{addr.name} <span className="ml-2 text-stone-500 font-normal">{addr.phone}</span></p>
-                    {selectedAddressIndex === idx && <span className="text-xs font-bold text-emerald-700">✓ {t('payment.use')}</span>}
+                  <button
+                    type="button"
+                    onClick={() => { setSelectedAddressIndex(idx); setAddressForm({ ...addr, isDefault: true }); setAddressMessage(''); }}
+                    className="w-full text-left"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-bold">
+                        {addr.name}
+                        <span className="ml-2 text-stone-500 font-normal">{addr.phone}</span>
+                        {addr.isDefault && <span className="ml-2 text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-full">{t('payment.defaultLabel')}</span>}
+                      </p>
+                      {selectedAddressIndex === idx && <span className="text-xs font-bold text-emerald-700">✓ {t('payment.use')}</span>}
+                    </div>
+                    <p className="text-xs text-stone-500 mt-1">{formatAddress(addr)}</p>
+                  </button>
+                  <div className="mt-2 flex items-center gap-3 text-xs">
+                    {!addr.isDefault && (
+                      <button type="button" onClick={() => handleSetDefault(addr)} className="text-emerald-700 hover:underline">
+                        {t('payment.setDefault')}
+                      </button>
+                    )}
+                    <button type="button" onClick={() => handleDeleteAddress(addr)} className="text-rose-500 hover:underline ml-auto">
+                      {t('payment.deleteAddress')}
+                    </button>
                   </div>
-                  <p className="text-xs text-stone-500 mt-1">{formatAddress(addr)}</p>
-                </button>
+                </div>
               ))}
               <button
                 type="button"
@@ -398,6 +632,22 @@ function PaymentContent() {
         </section>
 
         <section className="rounded-3xl border border-stone-200 bg-white p-5 md:p-6 shadow-sm">
+          {isDomestic ? (
+            <div className="space-y-2">
+              <h2 className="text-lg font-bold">下单方式</h2>
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">📋</span>
+                  <div>
+                    <p className="font-bold text-sm text-emerald-800">线下采购单</p>
+                    <p className="text-[12px] text-emerald-700 mt-1 leading-relaxed">
+                      下单后不做在线支付。我们将尽快联系您确认发货，采用线下收款方式。订单会自动保存到"订单管理"。
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (<>
           <h2 className="text-lg font-bold mb-4">{t('payment.selectPaymentMethod')}</h2>
           <div className={`grid gap-3 ${paymentMethods.length <= 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'}`}>
             {paymentMethods.map(m => {
@@ -438,6 +688,7 @@ function PaymentContent() {
               );
             })}
           </div>
+          </>)}
         </section>
 
         {payStatus === 'success' && (
@@ -445,14 +696,14 @@ function PaymentContent() {
             <div className="text-4xl mb-2">✅</div>
             <p className="font-bold text-emerald-800">{t('payment.orderCreated')}</p>
             <p className="text-xs text-emerald-700 mt-1">{t('payment.orderNumber')}：{orderId}</p>
-            <p className="text-sm font-bold text-emerald-800 mt-2">{t('payment.amountDue')}：¥{totalAmount.toFixed(2)}</p>
+            <p className="text-sm font-bold text-emerald-800 mt-2">{t('payment.amountDue')}：{fmt(totalAmount)}</p>
             {message && <p className="text-xs text-emerald-700 mt-2">{message}</p>}
             {wechatCodeUrl && <img src={wechatCodeUrl} alt={t('payment.wechatPay')} className="mx-auto mt-3 w-48 h-48 rounded-xl border" />}
             <button
-              onClick={() => window.open('/order/', '_blank')}
+              onClick={() => router.push(isDomestic ? `/purchase-order/${encodeURIComponent(orderId)}` : '/order/')}
               className="mt-4 px-6 py-2.5 rounded-xl bg-emerald-700 text-white text-sm font-bold hover:bg-emerald-800 transition-colors"
             >
-              {t('payment.viewOrder')}
+              {isDomestic ? '查看采购单' : t('payment.viewOrder')}
             </button>
           </section>
         )}
@@ -470,10 +721,10 @@ function PaymentContent() {
           <div className="max-w-5xl mx-auto px-6 md:px-10 py-3 flex items-center justify-between">
             <div>
               <span className="text-xs text-stone-500">{t('payment.total')}: </span>
-              <span className="text-xl font-bold text-emerald-700">¥{totalAmount.toFixed(2)}</span>
+              <span className="text-xl font-bold text-emerald-700">{fmt(totalAmount)}</span>
             </div>
             <button onClick={handlePay} disabled={products.length === 0 || !hasPayableAddress || payStatus === 'creating' || payStatus === 'redirecting'} className={`px-6 md:px-8 py-3 rounded-xl text-sm font-bold transition-colors ${products.length > 0 && hasPayableAddress ? 'bg-emerald-700 text-white hover:bg-emerald-800' : 'bg-stone-200 text-stone-400 cursor-not-allowed'}`}>
-              {!hasPayableAddress ? t('payment.fillAddressToPay') : payStatus === 'creating' ? t('payment.creating') : payStatus === 'redirecting' ? t('payment.redirecting') : t('payment.payWith', { method: paymentMethods.find(x => x.key === payMethod)?.name || t('payment.payNow') })}
+              {!hasPayableAddress ? t('payment.fillAddressToPay') : payStatus === 'creating' ? (isDomestic ? '提交中…' : t('payment.creating')) : payStatus === 'redirecting' ? t('payment.redirecting') : (isDomestic ? '确认下单' : t('payment.payWith', { method: paymentMethods.find(x => x.key === payMethod)?.name || t('payment.payNow') }))}
             </button>
           </div>
         </div>

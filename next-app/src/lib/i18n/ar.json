@@ -7,7 +7,7 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "confirm": "Confirm",
-    "login": "Login",
+    "login": "تسجيل الدخول",
     "logout": "Logout",
     "back": "Back",
     "submit": "Submit",
@@ -36,7 +36,8 @@
     "download": "Download",
     "confirmDelete": "Confirm delete?",
     "copied": "Copied",
-    "cny": "CNY"
+    "cny": "CNY",
+    "register": "التسجيل"
   },
   "nav": {
     "home": "Home",
@@ -248,13 +249,14 @@
       "copyright": "Beijing-Tianjin-Hebei Flower Supply Chain Platform © 2026",
       "phone": "الهاتف",
       "email": "البريد الإلكتروني",
-      "address": "العنوان"
+      "address": "العنوان",
+      "addressValue": "شينغونغ، فينغتاي، بكين، الصين"
     },
     "intelligentSupply": "Intelligent Supply Chain",
     "greenCertSubtitle": "Green Certification · Carbon Credit",
     "step": "Step {n}",
     "searchTitle": "البحث عن المنتجات",
-    "searchSubtitle": "يتم حفظ كلمات البحث في PostgreSQL لتحليل استراتيجية SEO.",
+    "searchSubtitle": "",
     "searchPlaceholder": "ابحث عن الزهور أو الشتلات أو الفئات أو الموردين…",
     "searching": "جارٍ البحث…",
     "clearSearch": "مسح البحث",
@@ -413,7 +415,12 @@
     "province": "المقاطعة",
     "city": "المدينة",
     "district": "المنطقة",
-    "detailAddress": "العنوان التفصيلي: الشارع، رقم المبنى"
+    "detailAddress": "العنوان التفصيلي: الشارع، رقم المبنى",
+    "addressDeleted": "تم حذف العنوان",
+    "defaultSet": "تم التعيين كافتراضي",
+    "defaultLabel": "افتراضي",
+    "setDefault": "تعيين كافتراضي",
+    "deleteAddress": "حذف"
   },
   "login": {
     "title": "Login",
@@ -667,5 +674,158 @@
     "reverseFlowerAuction": "المزاد العكسي للزهور الطازجة",
     "shop": "المتجر",
     "mine": "حسابي"
+  },
+  "peonyRegister": {
+    "title": "Peony Alliance Registration",
+    "subtitle": "China's National Flower · Global Alliance · Phone as ID",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Begin",
+    "submitting": "Blooming…",
+    "submitFailed": "Registration failed",
+    "pwSaveUnsupported": "Your browser cannot auto-save passwords. Please use latest Chrome / Edge / Safari for the best experience.",
+    "pwSaveFailed": "Browser refused to save your password. Please allow autofill and try again.",
+    "footer": "© Peony Alliance",
+    "step1": {
+      "title": "Account & Key",
+      "sub": "Your phone is your username; browser will save the password",
+      "phone": "Phone / Username",
+      "phonePh": "Digits only",
+      "password": "Password",
+      "passwordPh": "At least 6 chars",
+      "confirm": "Confirm Password",
+      "confirmPh": "Must match",
+      "mismatch": "Passwords do not match",
+      "pwSaveAck": "I agree to let my browser save this password. Registration cannot proceed without saving — ensures smooth future logins."
+    },
+    "step2": {
+      "title": "Alliance Branch",
+      "sub": "Which branch do you belong to?"
+    },
+    "step3": {
+      "title": "My Identity",
+      "sub": "Choose your role in this alliance"
+    },
+    "step4": {
+      "title": "Final Details",
+      "sub": "One step from bloom",
+      "positions": "Roles (multi-select)",
+      "entity": "Legal Name",
+      "entityPh": "Company / co-op / nursery name",
+      "province": "Province",
+      "city": "City",
+      "district": "District",
+      "address": "Full Address",
+      "addressPh": "Street · No. · Park",
+      "species": "Main Species",
+      "capacity": "Cultivation (mu)",
+      "capacityPh": "Estimated area",
+      "inviteCode": "Invite Code",
+      "inviteCodePh": "6-char code"
+    },
+    "alliance": {
+      "hq": {
+        "emoji": "🏛",
+        "title": "HQ",
+        "sub": "Heze / Caozhou Peony Garden"
+      },
+      "branch": {
+        "emoji": "🌸",
+        "title": "Branch",
+        "sub": "Heze / Luoyang / Beijing / Yunnan"
+      },
+      "overseas": {
+        "emoji": "🌍",
+        "title": "Overseas User",
+        "sub": "Global peony enthusiasts"
+      },
+      "partner": {
+        "emoji": "🤝",
+        "title": "Overseas Partner",
+        "sub": "International distribution"
+      }
+    },
+    "identity": {
+      "admin": {
+        "emoji": "👑",
+        "title": "Admin",
+        "sub": "Create org · invite members"
+      },
+      "staff": {
+        "emoji": "🧑‍🌾",
+        "title": "Member",
+        "sub": "Join via invite code"
+      }
+    },
+    "position": {
+      "sales": {
+        "emoji": "💐",
+        "label": "Sales"
+      },
+      "operation": {
+        "emoji": "🌱",
+        "label": "Operations"
+      },
+      "info": {
+        "emoji": "📋",
+        "label": "Info Officer"
+      },
+      "aftersales": {
+        "emoji": "💬",
+        "label": "After-sales"
+      }
+    },
+    "species": {
+      "peony": "Peony",
+      "moutan": "Moutan",
+      "cutflower": "Cut Flower",
+      "seedling": "Seedling",
+      "potted": "Potted",
+      "other": "Other"
+    },
+    "badge": {
+      "seedling": "New Bud",
+      "sprout": "Sprout",
+      "rooted": "Rooted",
+      "budding": "Budding",
+      "bloom": "Full Bloom"
+    },
+    "done": {
+      "title": "Registration Complete · New Bud",
+      "sub": "Welcome to Peony Alliance. Your badge grows with your contribution.",
+      "enter": "Enter Alliance"
+    }
+  },
+  "auth": {
+    "brandTitle": "جامع النباتات · منذ 2006",
+    "loginSubtitle": "سجّل الدخول لعرض الطلبات والمفضلة",
+    "registerTitle": "كن جامع نباتات",
+    "registerSubtitle": "بعد التسجيل يتم إضافة وسم \"جامع النباتات\" تلقائياً",
+    "registerOk": "تم التسجيل بنجاح! يرجى تسجيل الدخول.",
+    "tabPhone": "الهاتف",
+    "tabEmail": "البريد",
+    "labelPhone": "رقم الهاتف",
+    "labelEmail": "البريد الإلكتروني",
+    "labelPassword": "كلمة المرور",
+    "labelFirstName": "الاسم الأول",
+    "labelLastName": "اسم العائلة",
+    "phonePlaceholder": "مثال +966 5x xxx xxxx",
+    "emailPlaceholder": "you@example.com",
+    "pwdHint": "8 أحرف على الأقل، مع أرقام وحروف",
+    "optional": "اختياري",
+    "noAccount": "ليس لديك حساب؟",
+    "hasAccount": "لديك حساب بالفعل؟",
+    "errInvalidCreds": "بيانات دخول غير صحيحة",
+    "errMissing": "يرجى ملء جميع الحقول",
+    "errExists": "هذا الحساب مسجل بالفعل",
+    "errWeakPwd": "كلمة المرور ضعيفة (8 خانات على الأقل، أرقام وحروف)",
+    "errInvalidPhone": "صيغة الهاتف غير صحيحة",
+    "errGeneric": "فشل العملية",
+    "labelPwdConfirm": "تأكيد كلمة المرور",
+    "errPwdMismatch": "كلمتا المرور غير متطابقتين",
+    "submitting": "جارٍ الإرسال…",
+    "goLogin": "الذهاب لتسجيل الدخول",
+    "loginSubmitting": "جاري تسجيل الدخول…",
+    "pwdOnlyRetry": "كلمة المرور غير صحيحة. أعد إدخالها."
   }
 }

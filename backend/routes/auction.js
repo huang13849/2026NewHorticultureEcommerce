@@ -8,6 +8,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../lib/db');
+const pgOrders = require('../lib/pgOrders');
 
 const BID_INCREMENT = 5;        // 每次加价5元
 const AUCTION_DURATION = 600;   // 10分钟 = 600秒
@@ -309,7 +310,43 @@ router.post('/checkout/:productId', async (req, res) => {
       paidAt: null,
     };
 
-    await db.create('orders', order);
+    // 存入 PostgreSQL (plant_collector.orders)
+    try {
+      await pgOrders.createOrder({
+        zid: (winner && winner.zid) ? winner.zid : ('auction:' + (bidderPhone || bidderName || 'guest')),
+        orderNo: order.orderId,
+        subtotal: order.totalAmount,
+        shippingFee: 0,
+        discount: 0,
+        total: order.totalAmount,
+        currency: 'CNY',
+        shippingAddress: order.address || null,
+        source: 'auction',
+        originSite: req.get('host') || null,
+        metadata: {
+          pay_method: order.payMethod || 'wechat',
+          auction_id: String(order.auctionId || ''),
+          product_id: String(order.productId || ''),
+          product_title: order.productTitle || '',
+          product_category: order.productCategory || '',
+          bidder_name: order.bidderName || '',
+          bidder_phone: order.bidderPhone || '',
+          type: 'auction',
+        },
+        items: (order.items || []).map(it => ({
+          sku_id: it.productId || '',
+          title: it.name || '',
+          qty: it.quantity || 1,
+          unit_price: Number(it.price || 0),
+          subtotal: Number(it.price || 0) * Number(it.quantity || 1),
+          snapshot: it,
+        })),
+        status: 'pending',
+      });
+    } catch (e) {
+      console.error('[auction] PG createOrder failed:', e.message);
+      return res.status(500).json({ error: 'pg_write_failed', detail: e.message });
+    }
     // 标记拍卖已成交
     await db.update('auctions', auction._id, { status: 'sold' });
 

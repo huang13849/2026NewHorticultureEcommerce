@@ -161,12 +161,19 @@ function shapeUser(decoded) {
 // ============================================================================
 // GET /auth/me   —— 直接从 flower_token 解, 不查库
 // ============================================================================
-router.get('/me', (req, res) => {
+router.get('/me', async (req, res) => {
   try {
     const auth = req.headers.authorization;
     if (!auth) return res.status(401).json({ error: 'unauthenticated' });
     const decoded = jwt.verify(auth.replace('Bearer ', ''), JWT_SECRET);
     const isAdmin = decoded.role === 'super_admin' || decoded.role === 'admin';
+    // 从 Mongo user_profiles 拉地址列表 (静默失败, 不阻塞登录)
+    let address = [];
+    try {
+      const ups = require('../services/user-profile-service');
+      const profile = await ups.getByZid(decoded.zid);
+      if (profile && Array.isArray(profile.addresses)) address = profile.addresses;
+    } catch (e) { /* silent */ }
     return res.json({
       id: decoded.zid,
       phone: decoded.phone,
@@ -177,7 +184,7 @@ router.get('/me', (req, res) => {
       roles: decoded.roles || [],
       isAdmin,
       isSuperAdmin: isAdmin,
-      address: [],
+      address,
     });
   } catch (err) {
     return res.status(401).json({ error: 'token_invalid' });
@@ -186,15 +193,44 @@ router.get('/me', (req, res) => {
 
 // GET /auth/me-flower  —— 从 .horiculture.club/.horiculture.space 的 flower_token cookie 解
 //   跨站 SSO 兜底: 主站 next-app 挂载时 fetch 这个端点, 拿到用户就当已登录。
-router.get('/me-flower', (req, res) => {
+router.get('/me-flower', async (req, res) => {
   try {
     const cookies = parseCookies(req.headers.cookie);
+    // 1) sid cookie path (login-service)
+    try {
+      const loginService = require('../services/login-service');
+      const sess = await loginService.readSession(req);
+      if (sess && sess.user && sess.user.zid) {
+        const ups = require('../services/user-profile-service');
+        const profile = await ups.getByZid(sess.user.zid);
+        return res.json({ user: {
+          id: sess.user.zid,
+          zid: sess.user.zid,
+          phone: sess.user.phone,
+          email: sess.user.email,
+          nickname: sess.user.nickname,
+          brand: sess.user.brand,
+          role: sess.user.role || 'user',
+          isAdmin: false,
+          avatar: (profile && profile.avatar) || '',
+          address: (profile && profile.addresses) || [],
+        }});
+      }
+    } catch (_) {}
+    // 2) flower_token cookie fallback
     const authH = req.headers.authorization;
     const bearer = authH ? authH.replace('Bearer ', '') : null;
     const tok = cookies.flower_token || bearer;
     if (!tok) return res.status(401).json({ error: 'no_flower_token' });
     const decoded = jwt.verify(tok, JWT_SECRET);
-    return res.json({ user: shapeUser(decoded) });
+    const shaped = shapeUser(decoded);
+    try {
+      const ups = require('../services/user-profile-service');
+      const profile = await ups.getByZid(decoded.zid);
+      if (profile && Array.isArray(profile.addresses)) shaped.address = profile.addresses;
+      if (profile && profile.avatar) shaped.avatar = profile.avatar;
+    } catch (_) {}
+    return res.json({ user: shaped });
   } catch (err) {
     return res.status(401).json({ error: 'flower_token_invalid', detail: err.message });
   }
@@ -215,7 +251,6 @@ router.post('/sso-issue', goneHandler);
 // 业务数据端点 —— 先占位, 后续按 zid 重接 Mongo
 // ============================================================================
 router.put('/location', (req, res) => res.status(501).json({ error: 'not_implemented', note: 'awaiting zid-based reimpl' }));
-router.put('/address', (req, res) => res.status(501).json({ error: 'not_implemented', note: 'awaiting zid-based reimpl' }));
 
 // ============================================================================
 // 跨顶级域 SSO Bridge (2026-07-06, A 方案)
@@ -251,16 +286,11 @@ function xbridgeIsSafeReturn(url) {
   }
 }
 
-// 返回请求应该 Set-Cookie 的 domain: 根据 Host / X-Forwarded-Host 判断当前站点
-// (CF Pages Function 反代时会把 Host 改成 sslip.io, 优先读 X-Forwarded-Host)
-function xbridgeCookieDomain(req) {
-  const raw = String(
-    (req.headers['x-forwarded-host']) ||
-    (req.headers['x-original-host']) ||
-    (req.headers.host) || ''
-  ).toLowerCase().split(',')[0].trim().split(':')[0];
-  if (raw.endsWith('horiculture.club')) return '.horiculture.club';
-  if (raw.endsWith('horiculture.space')) return '.horiculture.space';
+// 返回请求应该 Set-Cookie 的 domain: 根据 Host 头判断当前站点
+function xbridgeCookieDomain(reqHost) {
+  const h = String(reqHost || '').toLowerCase().split(':')[0];
+  if (h.endsWith('horiculture.club')) return '.horiculture.club';
+  if (h.endsWith('horiculture.space')) return '.horiculture.space';
   return null;
 }
 
@@ -342,8 +372,8 @@ router.get('/consume-cross', (req, res) => {
     { expiresIn: '30d' }
   );
 
-  // 决定 cookie domain: 根据 X-Forwarded-Host 或 Host 头 (CF Pages 会改 Host)
-  const domain = xbridgeCookieDomain(req);
+  // 决定 cookie domain: 根据 Host 头
+  const domain = xbridgeCookieDomain(req.headers.host);
   if (!domain) return res.status(400).json({ error: 'bad_host' });
 
   // 注意: 跨站 SSO 场景 flower_token cookie 已经是"当前一级域全站可见",
@@ -360,44 +390,5 @@ router.get('/consume-cross', (req, res) => {
   return res.redirect(302, returnUrl);
 });
 
-
-// ============================================================================
-// POST /auth/sso-logout
-//   清除 flower_token cookie (Domain 按当前站点判断: .horiculture.club / .horiculture.space)
-//   前端 auth-context.tsx logout() 会调用这个;
-//   同时 NextAuth signout 会清 next-auth.session-token.
-// ============================================================================
-router.post('/sso-logout', (req, res) => {
-  const domain = xbridgeCookieDomain(req);
-  const cookieParts = [
-    'flower_token=',
-    'Path=/',
-    'Max-Age=0',
-    'Expires=Thu, 01 Jan 1970 00:00:00 GMT',
-    'SameSite=Lax',
-    'Secure',
-  ];
-  if (domain) cookieParts.splice(1, 0, `Domain=${domain}`);
-  res.setHeader('Set-Cookie', cookieParts.join('; '));
-  return res.json({ ok: true });
-});
-
-// GET 版本用于浏览器地址栏兜底
-router.get('/sso-logout', (req, res) => {
-  const domain = xbridgeCookieDomain(req);
-  const cookieParts = [
-    'flower_token=',
-    'Path=/',
-    'Max-Age=0',
-    'Expires=Thu, 01 Jan 1970 00:00:00 GMT',
-    'SameSite=Lax',
-    'Secure',
-  ];
-  if (domain) cookieParts.splice(1, 0, `Domain=${domain}`);
-  res.setHeader('Set-Cookie', cookieParts.join('; '));
-  const back = xbridgeIsSafeReturn(req.query.return) || '/';
-  return res.redirect(302, back);
-});
-
-
+router.use('/', require('./register-collector'));
 module.exports = router;

@@ -11,6 +11,10 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../lib/db');
+const pgOrders = require('../lib/pgOrders');
+const loginService = require('../services/login-service');
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || 'flower-shop-secret-2024';
 
 const axios = require('axios');
 const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL || 'http://100.96.54.109:3008';
@@ -81,10 +85,14 @@ async function syncPurchaseOrder(order) {
     delivery_address: order.deliveryAddress || '',
     product_id: order.items.map(i => i.productId).filter(Boolean),
     product_title: order.items.map(i => `${i.name} ×${i.quantity}`),
-    personal_tag: '花伴商城,Stripe',
+    personal_tag: (function(){ const pm = (order.payMethod || '').toLowerCase(); const tagMap = { offline: '线下收款', stripe: 'Stripe', paypal: 'PayPal', alipay: '支付宝', wechat: '微信支付' }; return '花伴商城,' + (tagMap[pm] || 'Stripe'); })(),
     payment_order_id: order.orderId,
-    payment_channel: order.provider || order.payMethod,
-    region: order.region || (['wechat','alipay'].includes(order.payMethod) ? 'cn' : 'global'),
+    payment_channel: (order.payMethod || order.provider || '').toString().toLowerCase(),
+    region: order.region || 'cn',
+    consignee: order.memberName || '',
+    order_status: '已下单',
+    shipping_status: '未发货',
+    pay_status: (order.payMethod || '').toLowerCase() === 'offline' ? '未支付' : '已支付',
     product_subtotal: order.subtotal,
     shipping_fee: order.shippingFee,
     coupon_code: order.couponCode || '',
@@ -116,6 +124,12 @@ const PROVIDERS = {
     configured: !!(process.env.PAYPAL_CHECKOUT_URL || (process.env.PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET)),
     checkoutUrl: process.env.PAYPAL_CHECKOUT_URL || '',
     note: 'Supports PayPal balance and international card payments when configured.',
+  },
+  offline: {
+    name: 'Offline',
+    configured: true,
+    checkoutUrl: '',
+    note: 'Domestic offline purchase order: creates order + syncs to purchase-order service, no online payment.',
   },
   alipay: {
     name: 'Alipay',
@@ -194,11 +208,11 @@ router.post('/quote', async (req, res) => {
 router.post('/confirm-stripe', async (req, res) => {
   try {
     const { sessionId, orderId } = req.body;
-    let order = null;
-    if (sessionId) order = await db.findOne('orders', { stripeSessionId: sessionId });
-    if (!order && orderId) order = await db.findOne('orders', { orderId });
-    if (!order) return res.status(404).json({ error: '订单不存在' });
-    let paid = order.status === 'paid' || order.status === 'mock_paid';
+    let pgOrder = null;
+    if (sessionId) pgOrder = await pgOrders.findByStripeSession(sessionId);
+    if (!pgOrder && orderId) pgOrder = await pgOrders.findByOrderNo(orderId);
+    if (!pgOrder) return res.status(404).json({ error: '订单不存在' });
+    let paid = (pgOrder.status === 'paid' || pgOrder.status === 'mock_paid');
     if (stripeConfigured && sessionId) {
       const sessionRes = await axios.get(`https://api.stripe.com/v1/checkout/sessions/${sessionId}`, {
         auth: { username: process.env.STRIPE_SECRET_KEY, password: '' },
@@ -206,11 +220,25 @@ router.post('/confirm-stripe', async (req, res) => {
       });
       paid = sessionRes.data.payment_status === 'paid';
     }
-    if (!paid) return res.status(400).json({ error: '支付尚未完成', order });
-    const updates = { status: 'paid', paidAt: order.paidAt || new Date().toISOString() };
-    if (order.status !== 'paid') order = await db.update('orders', order._id, updates);
-    const purchaseOrderId = await syncPurchaseOrder({ ...order, ...updates });
-    res.json({ ok: true, order: { ...order, ...updates, syncedPurchaseOrderId: purchaseOrderId } });
+    if (!paid) return res.status(400).json({ error: '支付尚未完成', order: pgOrder });
+    const paidAt = pgOrder.paid_at || new Date().toISOString();
+    if (pgOrder.status !== 'paid') {
+      await pgOrders.updateOrderStatus(pgOrder.order_no, { status: 'paid', paidAt });
+    }
+    const purchaseOrderId = await syncPurchaseOrder({
+      orderId: pgOrder.order_no,
+      _id: pgOrder.id,
+      items: pgOrder.items,
+      totalAmount: Number(pgOrder.total),
+      subtotal: Number(pgOrder.subtotal),
+      shippingFee: Number(pgOrder.shipping_fee),
+      memberName: (pgOrder.shipping_address || {}).memberName || '',
+      phone: (pgOrder.shipping_address || {}).phone || '',
+      deliveryAddress: (pgOrder.shipping_address || {}).text || '',
+      zid: pgOrder.zid,
+      status: 'paid', paidAt,
+    });
+    res.json({ ok: true, order: { ...pgOrder, status: 'paid', paidAt, syncedPurchaseOrderId: purchaseOrderId } });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -234,10 +262,36 @@ router.get('/products', async (req, res) => {
 
 router.post('/checkout', async (req, res) => {
   try {
-    const { items, payMethod = 'stripe', couponCode = '', customer = {}, deliveryAddress = '' } = req.body;
+    let currentZid = '';
+    let currentBrand = '';
+    try {
+      const sess = await loginService.readSession(req);
+      if (sess && sess.user && sess.user.zid) { currentZid = sess.user.zid; currentBrand = sess.user.brand || ''; }
+    } catch (_) {}
+    if (!currentZid) {
+      try {
+        const cookieHdr = req.headers.cookie || '';
+        const m = /(?:^|;\s*)flower_token=([^;]+)/.exec(cookieHdr);
+        const tok = m ? decodeURIComponent(m[1]) : (req.headers.authorization||'').replace(/^Bearer\s+/i,'');
+        if (tok) {
+          const dec = jwt.verify(tok, JWT_SECRET);
+          if (dec && dec.zid) { currentZid = dec.zid; currentBrand = dec.brand || currentBrand; }
+        }
+      } catch(e) { console.warn('[checkout] flower_token verify failed:', e.message); }
+    }
+    // 按请求 Host 判定归属: .club / 内网 => 国内(cn), 其他(.space 等) => 国际(global)
+    const _host = String(req.get('host') || '').toLowerCase();
+    const isDomesticHost = _host.includes('horiculture.club') || _host.startsWith('100.96.54.109') || _host.startsWith('localhost') || _host.startsWith('127.0.0.1');
+    const orderRegion = isDomesticHost ? 'cn' : 'global';
+    const { items, payMethod = 'stripe', couponCode = '', customer = {}, deliveryAddress = '', currency: reqCurrency = 'CNY', exchangeRate: reqRate = 1, locale: reqLocale = 'zh' } = req.body;
+    const stripeCurrency = String(reqCurrency || 'CNY').toLowerCase();
+    const stripeLocale = String(reqLocale || 'zh').toLowerCase();
+    const rate = Number(reqRate) > 0 ? Number(reqRate) : 1;
     if (!String(deliveryAddress || '').trim()) return res.status(400).json({ error: '请先填写收货地址' });
     const provider = PROVIDERS[payMethod];
     if (!provider) return res.status(400).json({ error: '不支持的支付方式' });
+    // Offline: domestic .club purchase order (线下收款). Skip all online gateways.
+    const isOffline = payMethod === 'offline';
 
     // Alipay: always allow (mock if not configured)
     const orderItems = await enrichItems(items);
@@ -259,30 +313,44 @@ router.post('/checkout', async (req, res) => {
       currency: 'CNY',
       payMethod,
       provider: provider.name,
-      status: provider.configured ? 'pending' : 'mock_paid',
+      status: isOffline ? 'pending_offline' : (provider.configured ? 'pending' : 'mock_paid'),
       memberName: customer.name || '',
       phone: customer.phone || '',
       deliveryAddress,
-      region: ['wechat','alipay'].includes(payMethod) ? 'cn' : 'global',
+      zid: currentZid,
+      brand: currentBrand,
+      region: orderRegion,
       createdAt: new Date().toISOString(),
       paidAt: provider.configured ? null : new Date().toISOString(),
       checkoutUrl: '',
       stripeSessionId: '',
     };
 
-    if (payMethod === 'stripe' && stripeConfigured) {
+    if (!isOffline && payMethod === 'stripe' && stripeConfigured) {
       const form = new URLSearchParams();
       form.set('mode', 'payment');
+      form.set('ui_mode', 'hosted');
+      form.append('payment_method_types[]', 'card');
       form.set('success_url', `${SITE_URL}/payment?status=success&session_id={CHECKOUT_SESSION_ID}&orderId=${orderId}`);
-      form.set('cancel_url', `${SITE_URL}/payment?status=cancel&orderId=${orderId}`);
+      form.set('cancel_url', `${SITE_URL}/cart?canceled=${orderId}`);
       form.set('metadata[orderId]', orderId);
       if (quote.couponCode) form.set('metadata[couponCode]', quote.couponCode);
       // Stripe Checkout charges the final payable amount as one order line so coupon/shipping math matches our quote exactly.
       form.set('line_items[0][quantity]', '1');
-      form.set('line_items[0][price_data][currency]', 'cny');
-      form.set('line_items[0][price_data][product_data][name]', `花伴商城订单 ${orderId}`);
-      form.set('line_items[0][price_data][product_data][description]', `商品小计 ¥${quote.subtotal} + 运费 ¥${quote.shippingFee} - 优惠 ¥${quote.couponDiscount}`);
-      form.set('line_items[0][price_data][unit_amount]', String(Math.max(1, Math.round(quote.totalAmount * 100))));
+      form.set('line_items[0][price_data][currency]', stripeCurrency);
+      form.set('locale', stripeLocale === 'en' || stripeLocale === 'en-us' ? 'en' : 'auto');
+      const isZeroDecimal = ['jpy','krw','vnd','clp','pyg','ugx'].includes(stripeCurrency);
+      const nameLoc = stripeCurrency === 'cny' ? `花伴商城订单 ${orderId}` : `Horticulture Order ${orderId}`;
+      const symbol = stripeCurrency === 'cny' ? '¥' : (stripeCurrency === 'usd' ? '$' : stripeCurrency.toUpperCase()+' ');
+      const conv = (v) => stripeCurrency === 'cny' ? v : v * rate;
+      const fmtDesc = (v) => isZeroDecimal ? String(Math.round(conv(v))) : conv(v).toFixed(2);
+      const descLoc = stripeCurrency === 'cny'
+        ? `商品小计 ¥${quote.subtotal} + 运费 ¥${quote.shippingFee} - 优惠 ¥${quote.couponDiscount}`
+        : `Subtotal ${symbol}${fmtDesc(quote.subtotal)} + Shipping ${symbol}${fmtDesc(quote.shippingFee)} - Discount ${symbol}${fmtDesc(quote.couponDiscount)}`;
+      form.set('line_items[0][price_data][product_data][name]', nameLoc);
+      form.set('line_items[0][price_data][product_data][description]', descLoc);
+      const unit = isZeroDecimal ? Math.max(1, Math.round(conv(quote.totalAmount))) : Math.max(1, Math.round(conv(quote.totalAmount) * 100));
+      form.set('line_items[0][price_data][unit_amount]', String(unit));
       const sessionRes = await axios.post('https://api.stripe.com/v1/checkout/sessions', form, {
         auth: { username: process.env.STRIPE_SECRET_KEY, password: '' },
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -292,14 +360,55 @@ router.post('/checkout', async (req, res) => {
       stripeSessionId = sessionRes.data.id;
       order.checkoutUrl = checkoutUrl;
       order.stripeSessionId = stripeSessionId;
-    } else if (provider.configured && provider.checkoutUrl) {
+    } else if (!isOffline && provider.configured && provider.checkoutUrl) {
       order.checkoutUrl = appendCheckoutParams(provider.checkoutUrl, order);
       checkoutUrl = order.checkoutUrl;
     }
 
-    const saved = await db.create('orders', order);
-    if (!provider.configured) {
-      try { await syncPurchaseOrder({ ...order, _id: saved._id }); } catch (e) { console.error('sync mock order failed:', e.message); }
+    // === PG: canonical write to plant_collector.orders ===
+    let pgSaved = null;
+    try {
+      pgSaved = await pgOrders.createOrder({
+        zid: currentZid,
+        orderNo: orderId,
+        subtotal: quote.subtotal,
+        shippingFee: quote.shippingFee,
+        discount: quote.couponDiscount,
+        total: quote.totalAmount,
+        currency: 'CNY',
+        shippingAddress: (deliveryAddress || customer) ? { text: deliveryAddress, memberName: customer.name || '', phone: customer.phone || '' } : null,
+        couponCode: quote.couponCode || null,
+        source: 'checkout',
+        originSite: req.get('host') || null,
+        metadata: {
+          pay_method: payMethod,
+          provider: provider.name,
+          brand: currentBrand,
+          region: order.region,
+          checkout_url: checkoutUrl,
+          stripe_session_id: stripeSessionId || null,
+          cost_amount: quote.costAmount,
+          profit_amount: quote.profitAmount,
+          coupon_title: quote.couponTitle || null,
+        },
+        items: orderItems.map(it => ({
+          sku_id: it.productId || it.id || '',
+          title: it.name || it.title || '',
+          qty: it.quantity || 1,
+          unit_price: Number(it.price || 0),
+          subtotal: Number(it.price || 0) * Number(it.quantity || 1),
+          snapshot: it,
+        })),
+        status: isOffline ? 'pending_offline' : (provider.configured ? 'pending' : 'mock_paid'),
+      });
+      order._pgId = pgSaved.id;
+    } catch (e) {
+      console.error('[checkout] PG createOrder failed:', e.message);
+      return res.status(500).json({ error: 'pg_write_failed', detail: e.message });
+    }
+    // No Mongo mirror — PostgreSQL is the source of truth.
+    if (isOffline || !provider.configured) {
+      try { await syncPurchaseOrder({ ...order, _id: pgSaved.id }); } catch (e) { console.error('sync purchase order failed:', e.message); }
     }
 
     res.json({
@@ -310,8 +419,11 @@ router.post('/checkout', async (req, res) => {
       provider: provider.name,
       status: order.status,
       checkoutUrl,
-      mock: !provider.configured,
-      message: provider.configured ? '支付订单已创建' : `${provider.name} 尚未配置真实收银台，当前为模拟支付成功。`,
+      mock: !isOffline && !provider.configured,
+      offline: isOffline,
+      message: isOffline
+        ? '采购单已创建，我们将尽快联系您确认发货并线下收款'
+        : (provider.configured ? '支付订单已创建' : `${provider.name} 尚未配置真实收银台，当前为模拟支付成功。`),
     });
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -343,7 +455,7 @@ router.post('/pay/:orderId', async (req, res) => {
 
 router.get('/order/:orderId', async (req, res) => {
   try {
-    const order = await db.findOne('orders', { orderId: req.params.orderId });
+    const order = await pgOrders.findByOrderNo(req.params.orderId);
     if (!order) return res.status(404).json({ error: '订单不存在' });
     res.json({ order });
   } catch (err) {
@@ -353,10 +465,46 @@ router.get('/order/:orderId', async (req, res) => {
 
 router.get('/orders', async (req, res) => {
   try {
-    const filter = {};
-    if (req.query.region) filter.region = req.query.region;
-    const orders = await db.find('orders', { filter, sort: { createdAt: -1 } });
-    res.json({ orders, total: orders.length });
+    // 必须登录: 只返回该用户 (zid) 的订单
+    let zid = '';
+    try {
+      const sess = await loginService.readSession(req);
+      if (sess && sess.user && sess.user.zid) zid = sess.user.zid;
+    } catch (_) {}
+    if (!zid) return res.status(401).json({ error: 'unauthenticated', orders: [], total: 0 });
+    const rows = await pgOrders.listByUser(zid, { limit: 200 });
+    const orders = rows.map(r => {
+      const meta = r.metadata || {};
+      const addr = r.shipping_address || {};
+      return {
+        _id: r.id,
+        orderId: r.order_no,
+        zid: r.zid,
+        status: r.status,
+        subtotal: Number(r.subtotal),
+        shippingFee: Number(r.shipping_fee),
+        couponDiscount: Number(r.discount),
+        totalAmount: Number(r.total),
+        currency: r.currency,
+        payMethod: meta.pay_method || '',
+        provider: meta.provider || '',
+        brand: meta.brand || '',
+        region: meta.region || (req.query.region || ''),
+        stripeSessionId: meta.stripe_session_id || '',
+        checkoutUrl: meta.checkout_url || '',
+        memberName: addr.memberName || '',
+        phone: addr.phone || '',
+        deliveryAddress: addr.text || '',
+        items: (r.items || []).map(it => ({
+          productId: it.sku_id, name: it.title, price: Number(it.unit_price),
+          quantity: it.qty, ...(it.snapshot || {}),
+        })),
+        createdAt: r.created_at,
+        paidAt: r.paid_at,
+      };
+    });
+    const filtered = req.query.region ? orders.filter(o => o.region === req.query.region) : orders;
+    res.json({ orders: filtered, total: filtered.length });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

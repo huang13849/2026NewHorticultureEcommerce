@@ -74,7 +74,7 @@ git push gitea main    # → 5 分钟内 Jenkins 自动 build+deploy 到 k3s
 ### 3. MongoDB API Gateway 需要 header
 ```
 GET /api/mongo/supplier?limit=1
-Header: x-api-key: flower-app-key-2024
+Header: x-api-key: ***REMOVED_API_KEY***
 ```
 苏州 nginx 已在 `/api/mongo/` location 加了 `proxy_set_header x-api-key`, 但 k3s NodePort 直连需要手动带.
 
@@ -138,7 +138,7 @@ curl -sSI http://100.96.54.109:31000/ | head -3
 curl -sSI https://horiculture.space/ | head -3
 
 # API
-curl -sS -H 'x-api-key: flower-app-key-2024' \
+curl -sS -H 'x-api-key: ***REMOVED_API_KEY***' \
   'http://100.96.54.109:31000/api/mongo/supplier?limit=1' | head -c 100
 ```
 

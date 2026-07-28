@@ -1,4 +1,4 @@
-// /api/auth/register-collector - 注册植物收藏家 -> Shop Club instance
+// /api/auth/register-collector — 注册植物收藏家 → Shop Club instance
 // 使用 Node.js 内建 crypto (无外部依赖)，自动打 "植物收藏家" 标签
 import { NextRequest, NextResponse } from 'next/server';
 import { readFileSync } from 'fs';
@@ -10,13 +10,13 @@ const KEY_PATH = process.env.ZITADEL_SYSTEM_KEY_PATH || '/system-key/systemuser.
 const ZITADEL_URL = process.env.ZITADEL_URL || 'http://zitadel.identity.svc.cluster.local:8080';
 const SHOPCLUB_HOST = 'id-shopclub.horiculture.club';
 const BRAND_INSTANCE: Record<string, { host: string; orgId: string; tag: string; source: string }> = {
-  club:       { host: 'id-shopclub.horiculture.club',  orgId: process.env.ZITADEL_SHOPCLUB_ORG_ID    || '382005470828757108', tag: '植物收藏家', source: 'shopclub-register' },
-  space:      { host: 'id-shopclub.horiculture.club',  orgId: process.env.ZITADEL_SHOPCLUB_ORG_ID    || '382005470828757108', tag: '海外收藏家', source: 'shopclub-register' },
-  shopclub:   { host: 'id-shopclub.horiculture.club',  orgId: process.env.ZITADEL_SHOPCLUB_ORG_ID    || '382005470828757108', tag: '植物收藏家', source: 'shopclub-register' },
-  school:     { host: 'id-school.horiculture.club',    orgId: process.env.ZITADEL_SCHOOL_ORG_ID      || '',                     tag: '金匠人学员', source: 'school-register' },
-  peony:      { host: 'id-peony.horiculture.club',     orgId: process.env.ZITADEL_PEONY_ORG_ID       || '',                     tag: '芍药联盟',   source: 'peony-register' },
-  tropical:   { host: 'id-tropical.horiculture.club',  orgId: process.env.ZITADEL_TROPICAL_ORG_ID    || '',                     tag: '热植联盟',   source: 'tropical-register' },
-  plantshare: { host: 'id-plantshare.horiculture.club',orgId: process.env.ZITADEL_PLANTSHARE_ORG_ID  || '',                     tag: '植物共享',   source: 'plantshare-register' },
+  club:       { host: 'id-shopclub.horiculture.club',  orgId: process.env.ZITADEL_SHOPCLUB_ORG_ID    || '382005470828757108', tag: '植物收藏家', source: 'shopclub' },
+  space:      { host: 'id-shopclub.horiculture.club',  orgId: process.env.ZITADEL_SHOPCLUB_ORG_ID    || '382005470828757108', tag: '海外收藏家', source: 'shopclub' },
+  shopclub:   { host: 'id-shopclub.horiculture.club',  orgId: process.env.ZITADEL_SHOPCLUB_ORG_ID    || '382005470828757108', tag: '植物收藏家', source: 'shopclub' },
+  school:     { host: 'id-school.horiculture.club',    orgId: process.env.ZITADEL_SCHOOL_ORG_ID      || '',                     tag: '金匠人学员', source: 'edu' },
+  peony:      { host: 'id-peony.horiculture.club',     orgId: process.env.ZITADEL_PEONY_ORG_ID       || '',                     tag: '芍药联盟',   source: 'peony' },
+  tropical:   { host: 'id-tropical.horiculture.club',  orgId: process.env.ZITADEL_TROPICAL_ORG_ID    || '',                     tag: '热植联盟',   source: 'tropical' },
+  plantshare: { host: 'id-plantshare.horiculture.club',orgId: process.env.ZITADEL_PLANTSHARE_ORG_ID  || '',                     tag: '植物共享',   source: 'plant-share' },
 };
 const AUD = 'http://id.horiculture.club:443';
 const USER_MGMT_URL = process.env.USER_MGMT_URL || 'http://api-gateway.supply-chain.svc.cluster.local:8080';
@@ -60,28 +60,10 @@ async function zitadelPost(path: string, body: unknown, host: string) {
   return { status: r.status, text: await r.text() };
 }
 
-// Build a proper public URL from the request, avoiding internal Pod hostnames
-function getPublicOrigin(req: NextRequest): string {
-  // Prefer x-forwarded-host / x-forwarded-proto from nginx
-  const fwdHost = req.headers.get('x-forwarded-host');
-  const fwdProto = req.headers.get('x-forwarded-proto') || 'https';
-  if (fwdHost) {
-    return `${fwdProto}://${fwdHost}`;
-  }
-  // Fall back to the host header
-  const host = req.headers.get('host');
-  if (host && !host.includes('.svc.cluster.local') && !host.match(/^\d+\.\d+\.\d+\.\d+:/) && !host.includes(':3000')) {
-    return `${fwdProto}://${host}`;
-  }
-  // Last resort: use the configured public domain
-  return 'https://horiculture.club';
-}
-
 export async function POST(req: NextRequest) {
   let email = '', phone = '', password = '', firstName = '', lastName = '', redirect = '/', lang = 'zh';
   const ct = req.headers.get('content-type') || '';
   const isFormPost = ct.includes('urlencoded') || ct.includes('multipart');
-  const origin = getPublicOrigin(req);
 
   if (isFormPost) {
     const fd = await req.formData();
@@ -114,7 +96,7 @@ export async function POST(req: NextRequest) {
     : '';
 
   const bail = (err: string) => isFormPost
-    ? NextResponse.redirect(new URL(`/register?error=${err}&redirect=${encodeURIComponent(redirect)}`, origin), { status: 303 })
+    ? NextResponse.redirect(new URL(`/register?error=${err}&redirect=${encodeURIComponent(redirect)}`, req.url), { status: 303 })
     : NextResponse.json({ error: err }, { status: 400 });
 
   if (!password || !firstName || !lastName) return bail('missing');
@@ -122,7 +104,7 @@ export async function POST(req: NextRequest) {
   if (password.length < 8 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) return bail('weak_password');
 
   // 1) Create user in Shop Club instance (userName = phone as primary identifier)
-  // Zitadel loginName includes userName + email + phone -> user can log in with any of them.
+  // Zitadel loginName includes userName + email + phone → user can log in with any of them.
   const effectiveUserName = canonicalPhone || email;
   const createBody: Record<string, unknown> = {
     userName: effectiveUserName,
@@ -146,7 +128,7 @@ export async function POST(req: NextRequest) {
   }
   if (created.status >= 400) {
     console.error('[register-collector] create failed', created.status, created.text);
-    if (/already|exists|AlreadyExists/i.test(created.text)) return bail('exists');
+    if (/already|exists|AlreadyExists|已存在|重复/i.test(created.text) || created.status === 409) return bail('exists');
     return bail(`zitadel_${created.status}`);
   }
   let userId = '';
@@ -158,7 +140,7 @@ export async function POST(req: NextRequest) {
       const backendUrl = process.env.FLOWER_API_URL || 'http://flower-api.new-ecommerce.svc.cluster.local:3010';
       await fetch(backendUrl + '/api/user/_internal/upsert-profile', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.INTERNAL_API_KEY || 'flower-app-key-2024' },
+        headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.INTERNAL_API_KEY || '***REMOVED_API_KEY***' },
         body: JSON.stringify({
           zid: userId, loginName: canonicalPhone || email,
           nickname: (firstName + ' ' + lastName).trim(),
@@ -195,7 +177,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (isFormPost) {
-    return NextResponse.redirect(new URL(`/login?register=ok&redirect=${encodeURIComponent(redirect)}`, origin), { status: 303 });
+    return NextResponse.redirect(new URL(`/register?ok=1&redirect=${encodeURIComponent(redirect)}`, req.url), { status: 303 });
   }
   return NextResponse.json({ ok: true, userId });
 }

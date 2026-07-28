@@ -13,6 +13,8 @@ const db = require('./lib/db');
 
 // ===== 路由 =====
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/user', require('./routes/user'));
+app.use('/api/session', require('./routes/sessions'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/recommend', require('./routes/recommend'));
 app.use('/api/garden', require('./routes/garden'));
@@ -32,7 +34,7 @@ app.get('/api/health', async (req, res) => {
     const { default: axios } = require('axios');
     const gw = process.env.API_GATEWAY_URL || 'http://100.96.54.109:3007';
     const gwRes = await axios.get(`${gw}/api/health`, {
-      headers: { 'X-API-Key': 'flower-app-key-2024' },
+      headers: { 'X-API-Key': '***REMOVED_API_KEY***' },
       timeout: 5000,
     });
     res.json({

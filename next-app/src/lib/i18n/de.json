@@ -7,7 +7,7 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "confirm": "Confirm",
-    "login": "Login",
+    "login": "Anmelden",
     "logout": "Logout",
     "back": "Back",
     "submit": "Submit",
@@ -36,7 +36,8 @@
     "download": "Download",
     "confirmDelete": "Confirm delete?",
     "copied": "Copied",
-    "cny": "CNY"
+    "cny": "CNY",
+    "register": "Registrieren"
   },
   "nav": {
     "home": "Home",
@@ -248,13 +249,14 @@
       "copyright": "Beijing-Tianjin-Hebei Flower Supply Chain Platform © 2026",
       "phone": "Telefon",
       "email": "E-Mail",
-      "address": "Adresse"
+      "address": "Adresse",
+      "addressValue": "Xingong, Fengtai, Peking, China"
     },
     "intelligentSupply": "Intelligent Supply Chain",
     "greenCertSubtitle": "Green Certification · Carbon Credit",
     "step": "Step {n}",
     "searchTitle": "Produkte suchen",
-    "searchSubtitle": "Suchbegriffe werden im PostgreSQL-Cluster für SEO-Analysen gespeichert.",
+    "searchSubtitle": "",
     "searchPlaceholder": "Blumen, Gehölze, Kategorien oder Lieferanten suchen…",
     "searching": "Suche…",
     "clearSearch": "Suche löschen",
@@ -413,7 +415,12 @@
     "province": "Provinz/Stadt",
     "city": "Stadt",
     "district": "Bezirk/Kreis",
-    "detailAddress": "Detailadresse: Straße, Hausnummer"
+    "detailAddress": "Detailadresse: Straße, Hausnummer",
+    "addressDeleted": "Adresse gelöscht",
+    "defaultSet": "Standard gesetzt",
+    "defaultLabel": "Standard",
+    "setDefault": "Als Standard",
+    "deleteAddress": "Löschen"
   },
   "login": {
     "title": "Login",
@@ -667,5 +674,158 @@
     "reverseFlowerAuction": "Umgekehrte Blumenauktion",
     "shop": "Laden",
     "mine": "Mein"
+  },
+  "peonyRegister": {
+    "title": "Peony Alliance Registration",
+    "subtitle": "China's National Flower · Global Alliance · Phone as ID",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Begin",
+    "submitting": "Blooming…",
+    "submitFailed": "Registration failed",
+    "pwSaveUnsupported": "Your browser cannot auto-save passwords. Please use latest Chrome / Edge / Safari for the best experience.",
+    "pwSaveFailed": "Browser refused to save your password. Please allow autofill and try again.",
+    "footer": "© Peony Alliance",
+    "step1": {
+      "title": "Account & Key",
+      "sub": "Your phone is your username; browser will save the password",
+      "phone": "Phone / Username",
+      "phonePh": "Digits only",
+      "password": "Password",
+      "passwordPh": "At least 6 chars",
+      "confirm": "Confirm Password",
+      "confirmPh": "Must match",
+      "mismatch": "Passwords do not match",
+      "pwSaveAck": "I agree to let my browser save this password. Registration cannot proceed without saving — ensures smooth future logins."
+    },
+    "step2": {
+      "title": "Alliance Branch",
+      "sub": "Which branch do you belong to?"
+    },
+    "step3": {
+      "title": "My Identity",
+      "sub": "Choose your role in this alliance"
+    },
+    "step4": {
+      "title": "Final Details",
+      "sub": "One step from bloom",
+      "positions": "Roles (multi-select)",
+      "entity": "Legal Name",
+      "entityPh": "Company / co-op / nursery name",
+      "province": "Province",
+      "city": "City",
+      "district": "District",
+      "address": "Full Address",
+      "addressPh": "Street · No. · Park",
+      "species": "Main Species",
+      "capacity": "Cultivation (mu)",
+      "capacityPh": "Estimated area",
+      "inviteCode": "Invite Code",
+      "inviteCodePh": "6-char code"
+    },
+    "alliance": {
+      "hq": {
+        "emoji": "🏛",
+        "title": "HQ",
+        "sub": "Heze / Caozhou Peony Garden"
+      },
+      "branch": {
+        "emoji": "🌸",
+        "title": "Branch",
+        "sub": "Heze / Luoyang / Beijing / Yunnan"
+      },
+      "overseas": {
+        "emoji": "🌍",
+        "title": "Overseas User",
+        "sub": "Global peony enthusiasts"
+      },
+      "partner": {
+        "emoji": "🤝",
+        "title": "Overseas Partner",
+        "sub": "International distribution"
+      }
+    },
+    "identity": {
+      "admin": {
+        "emoji": "👑",
+        "title": "Admin",
+        "sub": "Create org · invite members"
+      },
+      "staff": {
+        "emoji": "🧑‍🌾",
+        "title": "Member",
+        "sub": "Join via invite code"
+      }
+    },
+    "position": {
+      "sales": {
+        "emoji": "💐",
+        "label": "Sales"
+      },
+      "operation": {
+        "emoji": "🌱",
+        "label": "Operations"
+      },
+      "info": {
+        "emoji": "📋",
+        "label": "Info Officer"
+      },
+      "aftersales": {
+        "emoji": "💬",
+        "label": "After-sales"
+      }
+    },
+    "species": {
+      "peony": "Peony",
+      "moutan": "Moutan",
+      "cutflower": "Cut Flower",
+      "seedling": "Seedling",
+      "potted": "Potted",
+      "other": "Other"
+    },
+    "badge": {
+      "seedling": "New Bud",
+      "sprout": "Sprout",
+      "rooted": "Rooted",
+      "budding": "Budding",
+      "bloom": "Full Bloom"
+    },
+    "done": {
+      "title": "Registration Complete · New Bud",
+      "sub": "Welcome to Peony Alliance. Your badge grows with your contribution.",
+      "enter": "Enter Alliance"
+    }
+  },
+  "auth": {
+    "brandTitle": "Pflanzensammler · Seit 2006",
+    "loginSubtitle": "Anmelden, um Bestellungen und Favoriten zu sehen",
+    "registerTitle": "Pflanzensammler werden",
+    "registerSubtitle": "Nach der Anmeldung wirst du automatisch dem Pflanzensammler-Tag zugeordnet",
+    "registerOk": "Registrierung erfolgreich! Bitte anmelden.",
+    "tabPhone": "Telefon",
+    "tabEmail": "E-Mail",
+    "labelPhone": "Telefonnummer",
+    "labelEmail": "E-Mail",
+    "labelPassword": "Passwort",
+    "labelFirstName": "Vorname",
+    "labelLastName": "Nachname",
+    "phonePlaceholder": "z. B. +49 30 12345678",
+    "emailPlaceholder": "du@beispiel.com",
+    "pwdHint": "Mindestens 8 Zeichen, Buchstaben und Zahlen",
+    "optional": "optional",
+    "noAccount": "Noch kein Konto?",
+    "hasAccount": "Bereits ein Konto?",
+    "errInvalidCreds": "Ungültige Anmeldedaten",
+    "errMissing": "Bitte alle Pflichtfelder ausfüllen",
+    "errExists": "Dieses Konto existiert bereits, bitte anmelden",
+    "errWeakPwd": "Passwort zu schwach (min. 8 Zeichen, Buchstaben + Zahlen)",
+    "errInvalidPhone": "Ungültiges Telefonformat",
+    "errGeneric": "Fehler",
+    "labelPwdConfirm": "Passwort bestätigen",
+    "errPwdMismatch": "Passwörter stimmen nicht überein",
+    "submitting": "Wird gesendet…",
+    "goLogin": "Zum Login",
+    "loginSubmitting": "Anmelden…",
+    "pwdOnlyRetry": "Falsches Passwort. Bitte erneut eingeben."
   }
 }

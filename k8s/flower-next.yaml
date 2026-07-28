@@ -7,14 +7,16 @@ metadata:
 type: Opaque
 stringData:
   # NextAuth session secret (32-byte hex). 生产上请轮换。
-  NEXTAUTH_SECRET: "5a93a5ef0c11dbfa29f2fc16ad406f748feff1e3751d626c419e7441134fa499"
-  AUTH_SECRET: "5a93a5ef0c11dbfa29f2fc16ad406f748feff1e3751d626c419e7441134fa499"
+  NEXTAUTH_SECRET: ""  # security-scan: ignore
+  # 真值走 kubectl create secret / SealedSecret
+  AUTH_SECRET: ""  # security-scan: ignore
   # club-web (horiculture.club, 中文)
-  CLUB_CLIENT_ID: "380222397556523217"
-  CLUB_CLIENT_SECRET: "0xbEz7VNIqLndmsXF2CNUbyByY4JGcgEE0E0BzyXeNYr7gEGmc6chenldTxrmChv"
+  CLUB_CLIENT_ID: "382022444505956510"
+  CLUB_CLIENT_SECRET: ""
+  CLUB_ISSUER: "https://id-shopclub.horiculture.club"
   # space-web (horiculture.space, 英文)
   SPACE_CLIENT_ID: "380222566284984529"
-  SPACE_CLIENT_SECRET: "ZkRQPNUkxJYDHQ0cKogyvF1lvLGCjJwiULX8JpohzhD0pjwFTpJbg7CrHYWP64rh"
+  SPACE_CLIENT_SECRET: ""  # security-scan: ignore
 ---
 # Zitadel Service User PAT (方案 Z: 后端调 v2 Session API)
 # 由 jenkins-pat.sh 从 ~/.zitadel-svc-pat 生成后 apply, 不直接写在 repo
@@ -26,7 +28,7 @@ metadata:
   namespace: new-ecommerce
 type: Opaque
 data:
-  pat: ZXlKaGJHY2lPaUpCTWpVMlIwTk5TMWNpTENKbGJtTWlPaUpCTWpVMlIwTk5JaXdpYVhZaU9pSnZSRGxYZURoTldVdGZiRk53Uld4S0lpd2lhMmxrSWpvaWIybGtZMHRsZVNJc0luUmhaeUk2SWxKVWFHTndNa281U0V0RVlVbzNWMFpIUlhadlpVRWlmUS53dzVJb1Z3X0Y5UnZaNEZIT3ZfTW1RMC1yMFdGaXR2YjhoRzA1ZUVKT2dJLlRaX1dydTNUX2MtSkk5Z0ouYXVESnFYMFlGT09lZFphT0NPSlZTYXYtWkpScGkybHRWbkltNzMtQUR0eDgxempXNlEuY1NzWXNqb1Z6eXprMkxkX0JTb2kwQQ==
+  pat: ""  # security-scan: ignore  # kubectl edit secret zitadel-svc 单独注入
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -56,13 +58,17 @@ spec:
         env:
         - name: NODE_ENV
           value: production
+        - name: PEONY_MOBILE_AUTH_URL
+          value: "http://mobile-auth-service.peony.svc.cluster.local:3020"
+        - name: PEONY_SUPPLIER_URL
+          value: "http://supplier-service.supply-chain.svc.cluster.local:3002"
         - name: ZITADEL_LOGIN_V2_URL
           value: "http://100.96.54.109:31112"
         # === club-web OIDC (2026-07-05) ===
         - name: ZITADEL_ISSUER
           value: "https://id.horiculture.club"
         - name: ZITADEL_CLUB_WEB_CLIENT_ID
-          value: "380222397556523217"
+          value: "382022444505956510"
         - name: ZITADEL_CLUB_WEB_REDIRECT_URI
           value: "https://horiculture.club/api/auth/callback/zitadel"
         - name: FLOWER_API_URL
@@ -88,6 +94,15 @@ spec:
         envFrom:
         - secretRef:
             name: flower-next-zitadel
+        volumeMounts:
+        - name: system-key
+          mountPath: /system-key
+          readOnly: true
+      volumes:
+      - name: system-key
+        secret:
+          secretName: zitadel-system-key
+          defaultMode: 0444
 ---
 apiVersion: v1
 kind: Service

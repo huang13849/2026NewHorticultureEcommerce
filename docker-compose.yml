@@ -11,8 +11,8 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3010
-      - JWT_SECRET=REDACTED-JWT-SECRET
-      - API_GATEWAY_URL=http://100.96.54.109:31007
+      - JWT_SECRET=${JWT_SECRET}
+      - API_GATEWAY_URL=http://100.96.54.109:3007
       - REGION=global
     extra_hosts:
       - "host.docker.internal:host-gateway"

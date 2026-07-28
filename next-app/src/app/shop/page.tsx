@@ -185,17 +185,20 @@ export default function ShopPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, hasMore, loadingMore, search, loading]);
 
-  // 搜索时加载全部商品（后端 keyword 只匹配 name/description，商品用 title，故改为前端过滤）
+  // 搜索走 ES (seo-service /seo/api/search),IK 中文分词
   useEffect(() => {
     const kw = search.trim();
     if (!kw) return;
     let alive = true;
     const handle = setTimeout(async () => {
       try {
-        const res = await fetch(`${API}/products?limit=500`);
+        const res = await fetch(
+          `/seo/api/search?q=${encodeURIComponent(kw)}&size=${PAGE_SIZE}`,
+        );
         const data = await res.json();
         if (!alive) return;
-        setProducts(data.products || []);
+        const hits = data.hits || [];
+        setProducts(hits.map((h: any) => ({ ...h, _id: h.id })));
         setHasMore(false);
       } catch { /* empty */ }
     }, 300);
@@ -245,12 +248,9 @@ export default function ShopPage() {
   const exchangeRate = rates[currency] || FALLBACK_RATES[currency];
   const fxLabel = rateSource === 'live' ? '实时汇率' : rateSource === 'loading' ? '汇率加载中' : '备用汇率';
 
-  const filtered = search
-    ? products.filter(p => {
-        const name = (p.title || p.flowerName || '').toLowerCase();
-        return name.includes(search.toLowerCase());
-      })
-    : products;
+  // 后端已按 $text 索引匹配 title/description/flowerName（命中
+  // title_text_description_text_flowerName_text 复合文本索引），前端不再重复 filter。
+  const filtered = products;
 
   const goCheckout = () => {
     localStorage.setItem('flower_cart', JSON.stringify(cart.filter(i => i.checked)));

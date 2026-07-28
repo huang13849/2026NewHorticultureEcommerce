@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { resolveMinioUrl } from '@/lib/imageUrl';
 import TabBar from '../TabBar';
+import { formatPrice } from '@/lib/utils';
 
 type Region = 'cn' | 'global';
 
@@ -39,6 +41,8 @@ const REGION = process.env.NEXT_PUBLIC_REGION || '';
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
   pending: { label: '待支付', color: 'bg-amber-100 text-amber-700' },
+  canceled: { label: '已取消', color: 'bg-stone-200 text-stone-600' },
+  canceled_timeout: { label: '超时自动取消', color: 'bg-stone-200 text-stone-600' },
   mock_paid: { label: '已支付', color: 'bg-emerald-100 text-emerald-700' },
   paid: { label: '已支付', color: 'bg-emerald-100 text-emerald-700' },
   shipped: { label: '已发货', color: 'bg-blue-100 text-blue-700' },
@@ -64,6 +68,15 @@ function getPayIcon(payMethod: string, provider?: string): string {
 }
 
 export default function OrdersPage() {
+  const searchParams = useSearchParams();
+  const newOrderId = searchParams?.get('new') || '';
+  const [isDomestic, setIsDomestic] = useState<boolean>(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const h = window.location.hostname || '';
+      setIsDomestic(h.endsWith('.club') || h === 'localhost' || /^100\./.test(h) || /^192\.168\./.test(h) || /^10\./.test(h));
+    }
+  }, []);
   const [region, setRegion] = useState<Region>(REGION === 'cn' ? 'cn' : 'global');
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,7 +85,7 @@ export default function OrdersPage() {
   const fetchOrders = (r: Region) => {
     setLoading(true);
     setError('');
-    fetch(`${API}/payment/orders?region=${r}`)
+    fetch(`${API}/user/orders?region=${r}`, { credentials: 'include', cache: 'no-store' })
       .then(res => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -88,21 +101,59 @@ export default function OrdersPage() {
   };
 
   useEffect(() => {
-    fetchOrders(region);
-  }, [region]);
+    fetchOrders(isDomestic ? 'cn' : region);
+  }, [region, isDomestic]);
 
-  const totalAmount = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
-  const totalItems = orders.reduce((sum, o) => sum + (o.items || []).reduce((s, i) => s + (i.quantity || 1), 0), 0);
+  const [deletingId, setDeletingId] = useState<string>('');
+  const deleteOrder = async (orderId: string) => {
+    if (!orderId) return;
+    if (!confirm(`确定要删除订单 ${orderId}?此操作不可恢复。`)) return;
+    setDeletingId(orderId);
+    try {
+      const res = await fetch(`${API}/user/orders/${encodeURIComponent(orderId)}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data?.error === 'order_not_found_or_not_yours' ? '订单不存在或不属于你' : (data?.error || `删除失败 HTTP ${res.status}`));
+        setDeletingId('');
+        return;
+      }
+      // 乐观移除 + 重拉一次兜底
+      setOrders(prev => prev.filter(o => o.orderId !== orderId));
+      setDeletingId('');
+      // Silent refetch to sync w/ backend
+      fetchOrders(region);
+    } catch (e: any) {
+      alert(e?.message || '删除失败');
+      setDeletingId('');
+    }
+  };
+
+  const paidOrders = orders.filter(o => o.status === 'paid' || o.status === 'mock_paid');
+  const totalAmount = paidOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+  const totalItems = paidOrders.reduce((sum, o) => sum + (o.items || []).reduce((s, i) => s + (i.quantity || 1), 0), 0);
+  const paidCount = paidOrders.length;
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-stone-50 to-white text-stone-900 pb-24">
       <div className="sticky top-0 z-10 bg-white/85 backdrop-blur-xl border-b border-stone-200/60 px-6 py-4">
-        <h1 className="text-lg font-bold text-center">购买订单管理</h1>
+        <h1 className="text-lg font-bold text-center">{isDomestic ? "我的订单" : "购买订单管理"}</h1>
       </div>
 
       <div className="max-w-5xl mx-auto px-6 md:px-10 py-6 space-y-5">
-        {/* Region Toggle — 国内/国际 */}
-        <div className="flex justify-center">
+        {newOrderId && (
+          <div className="rounded-2xl border border-emerald-300 bg-emerald-50 px-5 py-4 flex items-center gap-3 shadow-sm">
+            <span className="text-2xl">✅</span>
+            <div className="flex-1">
+              <p className="font-bold text-emerald-800 text-sm">下单成功！</p>
+              <p className="text-xs text-emerald-700 mt-0.5">采购单号 <span className="font-mono">{newOrderId}</span>。我们会尽快联系您确认发货并线下收款。</p>
+            </div>
+          </div>
+        )}
+        {/* Region Toggle — 国内/国际 (仅国际站显示) */}
+        {!isDomestic && <div className="flex justify-center">
           <div className="inline-flex rounded-2xl border border-stone-200 bg-white p-1 shadow-sm">
             <button
               onClick={() => setRegion('cn')}
@@ -125,12 +176,12 @@ export default function OrdersPage() {
               🌍 国际订单
             </button>
           </div>
-        </div>
+        </div>}
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-2xl border border-stone-200 bg-white p-4 text-center">
-            <p className="text-2xl font-black text-emerald-700">{orders.length}</p>
+            <p className="text-2xl font-black text-emerald-700">{paidCount}</p>
             <p className="text-xs text-stone-400 mt-1">订单数</p>
           </div>
           <div className="rounded-2xl border border-stone-200 bg-white p-4 text-center">
@@ -138,7 +189,7 @@ export default function OrdersPage() {
             <p className="text-xs text-stone-400 mt-1">商品件数</p>
           </div>
           <div className="rounded-2xl border border-stone-200 bg-white p-4 text-center">
-            <p className="text-2xl font-black text-emerald-700">¥{totalAmount.toFixed(2)}</p>
+            <p className="text-2xl font-black text-emerald-700">{formatPrice(totalAmount, region === 'cn' ? 'cn' : 'us')}</p>
             <p className="text-xs text-stone-400 mt-1">总金额</p>
           </div>
         </div>
@@ -151,15 +202,17 @@ export default function OrdersPage() {
         ) : orders.length === 0 ? (
           <div className="p-12 text-center text-stone-400">
             <p className="text-4xl mb-3">📭</p>
-            <p>暂无{region === 'cn' ? '国内' : '国际'}订单</p>
+            <p>暂无{isDomestic ? '' : (region === 'cn' ? '国内' : '国际')}订单</p>
             <p className="text-xs mt-2">支付成功后订单将自动出现在这里</p>
           </div>
         ) : (
           <div className="space-y-3">
             {orders.map(order => {
-              const statusInfo = STATUS_MAP[order.status] || STATUS_MAP.pending;
+              const isTimedOut = order.status === 'pending' && order.createdAt && (Date.now() - new Date(order.createdAt).getTime() > 30 * 60 * 1000);
+              const effectiveStatus = isTimedOut ? 'canceled_timeout' : order.status;
+              const statusInfo = STATUS_MAP[effectiveStatus] || STATUS_MAP.pending;
               return (
-                <div key={order._id || order.orderId} className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+                <div key={order._id || order.orderId} className={`rounded-2xl border bg-white p-4 shadow-sm ${order.orderId === newOrderId ? "border-emerald-400 ring-2 ring-emerald-200" : "border-stone-200"}`}>
                   {/* Header: orderId + status + time */}
                   <div className="flex items-start justify-between mb-3">
                     <div>
@@ -188,7 +241,7 @@ export default function OrdersPage() {
                           <p className="text-sm font-medium truncate">{item.name}</p>
                           <p className="text-xs text-stone-400">×{item.quantity || 1}</p>
                         </div>
-                        <p className="text-sm font-bold">¥{(item.price * (item.quantity || 1)).toFixed(2)}</p>
+                        <p className="text-sm font-bold">{formatPrice(item.price * (item.quantity || 1), region === 'cn' ? 'cn' : 'us')}</p>
                       </div>
                     ))}
                   </div>
@@ -207,7 +260,16 @@ export default function OrdersPage() {
                         </span>
                       )}
                     </div>
-                    <p className="text-base font-black text-emerald-700">¥{(order.totalAmount || 0).toFixed(2)}</p>
+                    <p className="text-base font-black text-emerald-700">{formatPrice(order.totalAmount || 0, region === 'cn' ? 'cn' : 'us')}</p>
+                  </div>
+                  <div className="pt-3 mt-1 border-t border-stone-100 flex justify-end">
+                    <button
+                      onClick={() => deleteOrder(order.orderId)}
+                      disabled={deletingId === order.orderId}
+                      className="text-xs px-3 py-1.5 rounded-lg border border-stone-200 text-stone-500 hover:border-red-300 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-40"
+                    >
+                      {deletingId === order.orderId ? '删除中…' : '🗑 删除订单'}
+                    </button>
                   </div>
                 </div>
               );

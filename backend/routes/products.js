@@ -14,6 +14,63 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   return Math.round(R * c * 10) / 10;
 }
 
+// ===== 列表页只需要的字段（避免拉大数组、显著减小 payload） =====
+// title/flowerName/englishTitle 用于展示 + 前端 fallback 搜索
+// panorama_images/detail_images 里各取第 1 张即可，但 gateway 目前只支持整字段 projection，
+// 所以只挑首图字段之一 + images(小数组)。product 详情页仍走 /:id 拿完整数据。
+const LIST_FIELDS = [
+  '_id',
+  'title',
+  'flowerName',
+  'englishTitle',
+  'category',
+  'price',
+  'sellPrice',
+  'settlementPrice',
+  'costPrice',
+  'shippingFee',
+  'shipping_description',
+  'stock',
+  'salesCount',
+  'salesVolume',
+  'origin',
+  'supplierId',
+  'supplier_id',
+  'sellerName',
+  'location',
+  // 图片字段：首页/shop 列表只显示一张，客户端 getImg() 按优先级取第 1 张，
+  // 因此保留这三个字段。若单张有多 URL，后端会返回整数组，前端只用 [0]。
+  'images',
+  'panorama_images',
+  'detail_images',
+  'createdAt',
+  'updatedAt',
+].join(',');
+
+/**
+ * 是否使用 MongoDB 文本索引（$text）走全文搜索。
+ * products 集合已有 text 索引：title_text_description_text_flowerName_text
+ * 命中该索引后 stage = TEXT_MATCH，比 $regex 全表扫描/前缀扫描快得多，
+ * 且对多字段（标题+描述+品名）加权更合理。
+ *
+ * 为了保留旧的分类精确过滤 + 兜底 flowerName/category 子串行为，
+ * 组合关键词时优先 $text，若关键词很短（<2 字符）则退回 title 前缀正则（能走 title_1 索引）。
+ */
+function buildKeywordFilter(keywordRaw) {
+  const keyword = String(keywordRaw || '').trim();
+  if (!keyword) return null;
+
+  // 极短关键词（1 个字符）用前缀正则命中 title_1 单字段索引
+  if (keyword.length < 2) {
+    const safe = keyword.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+    return { title: { $regex: '^' + safe, $options: 'i' } };
+  }
+
+  // 常规查询：走 $text 全文索引（title+description+flowerName），
+  // 中文 MongoDB 默认走 none language，仍能按整词匹配。
+  return { $text: { $search: keyword } };
+}
+
 // ===== 获取商品列表（支持地理围栏筛选） =====
 router.get('/', async (req, res) => {
   try {
@@ -27,6 +84,7 @@ router.get('/', async (req, res) => {
       radius = 50,
       sort = 'recommend',
       includeOutOfStock = 'false',
+      fullFields, // 兼容参数：显式指定时返回完整字段（详情/预览用）
     } = req.query;
 
     const filter = { status: { $ne: 'deleted' } };
@@ -34,13 +92,11 @@ router.get('/', async (req, res) => {
       filter.stock = { $gt: 0 };
     }
 
-    if (keyword) {
-      filter.$or = [
-        { name: { $regex: keyword, $options: 'i' } },
-        { description: { $regex: keyword, $options: 'i' } },
-      ];
-    }
+    // 关键词：优先 $text（走 title/description/flowerName 复合文本索引）
+    const kwFilter = buildKeywordFilter(keyword);
+    if (kwFilter) Object.assign(filter, kwFilter);
 
+    // 分类精确过滤：走 category_1 单字段索引
     if (category) {
       filter.category = category;
     }
@@ -54,12 +110,16 @@ router.get('/', async (req, res) => {
       default: sortOption = { salesCount: -1, createdAt: -1 }; break;
     }
 
-    const products = await db.find('products', {
+    // 只返回列表页需要的字段，减小网络载荷（原来一条 product 有多组大数组，limit=500 时 ~470KB）
+    const findOpts = {
       filter,
       sort: sortOption,
       page: parseInt(page),
       limit: parseInt(limit),
-    });
+    };
+    if (fullFields !== 'true') findOpts.fields = LIST_FIELDS;
+
+    const products = await db.find('products', findOpts);
 
     // 如果有经纬度，计算距离
     if (lng && lat) {

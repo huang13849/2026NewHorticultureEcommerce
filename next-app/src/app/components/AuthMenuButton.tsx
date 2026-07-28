@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { useI18n } from '@/lib/i18n/context';
 import { startSSO, isInternationalHost } from '@/lib/sso';
 
 type Props = {
@@ -12,6 +13,7 @@ type Props = {
 
 export default function AuthMenuButton({ className = '', dark = false, loginRedirect }: Props) {
   const { user, logout } = useAuth();
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const redirect = loginRedirect || (typeof window !== 'undefined' ? window.location.pathname : '/');
   const loginHref = `/login?redirect=${encodeURIComponent(redirect)}`;
@@ -23,7 +25,7 @@ export default function AuthMenuButton({ className = '', dark = false, loginRedi
     : 'border-stone-200 bg-white text-stone-900 shadow-stone-900/10';
 
   const label = useMemo(() => {
-    if (!user) return '登录';
+    if (!user) return t('common.login');
     return user.nickname || user.phone || '已登录';
   }, [user]);
 
@@ -31,19 +33,35 @@ export default function AuthMenuButton({ className = '', dark = false, loginRedi
     // 国际版：点"登录"直接触发 Zitadel SSO，不落到本地 phone+code 页面。
     if (isInternationalHost()) {
       return (
-        <button
-          type="button"
-          onClick={() => { void startSSO(redirect); }}
-          className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-xs font-bold transition-colors ${shell} ${className}`}
-        >
-          <span>🔐</span><span>Zitadel 登录</span>
-        </button>
+        <div className={`flex items-center gap-1.5 ${className}`}>
+          <button
+            type="button"
+            onClick={() => { void startSSO(redirect); }}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-xs font-bold transition-colors ${shell}`}
+          >
+            <span>🔐</span><span>{t('common.login')}</span>
+          </button>
+          <a
+            href={`/register?redirect=${encodeURIComponent(redirect)}`}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition-colors ${dark ? 'border-white/25 bg-white/20 text-white hover:bg-white/30' : 'border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700'}`}
+          >
+            <span>✨</span><span>{t('common.register')}</span>
+          </a>
+        </div>
       );
     }
     return (
-      <a href={loginHref} className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-xs font-bold transition-colors ${shell} ${className}`}>
-        <span>👤</span><span>登录</span>
-      </a>
+      <div className={`flex items-center gap-1.5 ${className}`}>
+        <a href={loginHref} className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-xs font-bold transition-colors ${shell}`}>
+          <span>👤</span><span>{t('common.login')}</span>
+        </a>
+        <a
+          href={`/register?redirect=${encodeURIComponent(redirect)}`}
+          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-bold transition-colors ${dark ? 'border-white/25 bg-white/20 text-white hover:bg-white/30' : 'border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700'}`}
+        >
+          <span>✨</span><span>{t('common.register')}</span>
+        </a>
+      </div>
     );
   }
 

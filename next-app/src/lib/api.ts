@@ -177,7 +177,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   };
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  const res = await fetch(`${API_BASE}${path}`, { ...options, headers, credentials: 'include' });
 
   if (!res.ok) {
     const data = await res.json().catch(() => ({ error: 'Network error' }));
@@ -201,7 +201,7 @@ export const api = {
     }),
 
   updateAddress: (addressData: Partial<Address>) =>
-    request<{ message: string; address: Address[] }>('/auth/address', {
+    request<{ message: string; address: Address[] }>('/user/address', {
       method: 'PUT',
       body: JSON.stringify(addressData),
     }),

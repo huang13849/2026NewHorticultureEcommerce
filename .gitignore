@@ -14,6 +14,9 @@ uploads/
 # Cloudflare Pages static export
 next-app/out/
 
-# backup files
-*.bak-*
-*.bak
+# secrets - 兜底
+*.env
+*.env.*
+*.env.bak
+*.env.example
+!.env.template
