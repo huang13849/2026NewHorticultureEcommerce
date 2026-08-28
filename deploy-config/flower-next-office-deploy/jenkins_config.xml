@@ -1,14 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project>
-  <description>flower-next image build on Office + push to Mac Mini registry (100.76.15.64:5001) + deploy to k3s (flower-next deployment on ubuntu-master).
+  <description>flower-next image build on Office WSL + push to Mac Mini registry (100.76.15.64:5001) + deploy to k3s (flower-next deployment on ubuntu-master).
 
 触发方式:
-  - Gitea webhook: http://100.76.15.64:13000 → Jenkins (/job/flower-next-office-deploy/build?token=flower-next-deploy-c1ub-2026)
+  - Gitea webhook: http://100.76.15.64:13000 → Jenkins (/job/flower-next-office-deploy/buildWithParameters?token=flower-next-deploy-c1ub-2026&amp;GIT_REF=main)
   - 手动: 带参数 GIT_REF (默认 main) 即可
 
 SSH 信任:
-  - Jenkins 公钥已经加到 dell@office (100.113.60.71) 的 authorized_keys
+  - Jenkins 公钥 (cmdb-jenkins 容器的 id_ed25519) 已经加到 dell@office-wsl 的 /home/dell/.ssh/authorized_keys
   - Jenkins→ubuntu-master (huangfra-ubun-master@100.96.54.109) 沿用原 BatchMode 通道
+
+⚠️ 必须用 office-wsl 主机名（不能是 office）:
+  - office          = Windows 宿主机 sshd (OpenSSH_for_Windows), 读 C:\Users\dell\.ssh\authorized_keys, 我们加不进去 key
+  - office-wsl      = WSL2 Linux sshd, 读 /home/dell/.ssh/authorized_keys, cmdb-jenkins 公钥已写入
 
 Image 命名:
   - 100.76.15.64:5001/flower-next:&lt;短 SHA 8 位&gt;
@@ -27,7 +31,7 @@ Deploy:
         <hudson.model.StringParameterDefinition>
           <name>GIT_REF</name>
           <defaultValue>main</defaultValue>
-          <description>Branch/tag/SHA to build (default: main). 会被传到 office 上执行 git checkout。</description>
+          <description>Branch/tag/SHA to build (default: main). 会被传到 office-wsl 上执行 git checkout。</description>
           <trim>false</trim>
         </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
@@ -43,14 +47,19 @@ Deploy:
       <command>#!/bin/bash
 # flower-next-office-deploy — Jenkins controller script
 # Flow:
-#   1. SSH to Office (100.113.60.71) → run ~/bin/flower-next-office-build.sh
-#      (this clones/updates Gitea repo, builds flower-next image, pushes to 100.76.15.64:5001)
-#   2. SSH to ubuntu-master (100.96.54.109) → run ~/bin/flower-next-kube-deploy.sh
-#      (this does kubectl set image + rollout + smoke)
+#   1. SSH to Office WSL (office-wsl.tail87ed61.ts.net → 100.113.60.71 currently),
+#      run ~/bin/flower-next-office-build.sh: clones Gitea, docker build, docker push
+#      to Mac Mini registry (100.76.15.64:5001)
+#   2. SSH to ubuntu-master (100.96.54.109), run ~/bin/flower-next-kube-deploy.sh:
+#      kubectl set image + rollout + smoke
+#
+# Note: 必须用 office-wsl 主机名（不能是 office）！
+#   - office          = Windows sshd (OpenSSH_for_Windows), 读 C:\Users\dell\.ssh\authorized_keys, 我们加不进去 key
+#   - office-wsl      = WSL2 Linux sshd, 读 /home/dell/.ssh/authorized_keys, cmdb-jenkins 公钥已写入
 set -euo pipefail
 
 GIT_REF="${GIT_REF:-main}"
-OFFICE_HOST="dell@100.113.60.71"
+OFFICE_HOST="dell@office-wsl"          # 注意是 office-wsl, 不是 office
 MASTER_HOST="huangfra-ubun-master@100.96.54.109"
 KUBE_NS="new-ecommerce"
 DEPLOY="flower-next"
@@ -59,16 +68,16 @@ REGISTRY="100.76.15.64:5001"
 echo "=================================================="
 echo "flower-next-office-deploy"
 echo "GIT_REF=$GIT_REF"
+echo "OFFICE_HOST=$OFFICE_HOST"
 echo "=================================================="
 
 #--------------------------------------------------------------------
-# Step 1: Office builds + pushes image
+# Step 1: Office WSL builds + pushes image
 #--------------------------------------------------------------------
 echo
-echo "======= [1/3] Office: build flower-next image + push to Mac Mini registry ======="
+echo "======= [1/3] Office WSL: build flower-next image + push to Mac Mini registry ======="
 COMMIT_SHA=$(ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=30 "$OFFICE_HOST" \
   "GIT_REF='$GIT_REF' ~/bin/flower-next-office-build.sh")
-# script ends with `echo $SHA`, so the SHA is on the LAST stdout line
 COMMIT_SHA="$(echo "$COMMIT_SHA" | tail -n 1 | tr -d '[:space:]')"
 echo "Built and pushed image with SHA: $COMMIT_SHA"
 [ -n "$COMMIT_SHA" ] || { echo "FAIL: empty COMMIT_SHA"; exit 1; }
@@ -82,7 +91,7 @@ ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=30 "$MASTER_H
   "SHA='$COMMIT_SHA' ~/bin/flower-next-kube-deploy.sh"
 
 #--------------------------------------------------------------------
-# Step 3: smoke (re-check after deploy)
+# Step 3: smoke
 #--------------------------------------------------------------------
 echo
 echo "======= [3/3] smoke ======="
