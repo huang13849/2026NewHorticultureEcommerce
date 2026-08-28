@@ -10,7 +10,6 @@ const tabs = [
   { href: '/map', labelKey: 'tabbar.map', emoji: '🗺' },
   { href: '/auction', labelKey: 'tabbar.seedlingAuction', emoji: '🌳' },
   { href: '/reverse-auction', labelKey: 'tabbar.reverseFlowerAuction', emoji: '🌷' },
-  { href: '/shop', labelKey: 'tabbar.shop', emoji: '🛒' },
   { href: '/profile', labelKey: 'tabbar.mine', emoji: '👤' },
 ];
 

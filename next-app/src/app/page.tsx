@@ -560,11 +560,6 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-            {region.code === 'cn' && (
-              <div className="mt-8 pt-6 border-t border-stone-200/60 flex flex-col items-center gap-3">
-                
-              </div>
-            )}
           </div>
         </footer>
       </main>
