@@ -23,7 +23,7 @@
   <div id="map"></div>
   <div class="panel">
     <div class="title">🗺️ 供应商地图</div>
-    <div class="sub">高德瓦片底图 + API Gateway / MongoDB supplier 集合。无需浏览器端高德 JS Key。</div>
+    <div class="sub">高德瓦片底图 + API Gateway / CNPG (public.suppliers)。无需浏览器端高德 JS Key。</div>
     <div class="stat"><span class="pill" id="total">加载中…</span><span class="pill" id="shown">—</span></div>
     <div class="switchBar">
       <button class="switchBtn active">🗺️ 供应商地图</button>
@@ -68,9 +68,15 @@ async function reloadData(){
   try{
     statusEl.textContent = '正在加载供应商坐标…';
     markersLayer.clearLayers(); listEl.innerHTML=''; bounds = L.latLngBounds([]);
-    const r = await fetch(API_BASE + '/api/mongo/supplier?limit=500&sort='+encodeURIComponent(JSON.stringify({updatedAt:-1})), { headers: { 'x-api-key': '***REMOVED_API_KEY***' } });
+    // V2.5: 数据源从 MongoDB 切换到 CNPG (public.suppliers)
+    const r = await fetch(API_BASE + '/api/pg/supply_chain/suppliers?limit=200', { headers: { 'x-api-key': '***REMOVED_API_KEY***' } });
     const d = await r.json(); if(!r.ok) throw new Error(d.error||'加载失败');
-    const all = d.data || []; const suppliers = all.filter(valid);
+    // PG 用 GeoJSON Point { location: { coordinates: [lng, lat] } }, 转换为顶层 longitude/latitude 让后续 valid() / 渲染复用
+    const all = (d.data || []).map(s => {
+      const c = (s.location && s.location.coordinates) || [];
+      return Object.assign({}, s, { longitude: Number(c[0]), latitude: Number(c[1]) });
+    });
+    const suppliers = all.filter(valid);
     document.getElementById('total').textContent = `供应商 ${all.length} 家`;
     document.getElementById('shown').textContent = `有坐标 ${suppliers.length} 家`;
     statusEl.textContent = suppliers.length ? '点击标记查看商户信息，或点上方 🎬 视频逛店' : '暂无带经纬度的供应商';
