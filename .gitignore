@@ -20,3 +20,5 @@ next-app/out/
 *.env.bak
 *.env.example
 !.env.template
+# image-tools u2net model (baked into image, dont commit 175MB)
+image-tools/.u2net/
