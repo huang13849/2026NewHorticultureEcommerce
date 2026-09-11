@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>花伴应用中心 · App Center</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;background:#f6f8f7;color:#1a2e22;min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* Navbar */
+.navbar{background:linear-gradient(135deg,#2e7d32 0%,#43a047 60%,#66bb6a 100%);color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.08);position:sticky;top:0;z-index:100}
+.navbar-inner{max-width:1280px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.navbar-brand{display:flex;align-items:center;gap:10px;font-size:19px;font-weight:800;letter-spacing:.5px;color:#fff;text-decoration:none}
+.navbar-brand-icon{width:34px;height:34px;background:rgba(255,255,255,.18);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;backdrop-filter:blur(8px)}
+.navbar-brand-sub{font-size:11px;font-weight:500;opacity:.85;margin-left:4px;letter-spacing:.5px}
+.navbar-links{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.navbar-link{color:rgba(255,255,255,.85);text-decoration:none;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.navbar-link:hover{color:#fff;background:rgba(255,255,255,.15)}
+.navbar-link.active{background:rgba(255,255,255,.22);color:#fff}
+
+/* Main */
+.main{max-width:1280px;margin:0 auto;padding:36px 24px 80px}
+.header{margin-bottom:28px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px}
+.header-text h1{font-size:30px;font-weight:800;color:#255b3b;margin-bottom:6px;letter-spacing:.5px}
+.header-text p{font-size:14px;color:#5a7269;line-height:1.6}
+.header-stat{display:flex;gap:8px;align-items:center}
+.stat-pill{background:#fff;padding:8px 14px;border-radius:999px;font-size:12px;font-weight:600;color:#5a7269;box-shadow:0 2px 6px rgba(46,125,50,.06);border:1px solid #e8f5e9}
+.stat-num{color:#2e7d32;font-weight:800}
+
+/* Grid */
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+@media(max-width:1080px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.grid{grid-template-columns:1fr}}
+
+/* Card */
+.card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(46,125,50,.06);transition:transform .18s,box-shadow .18s;display:flex;flex-direction:column;text-decoration:none;color:inherit;cursor:pointer}
+.card.disabled{cursor:not-allowed;opacity:.92}
+.card:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(46,125,50,.14)}
+.card.disabled:hover{transform:none;box-shadow:0 2px 10px rgba(46,125,50,.06)}
+.card-thumb{aspect-ratio:16/10;position:relative;overflow:hidden}
+.card-thumb svg{width:100%;height:100%;display:block}
+.card-tag{position:absolute;top:12px;left:12px;background:rgba(255,255,255,.92);padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;color:#2e7d32;backdrop-filter:blur(4px);display:inline-flex;align-items:center;gap:5px}
+.card-tag.empty{background:rgba(120,120,120,.85);color:#fff}
+.card-tag-dot{width:5px;height:5px;border-radius:50%;background:#4caf50}
+.card-tag-dot.empty{background:#bdbdbd}
+.card-tag-dot.live{background:#00e676;box-shadow:0 0 6px #00e676}
+.card-body{padding:16px 18px 18px;flex:1;display:flex;flex-direction:column}
+.card-title{font-size:16px;font-weight:800;color:#255b3b;margin-bottom:5px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card-title-id{font-size:10px;font-weight:600;color:#9e9e9e;background:#f5f5f5;padding:2px 6px;border-radius:4px;font-family:ui-monospace,monospace}
+.card-desc{font-size:12.5px;color:#5a7269;line-height:1.55;margin-bottom:14px;flex:1;min-height:36px}
+.card-action{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 14px;border-radius:9px;font-size:13px;font-weight:700;text-decoration:none;background:#2e7d32;color:#fff;transition:background .15s;align-self:flex-start}
+.card-action:hover{background:#1b5e20}
+.card.disabled .card-action{background:#e0e0e0;color:#9e9e9e;cursor:not-allowed}
+.card-meta{display:flex;align-items:center;gap:6px;font-size:11px;color:#7a8e85;margin-top:10px;padding-top:10px;border-top:1px dashed #eef0ef;flex-wrap:wrap}
+.card-meta-item{display:inline-flex;align-items:center;gap:4px}
+.card-meta-dot{width:5px;height:5px;border-radius:50%;background:#4caf50}
+.card-meta-dot.empty{background:#bdbdbd}
+.card-meta-dot.live{background:#00e676;box-shadow:0 0 4px #00e676}
+
+/* Note */
+.note{margin-top:36px;padding:16px 18px;background:rgba(46,125,50,.04);border-radius:12px;color:#5a7269;font-size:13px;line-height:1.75;border-left:3px solid #2e7d32}
+.note strong{color:#255b3b}
+.note code{background:rgba(0,0,0,.05);padding:2px 6px;border-radius:4px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;color:#1b5e20}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/" class="navbar-brand">
+      <div class="navbar-brand-icon">🌸</div>
+      <div>
+        <span>花伴应用中心</span>
+        <span class="navbar-brand-sub">APP CENTER</span>
+      </div>
+    </a>
+    <div class="navbar-links">
+      <a href="/" class="navbar-link active"><span class="navbar-link-dot"></span>应用中心</a>
+      <a href="http://100.96.54.109:31307/" target="_blank" rel="noopener" class="navbar-link">🗺 地图中心</a>
+      <a href="http://100.96.54.109:31309/" target="_blank" rel="noopener" class="navbar-link">🏪 经销商地图</a>
+      <a href="http://100.96.54.109:31307/api/health" target="_blank" rel="noopener" class="navbar-link">⚡ 系统状态</a>
+      <a href="http://100.76.15.64:3000/" target="_blank" rel="noopener" class="navbar-link">🛒 前端商城</a>
+    </div>
+  </div>
+</nav>
+
+<main class="main">
+
+  <div class="header">
+    <div class="header-text">
+      <h1>选择应用</h1>
+      <p>点击缩略图打开对应业务视图 · 全部服务部署在 k3s (new-ecommerce namespace)</p>
+    </div>
+    <div class="header-stat">
+      <span class="stat-pill">已上架 <span class="stat-num">2</span> / 4</span>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <!-- ============ 1. 地图中心 ============ -->
+    <a href="http://100.96.54.109:31307/" target="_blank" rel="noopener noreferrer" class="card">
+      <div class="card-thumb">
+        <span class="card-tag"><span class="card-tag-dot live"></span>已上架</span>
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <radialGradient id="mapG1" cx="50%" cy="50%" r="65%">
+              <stop offset="0%" stop-color="#c8e6c9"/>
+              <stop offset="100%" stop-color="#81c784"/>
+            </radialGradient>
+          </defs>
+          <rect width="320" height="200" fill="url(#mapG1)"/>
+          <path d="M-10,140 Q60,118 260,135 T330,148" stroke="#4fc3f7" stroke-width="11" fill="none" opacity=".7"/>
+          <path d="M30,30 L130,20 L155,80 L65,95 Z" fill="#a5d6a7" opacity=".55"/>
+          <path d="M180,35 L295,42 L283,108 L195,98 Z" fill="#a5d6a7" opacity=".55"/>
+          <g>
+            <circle cx="62" cy="50" r="6" fill="#2e7d32"/><text x="62" y="54" text-anchor="middle" font-size="8" fill="#fff" font-weight="800">·</text>
+            <circle cx="92" cy="62" r="6" fill="#2e7d32"/>
+            <circle cx="135" cy="48" r="6" fill="#2e7d32"/>
+            <circle cx="210" cy="62" r="6" fill="#2e7d32"/>
+            <circle cx="246" cy="80" r="6" fill="#2e7d32"/>
+            <circle cx="270" cy="105" r="6" fill="#2e7d32"/>
+            <circle cx="180" cy="78" r="6" fill="#2e7d32"/>
+            <circle cx="100" cy="155" r="6" fill="#2e7d32"/>
+            <circle cx="155" cy="170" r="6" fill="#2e7d32"/>
+            <circle cx="225" cy="158" r="6" fill="#2e7d32"/>
+            <circle cx="285" cy="170" r="6" fill="#2e7d32"/>
+            <circle cx="55" cy="120" r="6" fill="#2e7d32"/>
+          </g>
+          <g transform="translate(280,30)">
+            <circle r="13" fill="rgba(255,255,255,.85)"/>
+            <path d="M0,-10 L3,2 L0,0 L-3,2 Z" fill="#2e7d32"/>
+            <text x="0" y="-13" text-anchor="middle" font-size="8" fill="#2e7d32" font-weight="800">N</text>
+          </g>
+        </svg>
+      </div>
+      <div class="card-body">
+        <div class="card-title">地图中心 <span class="card-title-id">APP-01</span></div>
+        <div class="card-desc">内含 4 个地图视图: 供应商地图 + 3 个扩展位 · CNPG · 高德瓦片 · k3s NodePort 31307</div>
+        <span class="card-action">打开 →</span>
+        <div class="card-meta">
+          <span class="card-meta-item"><span class="card-meta-dot live"></span>运行中</span>
+          <span class="card-meta-item">·</span>
+          <span class="card-meta-item">31307</span>
+          <span class="card-meta-item">·</span>
+          <span class="card-meta-item">118 供应商</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- ============ 2. 经销商地图 ============ -->
+    <a href="http://100.96.54.109:31309/" target="_blank" rel="noopener noreferrer" class="card">
+      <div class="card-thumb">
+        <span class="card-tag"><span class="card-tag-dot live"></span>已上架</span>
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <radialGradient id="mapG2" cx="50%" cy="50%" r="65%">
+              <stop offset="0%" stop-color="#ede9fe"/>
+              <stop offset="100%" stop-color="#a78bfa"/>
+            </radialGradient>
+          </defs>
+          <rect width="320" height="200" fill="url(#mapG2)"/>
+          <path d="M-10,120 Q60,98 200,115 T330,108" stroke="#7c3aed" stroke-width="10" fill="none" opacity=".55"/>
+          <path d="M30,40 L120,30 L140,90 L50,98 Z" fill="#c4b5fd" opacity=".55"/>
+          <path d="M180,45 L290,38 L280,108 L190,98 Z" fill="#c4b5fd" opacity=".55"/>
+          <g>
+            <circle cx="68" cy="60" r="6" fill="#7c3aed"/><text x="68" y="64" text-anchor="middle" font-size="8" fill="#fff" font-weight="800">·</text>
+            <circle cx="105" cy="72" r="6" fill="#7c3aed"/>
+            <circle cx="142" cy="58" r="6" fill="#7c3aed"/>
+            <circle cx="218" cy="72" r="6" fill="#7c3aed"/>
+            <circle cx="248" cy="92" r="6" fill="#7c3aed"/>
+            <circle cx="265" cy="115" r="6" fill="#7c3aed"/>
+            <circle cx="188" cy="88" r="6" fill="#7c3aed"/>
+            <circle cx="108" cy="165" r="6" fill="#7c3aed"/>
+            <circle cx="158" cy="178" r="6" fill="#7c3aed"/>
+            <circle cx="232" cy="168" r="6" fill="#7c3aed"/>
+            <circle cx="295" cy="178" r="6" fill="#7c3aed"/>
+            <circle cx="62" cy="130" r="6" fill="#7c3aed"/>
+          </g>
+          <g transform="translate(280,30)">
+            <circle r="13" fill="rgba(255,255,255,.85)"/>
+            <path d="M0,-10 L3,2 L0,0 L-3,2 Z" fill="#7c3aed"/>
+            <text x="0" y="-13" text-anchor="middle" font-size="8" fill="#7c3aed" font-weight="800">N</text>
+          </g>
+        </svg>
+      </div>
+      <div class="card-body">
+        <div class="card-title">经销商地图 <span class="card-title-id">APP-02</span></div>
+        <div class="card-desc">经销商点位 / 销售区域 · 高德瓦片底图 · API Gateway / MongoDB shops · 已部署</div>
+        <span class="card-action">打开 →</span>
+        <div class="card-meta">
+          <span class="card-meta-item"><span class="card-meta-dot live"></span>运行中</span>
+          <span class="card-meta-item">·</span>
+          <span class="card-meta-item">31309</span>
+          <span class="card-meta-item">·</span>
+          <span class="card-meta-item">dealer-map</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- ============ 3. 占位 ============ -->
+    <a href="#" onclick="alert('待补充应用 3');return false" class="card disabled">
+      <div class="card-thumb">
+        <span class="card-tag empty"><span class="card-tag-dot empty"></span>空位 3</span>
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <radialGradient id="mapG3" cx="50%" cy="50%" r="65%">
+              <stop offset="0%" stop-color="#fff8e1"/>
+              <stop offset="100%" stop-color="#ffd54f"/>
+            </radialGradient>
+          </defs>
+          <rect width="320" height="200" fill="url(#mapG3)"/>
+          <g transform="translate(160,100)">
+            <circle r="36" fill="rgba(255,255,255,.6)"/>
+            <text text-anchor="middle" y="11" font-size="34" fill="#b08800" font-weight="800">?</text>
+          </g>
+        </svg>
+      </div>
+      <div class="card-body">
+        <div class="card-title">应用 3 <span class="card-title-id">APP-03</span></div>
+        <div class="card-desc">空位 - 可放 / / 数据看板 / 营销中心 / 任意业务视图</div>
+        <span class="card-action">待补充</span>
+        <div class="card-meta">
+          <span class="card-meta-item"><span class="card-meta-dot empty"></span>未配置</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- ============ 4. 占位 ============ -->
+    <a href="#" onclick="alert('待补充应用 4');return false" class="card disabled">
+      <div class="card-thumb">
+        <span class="card-tag empty"><span class="card-tag-dot empty"></span>空位 4</span>
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <radialGradient id="mapG4" cx="50%" cy="50%" r="65%">
+              <stop offset="0%" stop-color="#e1f5fe"/>
+              <stop offset="100%" stop-color="#4fc3f7"/>
+            </radialGradient>
+          </defs>
+          <rect width="320" height="200" fill="url(#mapG4)"/>
+          <g transform="translate(160,100)">
+            <circle r="36" fill="rgba(255,255,255,.6)"/>
+            <text text-anchor="middle" y="11" font-size="34" fill="#015d8c" font-weight="800">?</text>
+          </g>
+        </svg>
+      </div>
+      <div class="card-body">
+        <div class="card-title">应用 4 <span class="card-title-id">APP-04</span></div>
+        <div class="card-desc">空位 - 可放 / / 数据看板 / 营销中心 / 任意业务视图</div>
+        <span class="card-action">待补充</span>
+        <div class="card-meta">
+          <span class="card-meta-item"><span class="card-meta-dot empty"></span>未配置</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="note">
+    <strong>📝 说明</strong> · 2 / 4 应用已上架 · 全部服务都在 k3s (new-ecommerce namespace)<br/>
+    · <strong>地图中心 (31307)</strong>：k3s Service <code>supplier-map</code> NodePort → nginx (supplier-map 容器)<br/>
+    · <strong>经销商地图 (31309)</strong>：k3s Service <code>dealer-map</code> NodePort → nginx (dealer-map 容器，原 31308)<br/>
+    · <strong>空位 3 / 4</strong>：需要时新建 k3s Service + Deployment (类似 supplier-map 模式)，然后在这里加卡片
+  </div>
+
+</main>
+
+</body>
+</html>
