@@ -49,10 +49,10 @@ function initMap(){
   }).addTo(map);
   markersLayer = L.layerGroup().addTo(map);
 }
-function valid(s){ const lng=Number(s.longitude), lat=Number(s.latitude); return Number.isFinite(lng)&&Number.isFinite(lat)&&lng!==0&&lat!==0; }
+function valid(s){ const lng=Number(s.longitude), lat=Number(s.latitude); return Number.isFinite(lng)&&Number.isFinite(lat)&&lng!==0&&lat!==0; } // V2.5.1: 没坐标的直接过滤掉
 function nameOf(s){ return s.shop_name || s.name || '未命名商户'; }
-function addrOf(s){ return (s.company_info&&s.company_info.address) || s.address || ((s.business_items||[]).find(x=>x.address)||{}).address || ''; }
-function bizOf(s){ return (s.company_info&&s.company_info.main_business) || (s.business_items||[]).map(x=>x.main_business).filter(Boolean).slice(0,2).join('；') || ''; }
+function addrOf(s){ const items = Array.isArray(s.business_items) ? s.business_items : []; return (s.company_info&&s.company_info.address) || s.address || (items.find(x=>x&&x.address)||{}).address || ''; }
+function bizOf(s){ const items = Array.isArray(s.business_items) ? s.business_items : []; return (s.company_info&&s.company_info.main_business) || items.map(x=>x.main_business).filter(Boolean).slice(0,2).join('；') || ''; }
 var API_BASE = "";
 function esc(s){ return String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function idOf(s){ return s._id || s.id || s.supplierId || ''; }
@@ -69,7 +69,7 @@ async function reloadData(){
     statusEl.textContent = '正在加载供应商坐标…';
     markersLayer.clearLayers(); listEl.innerHTML=''; bounds = L.latLngBounds([]);
     // V2.5: 数据源从 MongoDB 切换到 CNPG (public.suppliers)
-    const r = await fetch(API_BASE + '/api/pg/supply_chain/suppliers?limit=200', { headers: { 'x-api-key': '***REMOVED_API_KEY***' } });
+    const r = await fetch(API_BASE + '/api/pg/supply_chain/suppliers?limit=200', { headers: { 'x-api-key': 'flower-app-key-2024' } });
     const d = await r.json(); if(!r.ok) throw new Error(d.error||'加载失败');
     // PG 用 GeoJSON Point { location: { coordinates: [lng, lat] } }, 转换为顶层 longitude/latitude 让后续 valid() / 渲染复用
     const all = (d.data || []).map(s => {
