@@ -7,17 +7,7 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;background:#f6f8f7;color:#1a2e22;min-height:100vh;-webkit-font-smoothing:antialiased}
-
-/* Navbar */
-.navbar{background:linear-gradient(135deg,#2e7d32 0%,#43a047 60%,#66bb6a 100%);color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.08);position:sticky;top:0;z-index:100}
-.navbar-inner{max-width:1280px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-.navbar-brand{display:flex;align-items:center;gap:10px;font-size:19px;font-weight:800;letter-spacing:.5px;color:#fff;text-decoration:none}
-.navbar-brand-icon{width:34px;height:34px;background:rgba(255,255,255,.18);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;backdrop-filter:blur(8px)}
-.navbar-brand-sub{font-size:11px;font-weight:500;opacity:.85;margin-left:4px;letter-spacing:.5px}
-.navbar-links{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.navbar-link{color:rgba(255,255,255,.85);text-decoration:none;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
-.navbar-link:hover{color:#fff;background:rgba(255,255,255,.15)}
-.navbar-link.active{background:rgba(255,255,255,.22);color:#fff}
+.gc-has-shell{padding-top:56px !important}
 
 /* Main */
 .main{max-width:1280px;margin:0 auto;padding:36px 24px 80px}
@@ -66,24 +56,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
 </head>
 <body>
 
-<nav class="navbar">
-  <div class="navbar-inner">
-    <a href="/" class="navbar-brand">
-      <div class="navbar-brand-icon">🌸</div>
-      <div>
-        <span>花伴应用中心</span>
-        <span class="navbar-brand-sub">APP CENTER</span>
-      </div>
-    </a>
-    <div class="navbar-links">
-      <a href="/" class="navbar-link active"><span class="navbar-link-dot"></span>应用中心</a>
-      <a href="http://100.96.54.109:31307/" target="_blank" rel="noopener" class="navbar-link">🗺 地图中心</a>
-      <a href="http://100.96.54.109:31309/" target="_blank" rel="noopener" class="navbar-link">🏪 经销商地图</a>
-      <a href="http://100.96.54.109:31307/api/health" target="_blank" rel="noopener" class="navbar-link">⚡ 系统状态</a>
-      <a href="http://100.76.15.64:3000/" target="_blank" rel="noopener" class="navbar-link">🛒 前端商城</a>
-    </div>
-  </div>
-</nav>
+<!-- 通用 navbar (跟 31001 商品管理 一样的 gcNav) -->
+<script id="gcNav" src="http://100.96.54.109:31040/nav.js" data-app="portal" defer></script>
 
 <main class="main">
 
