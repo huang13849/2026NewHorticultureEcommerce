@@ -35,7 +35,7 @@ bash scripts/zitadel-loginv2.sh
 | tropical-app | 380222686325899473 | tropical.horiculture.club/oidc/callback + 苏州 8082 |
 
 ## 已知边界
-- **hostAliases** (k8s/flower-next.yaml): pod 内 `id.horiculture.club` -> zitadel svc ClusterIP 10.43.154.1
+- **hostAliases** (k8s/flower-next.yaml): pod 内 `id.horiculture.club` -> zitadel svc ClusterIP TODO_REPLACE_WITH_ZITADEL_SVC_HOSTNAME
 - Zitadel `ExternalDomain` 按 Host header 校验, 必须传 `Host: id.horiculture.club`
 - `authRequestId` 保留 `V2_` 前缀, finalize 端点用完整字符串
 - 密码双写: MongoDB (flower-api) + Zitadel, 前端登录成功后触发对齐
