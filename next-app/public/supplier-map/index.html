@@ -1,93 +1,267 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>供应商地图 · 花伴</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <style>
-    html,body,#map{width:100%;height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;background:#eef5ee}
-    .panel{position:absolute;top:16px;left:16px;z-index:1000;background:rgba(255,255,255,.95);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.15);padding:14px 16px;min-width:280px;max-width:390px;backdrop-filter:blur(8px)}
-    .title{font-size:18px;font-weight:800;color:#255b3b;margin-bottom:6px}.sub{font-size:12px;color:#667;margin-bottom:10px;line-height:1.45}
-    .stat{display:flex;gap:8px;flex-wrap:wrap}.pill{font-size:12px;background:#e8f5e9;color:#2e7d32;border-radius:999px;padding:4px 10px}.err{color:#b00020;font-size:12px;margin-top:8px}.loading{color:#666;font-size:12px;margin-top:8px}
-    .list{max-height:300px;overflow:auto;margin-top:10px;border-top:1px solid #eee;padding-top:8px}.item{font-size:12px;padding:7px 0;border-bottom:1px dashed #eee;cursor:pointer;line-height:1.4}.item:hover{color:#2e7d32;background:#fafafa}
-    .leaflet-popup-content{font-size:13px;line-height:1.55}.shop{font-weight:800;color:#255b3b;font-size:15px}.addr{color:#555}.biz{color:#777;max-width:260px}.toolbar{display:flex;gap:8px;margin-top:10px}.btn{border:1px solid #c8e6c9;background:#fff;color:#2e7d32;border-radius:9px;padding:6px 10px;font-size:12px;cursor:pointer}.btn:hover{background:#e8f5e9}.videoBtn{display:inline-block;margin-top:8px;background:#111827;color:#fff;border-radius:999px;padding:7px 12px;text-decoration:none;font-size:12px;font-weight:700}.videoBtn:hover{background:#064e3b;color:#fff}.miniVideo{display:inline-block;margin-top:4px;color:#047857;font-weight:700;font-size:11px}
-    .switchBar{display:flex;gap:0;margin-top:8px;border-radius:8px;overflow:hidden;border:1px solid #c8e6c9}
-    .switchBtn{flex:1;padding:6px 10px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all .15s}
-    .switchBtn.active{background:#2e7d32;color:#fff}
-    .switchBtn:not(.active){background:#fff;color:#2e7d32}
-    .switchBtn:not(.active):hover{background:#f1f8e9}
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>花伴地图中心 · Flower Map Hub</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;background:#f6f8f7;color:#1a2e22;min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* Navbar */
+.navbar{background:linear-gradient(135deg,#2e7d32 0%,#43a047 60%,#66bb6a 100%);color:#fff;box-shadow:0 2px 12px rgba(0,0,0,0.08);position:sticky;top:0;z-index:100}
+.navbar-inner{max-width:1280px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.navbar-brand{display:flex;align-items:center;gap:10px;font-size:19px;font-weight:800;letter-spacing:.5px;color:#fff;text-decoration:none}
+.navbar-brand-icon{width:34px;height:34px;background:rgba(255,255,255,.18);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;backdrop-filter:blur(8px)}
+.navbar-brand-sub{font-size:11px;font-weight:500;opacity:.85;margin-left:4px;letter-spacing:.5px}
+.navbar-links{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.navbar-link{color:rgba(255,255,255,.85);text-decoration:none;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+.navbar-link:hover{color:#fff;background:rgba(255,255,255,.15)}
+.navbar-link.active{background:rgba(255,255,255,.22);color:#fff}
+.navbar-link-dot{width:6px;height:6px;border-radius:50%;background:#a5d6a7}
+.navbar-link-dot.live{background:#69f0ae;box-shadow:0 0 8px #69f0ae}
+
+/* Main */
+.main{max-width:1280px;margin:0 auto;padding:36px 24px 80px}
+.header{margin-bottom:28px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px}
+.header-text h1{font-size:30px;font-weight:800;color:#255b3b;margin-bottom:6px;letter-spacing:.5px}
+.header-text p{font-size:14px;color:#5a7269;line-height:1.6}
+.header-stat{display:flex;gap:8px;align-items:center}
+.stat-pill{background:#fff;padding:8px 14px;border-radius:999px;font-size:12px;font-weight:600;color:#5a7269;box-shadow:0 2px 6px rgba(46,125,50,.06);border:1px solid #e8f5e9}
+.stat-num{color:#2e7d32;font-weight:800}
+
+/* Grid */
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+@media(max-width:1080px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.grid{grid-template-columns:1fr}}
+
+/* Card */
+.card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(46,125,50,.06);transition:transform .18s,box-shadow .18s;display:flex;flex-direction:column;text-decoration:none;color:inherit;cursor:pointer}
+.card.disabled{cursor:not-allowed;opacity:.92}
+.card:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(46,125,50,.14)}
+.card.disabled:hover{transform:none;box-shadow:0 2px 10px rgba(46,125,50,.06)}
+.card-thumb{aspect-ratio:16/10;position:relative;overflow:hidden}
+.card-thumb svg{width:100%;height:100%;display:block}
+.card-tag{position:absolute;top:12px;left:12px;background:rgba(255,255,255,.92);padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;color:#2e7d32;backdrop-filter:blur(4px);display:inline-flex;align-items:center;gap:5px}
+.card-tag.empty{background:rgba(120,120,120,.85);color:#fff}
+.card-tag-dot{width:5px;height:5px;border-radius:50%;background:#4caf50}
+.card-tag-dot.empty{background:#bdbdbd}
+.card-tag-dot.live{background:#00e676;box-shadow:0 0 6px #00e676}
+.card-body{padding:16px 18px 18px;flex:1;display:flex;flex-direction:column}
+.card-title{font-size:16px;font-weight:800;color:#255b3b;margin-bottom:5px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card-title-id{font-size:10px;font-weight:600;color:#9e9e9e;background:#f5f5f5;padding:2px 6px;border-radius:4px;font-family:ui-monospace,monospace}
+.card-desc{font-size:12.5px;color:#5a7269;line-height:1.55;margin-bottom:14px;flex:1;min-height:36px}
+.card-action{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 14px;border-radius:9px;font-size:13px;font-weight:700;text-decoration:none;background:#2e7d32;color:#fff;transition:background .15s;align-self:flex-start}
+.card-action:hover{background:#1b5e20}
+.card.disabled .card-action{background:#e0e0e0;color:#9e9e9e;cursor:not-allowed}
+.card-meta{display:flex;align-items:center;gap:6px;font-size:11px;color:#7a8e85;margin-top:10px;padding-top:10px;border-top:1px dashed #eef0ef}
+.card-meta-item{display:inline-flex;align-items:center;gap:4px}
+.card-meta-dot{width:5px;height:5px;border-radius:50%;background:#4caf50}
+.card-meta-dot.empty{background:#bdbdbd}
+.card-meta-dot.live{background:#00e676;box-shadow:0 0 4px #00e676}
+
+/* Note section */
+.note{margin-top:36px;padding:16px 18px;background:rgba(46,125,50,.04);border-radius:12px;color:#5a7269;font-size:13px;line-height:1.75;border-left:3px solid #2e7d32}
+.note strong{color:#255b3b}
+.note code{background:rgba(0,0,0,.05);padding:2px 6px;border-radius:4px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;color:#1b5e20}
+</style>
 </head>
 <body>
-  <div id="map"></div>
-  <div class="panel">
-    <div class="title">🗺️ 供应商地图</div>
-    <div class="sub">高德瓦片底图 + API Gateway / MongoDB supplier 集合。无需浏览器端高德 JS Key。</div>
-    <div class="stat"><span class="pill" id="total">加载中…</span><span class="pill" id="shown">—</span></div>
-    <div class="switchBar">
-      <button class="switchBtn active">🗺️ 供应商地图</button>
-      <button class="switchBtn" onclick="switchToDealer()">🏪 经销商地图</button>
-    </div>
-    <div class="toolbar"><button class="btn" onclick="fitAll()">显示全部</button><button class="btn" onclick="reloadData()">刷新数据</button><button class="btn" id="videoShopBtn" onclick="openCurrentVideo()" style="background:#111827;color:#fff;border-color:#111827">🎬 视频逛店</button></div>
-    <div class="loading" id="status">正在加载供应商坐标…</div>
-    <div class="list" id="list"></div>
-  </div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script>
-let map, markersLayer, bounds, currentSupplier = null;
-const statusEl = document.getElementById('status');
-const listEl = document.getElementById('list');
 
-function initMap(){
-  map = L.map('map', { center:[39.90923,116.397428], zoom:5, zoomControl:true });
-  // 高德矢量瓦片：x/y/z 标准切片，不需要 JS API key
-  L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
-    subdomains: ['1','2','3','4'],
-    maxZoom: 18,
-    attribution: '© 高德地图'
-  }).addTo(map);
-  markersLayer = L.layerGroup().addTo(map);
-}
-function valid(s){ const lng=Number(s.longitude), lat=Number(s.latitude); return Number.isFinite(lng)&&Number.isFinite(lat)&&lng!==0&&lat!==0; }
-function nameOf(s){ return s.shop_name || s.name || '未命名商户'; }
-function addrOf(s){ return (s.company_info&&s.company_info.address) || s.address || ((s.business_items||[]).find(x=>x.address)||{}).address || ''; }
-function bizOf(s){ return (s.company_info&&s.company_info.main_business) || (s.business_items||[]).map(x=>x.main_business).filter(Boolean).slice(0,2).join('；') || ''; }
-var API_BASE = "";
-function esc(s){ return String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-function idOf(s){ return s._id || s.id || s.supplierId || ''; }
-function videoUrl(s){ return '/supplier-videos?supplierId='+encodeURIComponent(idOf(s))+'&name='+encodeURIComponent(nameOf(s)); }
-function setCurrentSupplier(s){ currentSupplier=s; const b=document.getElementById('videoShopBtn'); if(b) b.textContent='🎬 视频逛店：'+nameOf(s).slice(0,8); }
-function openCurrentVideo(){ if(!currentSupplier){ alert('请先点击地图上的商家，或等待供应商加载完成'); return; } window.top.location.href = videoUrl(currentSupplier); }
-function switchToDealer(){
-  if (window.top !== window) { window.top.location.href = '/map?type=dealer'; }
-  else { window.location.href = '/dealer-map/index.html?v=2026062904'; }
-}
-function fitAll(){ if(bounds && bounds.isValid()) map.fitBounds(bounds.pad(0.18)); }
-async function reloadData(){
-  try{
-    statusEl.textContent = '正在加载供应商坐标…';
-    markersLayer.clearLayers(); listEl.innerHTML=''; bounds = L.latLngBounds([]);
-    const r = await fetch(API_BASE + '/api/mongo/supplier?limit=500&sort='+encodeURIComponent(JSON.stringify({updatedAt:-1})), { headers: { 'x-api-key': '***REMOVED_API_KEY***' } });
-    const d = await r.json(); if(!r.ok) throw new Error(d.error||'加载失败');
-    const all = d.data || []; const suppliers = all.filter(valid);
-    document.getElementById('total').textContent = `供应商 ${all.length} 家`;
-    document.getElementById('shown').textContent = `有坐标 ${suppliers.length} 家`;
-    statusEl.textContent = suppliers.length ? '点击标记查看商户信息，或点上方 🎬 视频逛店' : '暂无带经纬度的供应商';
-    if(suppliers.length) setCurrentSupplier(suppliers[0]);
-    suppliers.forEach((s,i)=>{
-      const lat=Number(s.latitude), lng=Number(s.longitude), name=nameOf(s), addr=addrOf(s), biz=bizOf(s);
-      const marker = L.marker([lat,lng], { title:name }).on('click',()=>setCurrentSupplier(s)).bindPopup(`<div class="shop">${esc(name)}</div><div class="addr">${esc(addr)||'无地址'}</div><div class="biz">${esc(biz)}</div><div style="color:#999;margin-top:4px">${lng.toFixed(6)}, ${lat.toFixed(6)}</div><a class="videoBtn" target="_top" href="${videoUrl(s)}">🎬 视频逛店 · 上下刷</a>`);
-      marker.addTo(markersLayer); bounds.extend([lat,lng]);
-      const item = document.createElement('div'); item.className='item';
-      item.innerHTML = `${i+1}. ${esc(name)}<br/><span style="color:#999">${esc(addr)||'无地址'} · ${lng.toFixed(4)}, ${lat.toFixed(4)}</span><br/><a class="miniVideo" target="_top" href="${videoUrl(s)}" onclick="event.stopPropagation()">🎬 视频逛店</a>`;
-      item.onclick = () => { setCurrentSupplier(s); map.setView([lat,lng], 12); marker.openPopup(); };
-      listEl.appendChild(item);
-    });
-    fitAll();
-  }catch(e){ statusEl.innerHTML = '<span class="err">加载失败：'+esc(e.message)+'</span>'; }
-}
-initMap(); reloadData();
-</script>
+<nav class="navbar">
+  <div class="navbar-inner">
+    <a href="/" class="navbar-brand">
+      <div class="navbar-brand-icon">🗺</div>
+      <div>
+        <span>花伴地图中心</span>
+        <span class="navbar-brand-sub">MAP HUB</span>
+      </div>
+    </a>
+    <div class="navbar-links">
+      <a href="/" class="navbar-link active"><span class="navbar-link-dot live"></span>地图</a>
+      <a href="http://100.96.54.109:31002/" target="_blank" rel="noopener" class="navbar-link">📋 供应商管理</a>
+      <a href="http://100.96.54.109:31307/api/health" target="_blank" rel="noopener" class="navbar-link">⚡ 系统状态</a>
+      <a href="http://100.76.15.64:3000/" target="_blank" rel="noopener" class="navbar-link">🛒 前端商城</a>
+    </div>
+  </div>
+</nav>
+
+<main class="main">
+
+  <div class="header">
+    <div class="header-text">
+      <h1>选择地图</h1>
+      <p>点击下方缩略图打开对应地图视图 · 数据来自 CNPG / MongoDB / Leaflet 实时拉取</p>
+    </div>
+    <div class="header-stat">
+      <span class="stat-pill">已上架 <span class="stat-num">1</span> / 4</span>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <!-- ============ 1. 供应商管理地图 (已上架) ============ -->
+    <a href="/maps/supplier.html" target="_blank" rel="noopener noreferrer" class="card">
+      <div class="card-thumb">
+        <span class="card-tag"><span class="card-tag-dot live"></span>已上架</span>
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <radialGradient id="mapG1" cx="50%" cy="50%" r="65%">
+              <stop offset="0%" stop-color="#c8e6c9"/>
+              <stop offset="100%" stop-color="#81c784"/>
+            </radialGradient>
+            <pattern id="grid1" width="32" height="32" patternUnits="userSpaceOnUse">
+              <path d="M 32 0 L 0 0 0 32" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+            </pattern>
+          </defs>
+          <rect width="320" height="200" fill="url(#mapG1)"/>
+          <rect width="320" height="200" fill="url(#grid1)"/>
+          <!-- river -->
+          <path d="M-10,140 Q60,118 130,142 T260,135 T330,148" stroke="#4fc3f7" stroke-width="11" fill="none" opacity=".7"/>
+          <!-- regions -->
+          <path d="M30,30 L130,20 L155,80 L65,95 Z" fill="#a5d6a7" opacity=".55"/>
+          <path d="M180,35 L295,42 L283,108 L195,98 Z" fill="#a5d6a7" opacity=".55"/>
+          <!-- roads -->
+          <path d="M0,90 L120,95 L280,85" stroke="#fff" stroke-width="1.5" fill="none" opacity=".7" stroke-dasharray="3 2"/>
+          <!-- pins (22 个坐标的视觉示意) -->
+          <g>
+            <circle cx="62" cy="50" r="6" fill="#2e7d32"/>
+            <text x="62" y="54" text-anchor="middle" font-size="8" fill="#fff" font-weight="800">·</text>
+            <circle cx="92" cy="62" r="6" fill="#2e7d32"/>
+            <circle cx="135" cy="48" r="6" fill="#2e7d32"/>
+            <circle cx="210" cy="62" r="6" fill="#2e7d32"/>
+            <circle cx="246" cy="80" r="6" fill="#2e7d32"/>
+            <circle cx="270" cy="105" r="6" fill="#2e7d32"/>
+            <circle cx="180" cy="78" r="6" fill="#2e7d32"/>
+            <circle cx="100" cy="155" r="6" fill="#2e7d32"/>
+            <circle cx="155" cy="170" r="6" fill="#2e7d32"/>
+            <circle cx="225" cy="158" r="6" fill="#2e7d32"/>
+            <circle cx="285" cy="170" r="6" fill="#2e7d32"/>
+            <circle cx="55" cy="120" r="6" fill="#2e7d32"/>
+          </g>
+          <!-- compass -->
+          <g transform="translate(280,30)">
+            <circle r="13" fill="rgba(255,255,255,.85)"/>
+            <path d="M0,-10 L3,2 L0,0 L-3,2 Z" fill="#2e7d32"/>
+            <text x="0" y="-13" text-anchor="middle" font-size="8" fill="#2e7d32" font-weight="800">N</text>
+          </g>
+        </svg>
+      </div>
+      <div class="card-body">
+        <div class="card-title">供应商管理地图 <span class="card-title-id">M-01</span></div>
+        <div class="card-desc">基于 CNPG public.suppliers · 高德矢量瓦片 · 22 个有效坐标 · Leaflet 渲染</div>
+        <span class="card-action">打开地图 →</span>
+        <div class="card-meta">
+          <span class="card-meta-item"><span class="card-meta-dot live"></span>运行中</span>
+          <span class="card-meta-item">·</span>
+          <span class="card-meta-item">CNPG · 高德瓦片</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- ============ 2. 空位 1 (经销商地图 候选) ============ -->
+    <a href="/maps/dealer.html" target="_blank" rel="noopener noreferrer" class="card disabled">
+      <div class="card-thumb">
+        <span class="card-tag empty"><span class="card-tag-dot empty"></span>空位 1</span>
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <radialGradient id="mapG2" cx="50%" cy="50%" r="65%">
+              <stop offset="0%" stop-color="#fff8e1"/>
+              <stop offset="100%" stop-color="#ffd54f"/>
+            </radialGradient>
+          </defs>
+          <rect width="320" height="200" fill="url(#mapG2)"/>
+          <g opacity=".4" stroke="#fff" stroke-width=".6">
+            <line x1="0" y1="40" x2="320" y2="40"/>
+            <line x1="0" y1="80" x2="320" y2="80"/>
+            <line x1="0" y1="120" x2="320" y2="120"/>
+            <line x1="0" y1="160" x2="320" y2="160"/>
+            <line x1="40" y1="0" x2="40" y2="200"/>
+            <line x1="120" y1="0" x2="120" y2="200"/>
+            <line x1="200" y1="0" x2="200" y2="200"/>
+            <line x1="280" y1="0" x2="280" y2="200"/>
+          </g>
+          <g transform="translate(160,100)">
+            <circle r="36" fill="rgba(255,255,255,.6)"/>
+            <text text-anchor="middle" y="11" font-size="34" fill="#b08800" font-weight="800">?</text>
+          </g>
+        </svg>
+      </div>
+      <div class="card-body">
+        <div class="card-title">地图 2 <span class="card-title-id">M-02</span></div>
+        <div class="card-desc">空位 1 - 待补充内容。可作为经销商地图或 / / / 任意业务视图</div>
+        <span class="card-action">待补充</span>
+        <div class="card-meta">
+          <span class="card-meta-item"><span class="card-meta-dot empty"></span>未配置</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- ============ 3. 空位 2 ============ -->
+    <a href="/maps/placeholder2.html" target="_blank" rel="noopener noreferrer" class="card disabled">
+      <div class="card-thumb">
+        <span class="card-tag empty"><span class="card-tag-dot empty"></span>空位 2</span>
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <radialGradient id="mapG3" cx="50%" cy="50%" r="65%">
+              <stop offset="0%" stop-color="#e1f5fe"/>
+              <stop offset="100%" stop-color="#4fc3f7"/>
+            </radialGradient>
+          </defs>
+          <rect width="320" height="200" fill="url(#mapG3)"/>
+          <g transform="translate(160,100)">
+            <circle r="36" fill="rgba(255,255,255,.6)"/>
+            <text text-anchor="middle" y="11" font-size="34" fill="#015d8c" font-weight="800">?</text>
+          </g>
+        </svg>
+      </div>
+      <div class="card-body">
+        <div class="card-title">地图 3 <span class="card-title-id">M-03</span></div>
+        <div class="card-desc">空位 2 - 待补充内容。可作为 / / 客户分布 / 物流地图 / 任意业务视图</div>
+        <span class="card-action">待补充</span>
+        <div class="card-meta">
+          <span class="card-meta-item"><span class="card-meta-dot empty"></span>未配置</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- ============ 4. 空位 3 ============ -->
+    <a href="/maps/placeholder3.html" target="_blank" rel="noopener noreferrer" class="card disabled">
+      <div class="card-thumb">
+        <span class="card-tag empty"><span class="card-tag-dot empty"></span>空位 3</span>
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <radialGradient id="mapG4" cx="50%" cy="50%" r="65%">
+              <stop offset="0%" stop-color="#f3e5f5"/>
+              <stop offset="100%" stop-color="#ba68c8"/>
+            </radialGradient>
+          </defs>
+          <rect width="320" height="200" fill="url(#mapG4)"/>
+          <g transform="translate(160,100)">
+            <circle r="36" fill="rgba(255,255,255,.6)"/>
+            <text text-anchor="middle" y="11" font-size="34" fill="#6a1b7a" font-weight="800">?</text>
+          </g>
+        </svg>
+      </div>
+      <div class="card-body">
+        <div class="card-title">地图 4 <span class="card-title-id">M-04</span></div>
+        <div class="card-desc">空位 3 - 待补充内容。可作为 / / 营销热力 / 产地溯源 / 任意业务视图</div>
+        <span class="card-action">待补充</span>
+        <div class="card-meta">
+          <span class="card-meta-item"><span class="card-meta-dot empty"></span>未配置</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="note">
+    <strong>📝 说明</strong> · 1 / 4 地图已上架<br/>
+    · <strong>供应商管理地图</strong>：数据源 <code>CNPG public.suppliers</code>（22 个有效坐标），高德矢量瓦片底图<br/>
+    · <strong>空位 1-3</strong>：预留扩展位。把 <code>supplier-map/maps/dealer.html</code> / <code>placeholder2.html</code> / <code>placeholder3.html</code> 三个占位文件替换为实际地图内容，然后 <code>docker build &amp;&amp; docker push &amp;&amp; kubectl rollout</code> 即可上线，nginx 路由无需改动
+  </div>
+
+</main>
+
 </body>
 </html>
