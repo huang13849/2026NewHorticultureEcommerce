@@ -272,14 +272,14 @@ async function process() {
   if ($('#maxWidth').value > 0) fd.append('max_width', $('#maxWidth').value);
   if (wantBg) fd.append('bg_color', $('#bgColor').value.replace('#','').toLowerCase());
 
-  try t =  let t =  try {
+  try {
     const t0 = Date.now();
     const r = await fetch(apiBase + endpoint, { method: 'POST', body: fd });
     const elapsed = Date.now() - t0;
 
-    if if (!r.ok) {
+    if (!r.ok) {
       let err = '';
-      try { const j = await r.json(); err = j.error || JSON.stringify(j); } catch { { err = await r.text(); } }
+      try { const j = await r.json(); err = j.error || JSON.stringify(j); } catch { err = await r.text(); }
       throw new Error(`HTTP ${r.status}: ${err}`);
     }
 
