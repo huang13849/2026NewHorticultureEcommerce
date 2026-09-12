@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>图片去背景 · 花伴</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;background:#0b172b;color:#e6e8eb;min-height:100vh;-webkit-font-smoothing:antialiased}
+.gc-has-shell{padding-top:56px !important}
+
+.wrap{max-width:1200px;margin:0 auto;padding:40px 24px 80px}
+.header{margin-bottom:32px}
+.header h1{font-size:28px;font-weight:800;background:linear-gradient(135deg,#c084fc,#f472b6,#60a5fa);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:6px;letter-spacing:.5px}
+.header p{font-size:14px;color:#9aa3b2;line-height:1.6}
+
+/* 主区域: 左上传区 + 右选项 + 下预览 */
+.main{display:grid;grid-template-columns:1.4fr 1fr;gap:20px}
+@media(max-width:900px){.main{grid-template-columns:1fr}}
+
+/* Drop zone */
+.drop{
+  background:rgba(255,255,255,.04);border:2px dashed rgba(192,132,252,.4);border-radius:16px;
+  min-height:340px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .2s;position:relative;overflow:hidden;
+}
+.drop:hover,.drop.dragover{border-color:#c084fc;background:rgba(192,132,252,.08)}
+.drop.has-file{padding:0;border-style:solid}
+.drop input[type=file]{display:none}
+.drop-empty{text-align:center;color:#9aa3b2;padding:30px}
+.drop-empty-icon{font-size:56px;margin-bottom:12px;opacity:.7}
+.drop-empty-hint{font-size:13px;color:#6b7280;margin-top:6px}
+.preview{max-width:100%;max-height:500px;display:block;margin:auto}
+.preview-wrap{position:relative;padding:16px}
+.preview-info{
+  position:absolute;top:6px;right:14px;background:rgba(11,23,43,.85);color:#c084fc;
+  padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;font-family:ui-monospace,monospace
+}
+
+/* Options panel */
+.panel{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:18px;
+}
+.panel-title{font-size:13px;font-weight:700;color:#9aa3b2;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.opt{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.03);cursor:pointer;transition:background .15s}
+.opt:hover{background:rgba(255,255,255,.06)}
+.opt input{margin:0;width:18px;height:18px;accent-color:#c084fc;cursor:pointer}
+.opt-label{flex:1;font-size:14px;color:#e6e8eb}
+.opt-hint{font-size:11px;color:#6b7280}
+
+.range-row{display:flex;align-items:center;gap:12px;padding:0 4px}
+.range-row input[type=range]{flex:1;accent-color:#c084fc}
+.range-val{font-size:13px;color:#c084fc;font-weight:700;font-family:ui-monospace,monospace;min-width:36px;text-align:right}
+
+select{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#e6e8eb;padding:8px 10px;border-radius:8px;font-size:13px;font-family:inherit;width:100%}
+.color-row{display:flex;align-items:center;gap:10px}
+.color-row input[type=color]{width:46px;height:34px;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:transparent;cursor:pointer}
+
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:14px;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;
+  transition:all .15s;font-family:inherit;
+}
+.btn-primary{background:linear-gradient(135deg,#722ed1,#eb2f96);color:#fff;box-shadow:0 6px 20px rgba(114,46,209,.35)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(235,47,150,.45)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-secondary{background:rgba(255,255,255,.06);color:#e6e8eb;border:1px solid rgba(255,255,255,.1)}
+.btn-secondary:hover{background:rgba(255,255,255,.1)}
+
+.result{
+  margin-top:24px;background:rgba(46,125,50,.08);border:1px solid rgba(46,125,50,.25);
+  border-radius:14px;padding:18px;display:none;
+}
+.result.show{display:block}
+.result-title{font-size:14px;font-weight:700;color:#69f0ae;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.result-info{display:flex;gap:18px;font-size:12px;color:#9aa3b2;margin-bottom:12px;font-family:ui-monospace,monospace}
+.result-info b{color:#e6e8eb;font-weight:700}
+.result-actions{display:flex;gap:10px}
+.result-img-wrap{text-align:center;margin-top:12px;padding:12px;background:#fff;border-radius:10px}
+.result-img-wrap img{max-width:100%;max-height:400px;border-radius:6px}
+
+.error-box{
+  margin-top:18px;padding:14px 18px;background:rgba(245,34,45,.1);
+  border:1px solid rgba(245,34,45,.3);border-radius:10px;color:#ff7875;font-size:13px;
+  display:none;
+}
+.error-box.show{display:block}
+
+.note{
+  margin-top:30px;padding:14px 18px;background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);border-radius:10px;
+  font-size:12px;color:#9aa3b2;line-height:1.6;
+}
+.note strong{color:#c084fc}
+.note code{background:rgba(255,255,255,.06);padding:2px 6px;border-radius:4px;font-family:ui-monospace,monospace;color:#69f0ae}
+</style>
+</head>
+<body>
+
+<script id="gcNav" src="http://100.96.54.109:31040/nav.js" data-app="tools" defer></script>
+
+  <div class="wrap">
+  <div style="margin-bottom:16px"><a href="/" style="color:#c084fc;text-decoration:none;font-size:13px">← 返回工具中心</a></div>
+  <div class="header">
+    <h1>图片去背景 + 压缩</h1>
+    <p>上传图片自动去背景 + 合成白底 + 压缩. 适合商品图/植物/人像.</p>
+  </div>
+
+  <div class="main">
+    <!-- 左: drop zone -->
+    <div>
+      <label class="drop" id="drop" for="file">
+        <div class="drop-empty" id="dropEmpty">
+          <div class="drop-empty-icon">📤</div>
+          <div>拖拽图片到此处, 或点击上传</div>
+          <div class="drop-empty-hint">支持 JPG / PNG / WebP · 最大 50MB</div>
+        </div>
+        <input type="file" id="file" accept="image/*"/>
+      </label>
+
+      <div class="error-box" id="err"></div>
+    </div>
+
+    <!-- 右: options -->
+    <div class="panel">
+      <div class="panel-title">处理选项</div>
+
+      <label class="opt"><input type="checkbox" id="removeBg" checked/><span class="opt-label">去除背景</span><span class="opt-hint">rembg u2net</span></label>
+
+      <label class="opt"><input type="checkbox" id="compress" checked/><span class="opt-label">压缩图片</span><span class="opt-hint">JPEG, 可调质量</span></label>
+
+      <div id="bgGroup">
+        <div class="panel-title" style="margin-top:6px">背景颜色</div>
+        <div class="color-row">
+          <input type="color" id="bgColor" value="#ffffff"/>
+          <span style="font-size:12px;color:#9aa3b2">合成背景 (默认白)</span>
+        </div>
+      </div>
+
+      <div id="qualityGroup">
+        <div class="panel-title" style="margin-top:6px">JPEG 质量</div>
+        <div class="range-row">
+          <input type="range" id="quality" min="40" max="95" value="85"/>
+          <span class="range-val" id="qVal">85</span>
+        </div>
+      </div>
+
+      <div class="panel-title" style="margin-top:6px">最大宽度 (px, 0=不缩)</div>
+      <div class="range-row">
+        <input type="range" id="maxWidth" min="0" max="4096" value="0" step="100"/>
+        <span class="range-val" id="wVal">0</span>
+      </div>
+
+      <button class="btn btn-primary" id="go" disabled>
+        <span id="goText">请先上传图片</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="result" id="result">
+    <div class="result-title">✅ 处理完成</div>
+    <div class="result-info" id="resultInfo"></div>
+    <div class="result-actions">
+      <a class="btn btn-primary" id="downloadBtn" download>⬇ 下载结果</a>
+      <button class="btn btn-secondary" id="againBtn">🔁 再来一张</button>
+    </div>
+    <div class="result-img-wrap"><img id="resultImg"/></div>
+  </div>
+
+  <div class="note">
+    <strong>📌 三种端点</strong>: 
+    <code>POST /api/remove-bg</code> (透明 PNG) · 
+    <code>POST /api/compress</code> (压缩) · 
+    <code>POST /api/process</code> (去背景+合成白底+压缩) ⭐ 推荐
+  </div>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const drop = $('#drop');
+const fileInput = $('#file');
+const dropEmpty = $('#dropEmpty');
+const go = $('#go');
+const goText = $('#goText');
+const err = $('#err');
+const result = $('#result');
+const resultInfo = $('#resultInfo');
+const downloadBtn = $('#downloadBtn');
+const againBtn = $('#againBtn');
+const resultImg = $('#resultImg');
+
+let currentFile = null;
+let outputBlobURL = null;
+let apiBase = '';  // same-origin via nginx /api proxy
+
+// UI sync
+$('#quality').addEventListener('input', (e) => $('#qVal').textContent = e.target.value);
+$('#maxWidth').addEventListener('input', (e) => $('#wVal').textContent = e.target.value);
+
+// Drag & drop
+['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, (e) => {e.preventDefault(); drop.classList.add('dragover');}));
+['dragleave','drop'].forEach(ev => drop.addEventListener(ev, (e) => {e.preventDefault(); drop.classList.remove('dragover');}));
+drop.addEventListener('drop', (e) => {
+  const f = e.dataTransfer.files[0];
+  if (f) setFile(f);
+});
+fileInput.addEventListener('change', (e) => {
+  if (e.target.files[0]) setFile(e.target.files[0]);
+});
+
+function setFile(f) {
+  if (! f.type.startsWith('image/')) { showErr('请上传图片文件'); return; }
+  if (f.size > 50 * 1024 * 1024) { showErr('文件超过 50MB'); return; }
+  currentFile = f;
+  hideErr();
+  // preview
+  if (outputBlobURL) URL.revokeObjectURL(outputBlobURL);
+  const url = URL.createObjectURL(f);
+  dropEmpty.style.display = 'none';
+  drop.classList.add('has-file');
+  drop.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'preview-wrap';
+  const info = document.createElement('div');
+  info.className = 'preview-info';
+  info.textContent = `${(f.size/1024).toFixed(1)} KB`;
+  const img = document.createElement('img');
+  img.className = 'preview';
+  img.src = url;
+  img.onload = () => URL.revokeObjectURL(url);
+  wrap.appendChild(img);
+  wrap.appendChild(info);
+  drop.appendChild(wrap);
+  // restore input + label behavior
+  drop.appendChild(fileInput);
+  go.disabled = false;
+  goText.textContent = '🚀 开始处理';
+  result.classList.remove('show');
+}
+
+function showErr(msg) {
+  err.textContent = '❌ ' + msg;
+  err.classList.add('show');
+}
+function hideErr() { err.classList.remove('show'); }
+
+// toggle bg / quality groups
+function syncOptVisibility() {
+  $('#bgGroup').style.display = $('#removeBg').checked ? 'block' : 'none';
+  $('#qualityGroup').style.display = $('#compress').checked ? 'block' : 'none';
+}
+$('#removeBg').addEventListener('change', syncOptVisibility);
+$('#compress').addEventListener('change', syncOptVisibility);
+
+async function process() {
+  if (!currentFile) return;
+  hideErr();
+  go.disabled = true;
+  goText.textContent = '⏳ 处理中...';
+
+  const fd = new FormData();
+  fd.append('file', currentFile);
+  const wantBg = $('#removeBg').checked;
+  const wantCompress = $('#compress').checked;
+
+  let endpoint, suffix;
+  if (wantBg && wantCompress) { endpoint = '/api/process'; suffix = 'processed'; }
+  else if (wantBg)           { endpoint = '/api/remove-bg'; suffix = 'no-bg'; }
+  else                       { endpoint = '/api/compress';  suffix = 'compressed'; }
+
+  if (wantCompress) fd.append('quality', $('#quality').value);
+  if ($('#maxWidth').value > 0) fd.append('max_width', $('#maxWidth').value);
+  if (wantBg) fd.append('bg_color', $('#bgColor').value.replace('#','').toLowerCase());
+
+  try {
+    const t0 = Date.now();
+    const r = await fetch(apiBase + endpoint, { method: 'POST', body: fd });
+    const elapsed = Date.now() - t0;
+
+    if (!r.ok) {
+      let err = '';
+      const txt = await r.text();
+      try { const j = JSON.parse(txt); err = j.error || JSON.stringify(j); } catch { err = txt; }
+      throw new Error(`HTTP ${r.status}: ${err}`);
+    }
+
+    const blob = await r.blob();
+    const origSize = currentFile.size;
+    const newSize = blob.size;
+    const procMs = r.headers.get('X-Process-Time-Ms') || '?';
+    const outSizeHdr = r.headers.get('X-Output-Size');
+    const mime = r.headers.get('Content-Type') || 'image/png';
+
+    if (outputBlobURL) URL.revokeObjectURL(outputBlobURL);
+    outputBlobURL = URL.createObjectURL(blob);
+    resultImg.src = outputBlobURL;
+    downloadBtn.href = outputBlobURL;
+    downloadBtn.download = `${(currentFile.name||'image').replace(/\.[^.]+$/,'')}-${suffix}.${mime.includes('png')?'png':'jpg'}`;
+
+    const ratio = ((1 - newSize/origSize) * 100).toFixed(1);
+    const sign = newSize < origSize ? '↓' : '↑';
+    resultInfo.innerHTML = `
+      <span>耗时 <b>${elapsed}ms</b> (server ${procMs}ms)</span>
+      <span>原 <b>${(origSize/1024).toFixed(1)} KB</b></span>
+      <span>新 <b>${(newSize/1024).toFixed(1)} KB</b></span>
+      <span>变化 <b>${sign}${Math.abs(ratio)}%</b></span>
+      <span>类型 <b>${mime.split('/')[1].toUpperCase()}</b></span>
+    `;
+    result.classList.add('show');
+    result.scrollIntoView({behavior:'smooth', block:'start'});
+  } catch (e) {
+    showErr(e.message || '处理失败');
+  } finally {
+    go.disabled = false;
+    goText.textContent = '🚀 开始处理';
+  }
+}
+
+go.addEventListener('click', process);
+
+againBtn.addEventListener('click', () => {
+  if (outputBlobURL) URL.revokeObjectURL(outputBlobURL);
+  currentFile = null;
+  fileInput.value = '';
+  result.classList.remove('show');
+  // rebuild empty state
+  drop.innerHTML = '';
+  drop.appendChild(dropEmpty.cloneNode(true));
+  drop.appendChild(fileInput);
+  go.disabled = true;
+  goText.textContent = '请先上传图片';
+});
+
+syncOptVisibility();
+</script>
+</body>
+</html>
