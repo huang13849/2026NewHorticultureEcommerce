@@ -1,6 +1,7 @@
 FROM nginx:alpine
 COPY index.html /usr/share/nginx/html/index.html
 COPY image-bg.html /usr/share/nginx/html/image-bg.html
+COPY resume.html /usr/share/nginx/html/resume.html
 # 目录 755 才能 cd 进入, 文件 644 即可读
 RUN find /usr/share/nginx/html -type d -exec chmod 755 {} \; && \
     find /usr/share/nginx/html -type f -exec chmod 644 {} \; && \

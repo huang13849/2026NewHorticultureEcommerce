@@ -67,7 +67,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
       <p>点击缩略图打开对应业务视图 · 全部服务部署在 k3s (new-ecommerce namespace)</p>
     </div>
     <div class="header-stat">
-      <span class="stat-pill">已上架 <span class="stat-num">2</span> / 4</span>
+      <span class="stat-pill">已上架 <span class="stat-num">3</span> / 4</span>
     </div>
   </div>
 
@@ -173,30 +173,38 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
       </div>
     </a>
 
-    <!-- ============ 3. 占位 ============ -->
-    <a href="#" onclick="alert('待补充应用 3');return false" class="card disabled">
+    <!-- ============ 3. 简历管理 ============ -->
+    <a href="http://100.96.54.109:31313/resume.html" class="card">
       <div class="card-thumb">
-        <span class="card-tag empty"><span class="card-tag-dot empty"></span>空位 3</span>
+        <span class="card-tag"><span class="card-tag-dot"></span>已上架</span>
         <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
           <defs>
             <radialGradient id="mapG3" cx="50%" cy="50%" r="65%">
-              <stop offset="0%" stop-color="#fff8e1"/>
-              <stop offset="100%" stop-color="#ffd54f"/>
+              <stop offset="0%" stop-color="#fed7aa"/>
+              <stop offset="100%" stop-color="#ea580c"/>
             </radialGradient>
           </defs>
           <rect width="320" height="200" fill="url(#mapG3)"/>
-          <g transform="translate(160,100)">
-            <circle r="36" fill="rgba(255,255,255,.6)"/>
-            <text text-anchor="middle" y="11" font-size="34" fill="#b08800" font-weight="800">?</text>
-          </g>
+          <rect x="100" y="50" width="120" height="120" rx="6" fill="rgba(255,255,255,.92)"/>
+          <rect x="110" y="60" width="100" height="8" rx="2" fill="#9a3412"/>
+          <rect x="110" y="76" width="80" height="6" rx="2" fill="#c2410c"/>
+          <rect x="110" y="88" width="90" height="6" rx="2" fill="#c2410c"/>
+          <rect x="110" y="100" width="70" height="6" rx="2" fill="#c2410c"/>
+          <rect x="110" y="112" width="85" height="6" rx="2" fill="#c2410c"/>
+          <rect x="110" y="130" width="60" height="20" rx="4" fill="#fb923c"/>
+          <text x="170" y="190" text-anchor="middle" font-size="11" fill="#7c2d12" font-weight="700">JD → DOCX</text>
         </svg>
       </div>
       <div class="card-body">
-        <div class="card-title">应用 3 <span class="card-title-id">APP-03</span></div>
-        <div class="card-desc">空位 - 可放 / / 数据看板 / 营销中心 / 任意业务视图</div>
-        <span class="card-action">待补充</span>
+        <div class="card-title">简历管理 <span class="card-title-id">APP-03</span></div>
+        <div class="card-desc">输入 JD 岗位描述 · 基于模板生成定制简历 docx · 列出所有已有简历 · 按 JD 关键词匹配段落</div>
+        <span class="card-action">打开 →</span>
         <div class="card-meta">
-          <span class="card-meta-item"><span class="card-meta-dot empty"></span>未配置</span>
+          <span class="card-meta-item"><span class="card-meta-dot"></span>本地</span>
+          <span class="card-meta-item">·</span>
+          <span class="card-meta-item">python-docx</span>
+          <span class="card-meta-item">·</span>
+          <span class="card-meta-item">AGENTS.md 模板</span>
         </div>
       </div>
     </a>
@@ -235,7 +243,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
     <strong>📝 说明</strong> · 2 / 4 应用已上架 · 全部服务都在 k3s (new-ecommerce namespace)<br/>
     · <strong>地图中心 (31307)</strong>：k3s Service <code>supplier-map</code> NodePort → nginx (supplier-map 容器)<br/>
     · <strong>经销商地图 (31309)</strong>：k3s Service <code>dealer-map</code> NodePort → nginx (dealer-map 容器，原 31308)<br/>
-    · <strong>空位 3 / 4</strong>：需要时新建 k3s Service + Deployment (类似 supplier-map 模式)，然后在这里加卡片
+    · <strong>空位 4 / 4</strong>：需要时新建 k3s Service + Deployment (类似 supplier-map 模式)，然后在这里加卡片
   </div>
 
 </main>
