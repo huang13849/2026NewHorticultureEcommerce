@@ -12,6 +12,8 @@ server {
   index index.html;
   location / {
     try_files $uri /index.html;
+    # The portal entry URLs must not remain stale in browser caches after a rollout.
+    add_header Cache-Control "no-store" always;
   }
   # tools backend 在 k8s cluster 内 (image-tools:3013), nginx 反代
   location /api/ {
