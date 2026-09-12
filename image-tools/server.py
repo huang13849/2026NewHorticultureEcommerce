@@ -562,8 +562,10 @@ def resume_generate():
         h = hashlib.md5(jd_text.encode()).hexdigest()[:6]
         ts = datetime.now().strftime("%Y%m%d-%H%M%S")
         info = _parse_jd(jd_text)
-        company = info["company"] or "未知公司"
-        title = info["title"] or "目标岗位"
+        form_company = request.form.get("company", "").strip() or (request.json.get("company", "") if request.is_json else "")
+        form_title = request.form.get("title", "").strip() or (request.json.get("title", "") if request.is_json else "")
+        company = form_company or info["company"] or "未知公司"
+        title = form_title or info["title"] or "目标岗位"
         safe_co = _re.sub(r"[\\/:*?\"<>|]", "_", company)[:30]
         safe_ti = _re.sub(r"[\\/:*?\"<>|]", "_", title)[:30]
         out_name = f"{safe_co}-{safe_ti}-黄毅-{h}.docx"
