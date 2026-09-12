@@ -22,6 +22,7 @@ from PIL import Image
 from docx import Document
 from docx.shared import Pt, RGBColor, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+import shutil
 
 MODEL_PATH = "/app/.u2net/u2net.onnx"
 MIRRORS = [
@@ -64,6 +65,7 @@ TEMPLATE_DIR = os.path.join(RESUME_SRC, "template")
 JD_DIR = os.path.join(RESUME_SRC, "job description")
 OUTPUT_DIR = os.path.join(RESUME_SRC, "output")
 AGENTS_FILE = os.path.join(RESUME_SRC, "AGENTS.md")
+TEMPLATE_DOCX = os.path.join(RESUME_SRC, "template", "nanwei.docx")  # 南威 docx 模板 (按 JD 定制简历用)
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024
@@ -204,6 +206,72 @@ def resume_list():
             files.append({"name": fn, "size": os.path.getsize(path), "type": fn.split(".")[-1]})
     return jsonify({"resumes": files, "total": len(files)})
 
+@app.route("/api/resume/jds/save", methods=["POST"])
+def resume_jds_save():
+    """保存 JD 到 job description/ 目录."""
+    company = request.form.get("company", "").strip()
+    title = request.form.get("title", "").strip()
+    jd_text = request.form.get("jd_text", "").strip()
+    if not company or not title or not jd_text:
+        return jsonify({"ok": False, "error": "company / title / jd_text 都必填"}), 400
+    safe_co = _re.sub(r"[\\/:*?\"<>|\s]", "_", company)[:40].strip("_")
+    safe_ti = _re.sub(r"[\\/:*?\"<>|\s]", "_", title)[:40].strip("_")
+    if not safe_co or not safe_ti:
+        return jsonify({"ok": False, "error": "公司/岗位名含太多非法字符"}), 400
+    filename = f"{safe_co}-{safe_ti}.md"
+    path = os.path.join(JD_DIR, filename)
+    try:
+        content = f"# {company} - {title}\n\n" + jd_text + "\n"
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content)
+        return jsonify({"ok": True, "filename": filename, "path": path})
+    except Exception as e:
+        print(traceback.format_exc(), flush=True)
+        return jsonify({"ok": False, "error": f"save failed: {e}"}), 500
+
+@app.route("/api/resume/jds/get")
+def resume_jds_get():
+    """读取 JD 文件, 解析 company/title/jd_text."""
+    name = request.args.get("name", "")
+    if not name or ".." in name or "/" in name or name.startswith("."):
+        return jsonify({"error": "invalid filename"}), 400
+    path = os.path.join(JD_DIR, name)
+    if not os.path.exists(path):
+        return jsonify({"error": f"JD not found: {name}"}), 404
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+        company, title, jd_text = "", "", content
+        first_line = content.split("\n", 1)[0].strip()
+        m = _re.match(r"^#\s*(.+?)\s*-\s*(.+?)\s*$", first_line)
+        if m:
+            company, title = m.group(1).strip(), m.group(2).strip()
+            jd_text = content.split("\n", 1)[1].strip() if "\n" in content else ""
+        else:
+            base = name.rsplit(".", 1)[0]
+            if "-" in base:
+                parts = base.split("-", 1)
+                company, title = parts[0], parts[1]
+            jd_text = content
+        return jsonify({"ok": True, "company": company, "title": title, "jd_text": jd_text, "filename": name})
+    except Exception as e:
+        return jsonify({"error": f"read failed: {e}"}), 500
+
+@app.route("/api/resume/jds/delete", methods=["DELETE"])
+def resume_jds_delete():
+    """删除 JD 文件."""
+    name = request.args.get("name", "")
+    if not name or ".." in name or "/" in name or name.startswith("."):
+        return jsonify({"ok": False, "error": "invalid filename"}), 400
+    path = os.path.join(JD_DIR, name)
+    if not os.path.exists(path):
+        return jsonify({"ok": False, "error": f"JD not found: {name}"}), 404
+    try:
+        os.remove(path)
+        return jsonify({"ok": True, "deleted": name})
+    except Exception as e:
+        return jsonify({"ok": False, "error": f"delete failed: {e}"}), 500
+
 @app.route("/api/resume/download")
 def resume_download():
     """下载 output/ 里的简历文件. ?file=xxx.docx"""
@@ -291,6 +359,184 @@ def _md_to_docx(md_content, output_path, title=None):
     doc.save(output_path)
     return output_path
 
+def _parse_jd(jd_text):
+    """从 JD 文本提取: 公司名 / 职位 / 核心职责 / 技能要求 / 任职资格."""
+    info = {"company": "", "title": "", "responsibilities": [], "skills": [], "qualifications": []}
+    lines = [l.strip() for l in jd_text.split("\n") if l.strip()]
+    current = None
+    section_map = {
+        "职责": "responsibilities",
+        "岗位职责": "responsibilities",
+        "工作职责": "responsibilities",
+        "Responsibilities": "responsibilities",
+        "技能": "skills",
+        "技能要求": "skills",
+        "Requirements": "skills",
+        "任职": "qualifications",
+        "任职要求": "qualifications",
+        "Qualifications": "qualifications",
+    }
+    for line in lines:
+        if line.startswith(("# ", "黄毅")):
+            continue
+        # 检测 section header (X: 或 X: 后跟内容)
+        matched_section = None
+        for kw, key in section_map.items():
+            if line.startswith(kw + ":") or line.startswith(kw + ":") or line == kw:
+                current = key
+                rest = line[len(kw)+1:].strip()
+                if rest:
+                    info[key].append(rest)
+                matched_section = True
+                break
+        if matched_section:
+            continue
+        # 公司名 (短行, 包含 "公司" 字)
+        if "公司" in line and len(line) < 50 and not info["company"]:
+            info["company"] = line.replace("公司:", "").replace("公司", "").strip()
+            continue
+        # 职位 (包含 "岗位" / "职位")
+        if ("岗位" in line or "职位" in line) and len(line) < 50 and not info["title"]:
+            info["title"] = line.replace("岗位:", "").replace("职位:", "").strip()
+            continue
+        # bullet 项
+        if (line.startswith("- ") or line.startswith("• ") or line.startswith("* ")):
+            item = line.lstrip("-•* ").strip()
+            if current:
+                info[current].append(item)
+        elif current and len(line) < 200:
+            info[current].append(line)
+    # 提取 keywords
+    text_lower = jd_text.lower()
+    info["keywords"] = set()
+    for token in _re.findall(r"[\u4e00-\u9fff]{2,5}|[a-zA-Z]{4,}", text_lower):
+        info["keywords"].add(token.lower())
+    return info
+
+
+def _generate_from_template(jd_text, output_path):
+    """基于南威 docx 模板生成简历:
+    1. 复制模板
+    2. 替换: 求职方向 / Heading 2 "与岗位相关职责" / 个人总结 / 岗位匹配优势 -> 用 JD 关键词
+    3. 不改: 姓名 / 联系信息 / 工作经历 bullet (保持原真实经历)
+    """
+    import shutil
+    if not os.path.exists(TEMPLATE_DOCX):
+        raise FileNotFoundError(f"template not found: {TEMPLATE_DOCX}")
+    shutil.copy(TEMPLATE_DOCX, output_path)
+
+    doc = Document(output_path)
+    info = _parse_jd(jd_text)
+    new_title = info["title"] or "目标岗位"
+    jd_keywords = info.get("keywords", set())
+
+    # 段落替换: 遍历 paragraph, 替换占位文本
+    # - 段落 3 "求职方向: ..." -> 用 JD 职位
+    # - Heading 2 "与...岗位相关职责:" -> 用 JD 职位
+    # - 段落 "黄毅 Frank Huang" (Title) - 不动
+    # - 段落 7 个人总结 - 用 JD 关键词 + 模板话术改写
+    # - 段落 87+ 岗位匹配优势 - 重写
+    title_replacements = []  # 收集所有 "跨境供应链负责人" 替换
+
+    for p in doc.paragraphs:
+        txt = p.text
+        new_txt = txt
+
+        # 求职方向 (段落 3)
+        if new_txt.startswith("求职方向:") or "求职方向" in new_txt:
+            if info["title"]:
+                # 保留 "求职方向:" 前缀, 替换职位
+                new_txt = _re.sub(r"(求职方向[:：]).*", f"\1{info['title']}", new_txt)
+                if new_txt == txt:  # regex 没匹配 (格式不一样)
+                    new_txt = f"求职方向: {info['title']}"
+
+        # "与...岗位相关职责" / "与岗位相关职责" -> 替换
+        if "岗位相关职责" in new_txt:
+            new_txt = _re.sub(r"与[^职]*?岗位相关职责", f"与{new_title}岗位相关职责", new_txt)
+            if "岗位相关职责" in new_txt and "与" not in new_txt[:5]:
+                new_txt = f"与{new_title}岗位相关职责:"
+
+        # 个人总结 (段落 7) - 用 JD 关键词重写
+        # 只重写 Normal 段落 (Heading 标题 "个人总结" 不动)
+        if p.style.name == "Normal" and "个人总结" not in new_txt[:20] and ("12年产业数字化" in new_txt and "经验" in new_txt):
+            # 重写 - 用 JD 关键词匹配增强原总结
+            matched_kws = [k for k in jd_keywords if len(k) >= 2 and k in jd_text][:5]
+            kw_str = "、".join(matched_kws) if matched_kws else ""
+            new_txt = (
+                f"12 年产业数字化、供应链、电商与项目管理经验，"
+                f"近年聚焦供应链建设、品类管理、跨境电商运营与海外市场拓展。"
+                f"能基于 {kw_str} 等岗位核心需求，"
+                f"将过往经验转化为该岗位可直接落地的能力与成果。"
+                f"具备从供应链上游到电商下全链路的实战经验，"
+                f"擅长数据驱动选品、成本控制与多团队协同。"
+            )
+
+        # "岗位匹配优势" 区块 - 把 bullet 重写为 JD 相关
+        if "岗位匹配优势" in new_txt[:20]:
+            # 找下一段, 段落是 Heading 1 之后开始
+            pass
+
+        if new_txt != txt:
+            # 替换段落所有 run 的 text (保留格式)
+            for run in p.runs:
+                if run.text:
+                    # 简单做法: 整体替换第一个 run 的 text, 清空其余
+                    pass
+            # 直接清空原 runs, 加新 run
+            for run in p.runs[1:]:
+                run.text = ""
+            if p.runs:
+                p.runs[0].text = new_txt
+            else:
+                p.add_run(new_txt)
+
+    # 在 Heading 1 "岗位匹配优势" 之后的 List Bullet, 用 JD 关键词重组
+    in_match_section = False
+    for p in doc.paragraphs:
+        if p.text.startswith("岗位匹配优势"):
+            in_match_section = True
+            continue
+        if in_match_section:
+            if p.text.startswith("Heading") or (p.style.name.startswith("Heading") and p.text.strip() and "岗位匹配优势" not in p.text):
+                in_match_section = False
+                continue
+            if p.style.name == "List Bullet" and p.text.startswith("✓"):
+                # 重写 bullet, 用 JD 关键词
+                if info["skills"]:
+                    sk = info["skills"][0]
+                    new_bullet = f"✓ {sk}: 基于过往供应链与电商经验，{sk}方面有实战积累，可快速适配新岗位。"
+                else:
+                    new_bullet = p.text  # 保留
+                if p.runs:
+                    p.runs[0].text = new_bullet
+                    for r in p.runs[1:]:
+                        r.text = ""
+
+    # "关键成果" 也根据 JD 关键词调整 (段落 28-31 那种 List Bullet)
+    in_results = False
+    for p in doc.paragraphs:
+        if p.text.startswith("关键成果"):
+            in_results = True
+            continue
+        if in_results:
+            if p.style.name.startswith("Heading"):
+                in_results = False
+                continue
+            if p.style.name == "List Bullet":
+                # 加点 JD 关键词匹配, 加在 bullet 前面
+                if info["skills"]:
+                    matched = [s for s in info["skills"] if any(k in s for k in jd_keywords)]
+                    if matched and not p.text.startswith("⚡"):
+                        prefix = f"⚡ [匹配 {matched[0]}] "
+                        if p.runs:
+                            p.runs[0].text = prefix + p.text
+                            for r in p.runs[1:]:
+                                r.text = ""
+
+    doc.save(output_path)
+    return output_path
+
+
 @app.route("/api/resume/generate", methods=["POST"])
 def resume_generate():
     """输入 JD text, 输出定制简历 docx.
@@ -312,7 +558,45 @@ def resume_generate():
         save_to_output = request.json.get("save_to_output", True)
 
     try:
-        # 1) 读模板
+        import hashlib
+        h = hashlib.md5(jd_text.encode()).hexdigest()[:6]
+        ts = datetime.now().strftime("%Y%m%d-%H%M%S")
+        info = _parse_jd(jd_text)
+        company = info["company"] or "未知公司"
+        title = info["title"] or "目标岗位"
+        safe_co = _re.sub(r"[\\/:*?\"<>|]", "_", company)[:30]
+        safe_ti = _re.sub(r"[\\/:*?\"<>|]", "_", title)[:30]
+        out_name = f"{safe_co}-{safe_ti}-黄毅-{h}.docx"
+        out_path = os.path.join(OUTPUT_DIR if save_to_output else "/tmp", out_name)
+
+        _generate_from_template(jd_text, out_path)
+
+        size = os.path.getsize(out_path)
+        if save_to_output:
+            return jsonify({
+                "ok": True,
+                "filename": out_name,
+                "size": size,
+                "company": company,
+                "title": title,
+                "matched_keywords_count": len(info.get("keywords", set())),
+                "download_url": f"/api/resume/download?file={out_name}"
+            })
+        else:
+            with open(out_path, "rb") as f:
+                data = f.read()
+            return Response(
+                data,
+                mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                headers={
+                    "Content-Disposition": "attachment; filename=\"" + out_name + "\"",
+                    "X-Process-Time-Ms": "0",
+                    "X-Output-Size": str(len(data)),
+                }
+            )
+    except Exception as e:
+        print(traceback.format_exc(), flush=True)
+        return jsonify({"error": f"generate failed: {e}"}), 500
         tpl_fn = "2026年简历 基础版.md" if lang == "zh" else "2026年简历 基础版 英文.md"
         tpl_path = os.path.join(TEMPLATE_DIR, tpl_fn)
         if not os.path.exists(tpl_path):
@@ -324,7 +608,7 @@ def resume_generate():
         jd_lower = jd_text.lower()
         # 简单的关键词 (中文 2-4 字, 英文 4+ 字母)
         keywords = set()
-        for token in _re.findall(r"[\u4e00-\u9fff]{2,5}|[a-zA-Z]{4,}", jd_lower):
+        for token in __re.findall(r"[\u4e00-\u9fff]{2,5}|[a-zA-Z]{4,}", jd_lower):
             keywords.add(token.lower())
         # 从模板匹配关键词 -> 重排相关段落
         # 简单策略: 输出包含 JD 关键词的模板段落 (按相关性排序)

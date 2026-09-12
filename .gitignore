@@ -22,3 +22,10 @@ next-app/out/
 !.env.template
 # image-tools u2net model (baked into image, dont commit 175MB)
 image-tools/.u2net/
+image-tools/resume_src/
+image-tools/resume_src/**/._*
+
+# image-tools resume_src (含模板 + JD + 已生成简历 19MB, baked 进 image)
+image-tools/resume_src/
+image-tools/resume_src/**/._*
+image-tools/resume_src/**/.DS_Store

@@ -13,7 +13,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
 .header h1{font-size:28px;font-weight:800;background:linear-gradient(135deg,#fb923c,#ef4444);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:6px;letter-spacing:.5px}
 .header p{font-size:14px;color:#9aa3b2;line-height:1.6;margin-bottom:24px}
 
-/* Tab 切换 */
+/* Tab */
 .tabs{display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:24px}
 .tab{padding:12px 24px;cursor:pointer;font-size:14px;font-weight:600;color:#9aa3b2;border-bottom:2px solid transparent;transition:all .2s}
 .tab:hover{color:#e6e8eb}
@@ -21,50 +21,55 @@ body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei
 .tab-content{display:none}
 .tab-content.active{display:block}
 
-/* Section */
 .section{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:24px;margin-bottom:20px}
 .section-title{font-size:15px;font-weight:700;color:#fb923c;margin-bottom:16px;display:flex;align-items:center;gap:8px}
 
-/* 文件列表 */
-.file-list{display:grid;gap:10px}
-.file-item{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;transition:background .15s}
-.file-item:hover{background:rgba(255,255,255,.06)}
-.file-info{flex:1;min-width:0}
-.file-name{font-size:14px;color:#e6e8eb;font-weight:600;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.file-meta{font-size:11px;color:#7a8e85;font-family:ui-monospace,monospace}
-.file-type{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:700;margin-right:10px;text-transform:uppercase;font-family:ui-monospace,monospace}
-.type-docx{background:#2563eb;color:#fff}
-.type-pdf{background:#dc2626;color:#fff}
-.btn{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;cursor:pointer;border:none;font-family:inherit;background:#fb923c;color:#fff;transition:background .15s;display:inline-flex;align-items:center;gap:5px}
+input,textarea,select{width:100%;padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#e6e8eb;font-size:13px;font-family:inherit;line-height:1.5}
+input:focus,textarea:focus,select:focus{outline:none;border-color:#fb923c}
+textarea{min-height:280px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px}
+
+.btn{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;border:none;font-family:inherit;background:#fb923c;color:#fff;transition:background .15s;display:inline-flex;align-items:center;gap:5px}
 .btn:hover{background:#ea580c}
 .btn-secondary{background:rgba(255,255,255,.06);color:#e6e8eb;border:1px solid rgba(255,255,255,.1)}
 .btn-secondary:hover{background:rgba(255,255,255,.12)}
+.btn-small{padding:6px 12px;font-size:12px}
+.btn-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
 
-/* 表单 */
-textarea,select,input{width:100%;padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#e6e8eb;font-size:13px;font-family:inherit;line-height:1.5}
-textarea:focus,select:focus,input:focus{outline:none;border-color:#fb923c}
-textarea{min-height:280px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px}
-.form-row{display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap}
-.form-row label{display:flex;align-items:center;gap:6px;font-size:13px;color:#9aa3b2;cursor:pointer}
-.form-row input[type=checkbox]{accent-color:#fb923c;width:16px;height:16px}
-
-/* 加载 */
-.loading{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.2);border-top-color:#fb923c;border-radius:50%;animation:spin 0.8s linear infinite}
+.loading{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.2);border-top-color:#fb923c;border-radius:50%;animation:spin 0.8s linear infinite;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* 结果区 */
 .result{margin-top:16px;padding:14px 18px;background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.3);border-radius:10px;display:none}
 .result.show{display:block}
-.result-title{font-size:13px;font-weight:700;color:#fb923c;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.result-title{font-size:13px;font-weight:700;color:#fb923c;margin-bottom:8px}
 .result-meta{font-size:12px;color:#9aa3b2;font-family:ui-monospace,monospace;margin-bottom:10px}
-
 .error-box{padding:12px 16px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;color:#fca5a5;font-size:13px;margin-top:12px;display:none}
 .error-box.show{display:block}
 
 .back-link{display:inline-block;margin-bottom:16px;color:#fb923c;text-decoration:none;font-size:13px}
 .back-link:hover{text-decoration:underline}
 
+.file-list{display:grid;gap:10px}
+.file-item{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px}
+.file-item:hover{background:rgba(255,255,255,.06)}
+.file-info{flex:1;min-width:0}
+.file-name{font-size:14px;color:#e6e8eb;font-weight:600;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-meta{font-size:11px;color:#7a8e85;font-family:ui-monospace,monospace}
+.btn-mini{padding:5px 10px;font-size:11px;border-radius:6px;border:none;cursor:pointer;font-family:inherit;font-weight:600;background:rgba(251,146,60,.2);color:#fb923c}
+.btn-mini:hover{background:rgba(251,146,60,.3)}
+
 .empty-state{text-align:center;padding:40px 20px;color:#7a8e85;font-size:13px}
+
+.jd-form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.jd-form-row.single{grid-template-columns:1fr}
+
+.modal-backdrop{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:1000;display:none;align-items:center;justify-content:center}
+.modal-backdrop.show{display:flex}
+.modal{background:#1a2538;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:24px;max-width:560px;width:90%}
+.modal h3{font-size:16px;color:#fb923c;margin-bottom:16px}
+.modal textarea{min-height:200px;margin-bottom:12px}
+
+.saved-jd-banner{padding:10px 14px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;color:#86efac;font-size:12px;margin-bottom:12px;display:none}
+.saved-jd-banner.show{display:block}
 </style>
 </head>
 <body>
@@ -76,7 +81,7 @@ textarea{min-height:280px;resize:vertical;font-family:ui-monospace,SFMono-Regula
 
   <div class="header">
     <h1>📄 简历管理 · Resume Manager</h1>
-    <p>输入 JD 岗位描述 → 基于基础模板 + JD 关键词匹配 → 输出定制化简历 docx · 列出所有已有简历</p>
+    <p>输入公司 + 岗位 + JD → 基于南威 docx 模板定制生成 · 列出所有已有简历</p>
   </div>
 
   <div class="tabs">
@@ -89,23 +94,48 @@ textarea{min-height:280px;resize:vertical;font-family:ui-monospace,SFMono-Regula
   <!-- ============ Tab 1: 生成简历 ============ -->
   <div class="tab-content active" id="tab-generate">
     <div class="section">
-      <div class="section-title">输入 JD 岗位描述</div>
-      <textarea id="jd_text" placeholder="粘贴目标岗位的 JD 内容:&#10;&#10;公司名称: xxx&#10;职位名称: xxx&#10;核心职责:&#10;- ...&#10;- ...&#10;技能要求: ...&#10;任职资格: ..."></textarea>
-      <div class="form-row">
-        <label>语言:
-          <select id="template_lang">
-            <option value="zh">中文简历</option>
-            <option value="en">English</option>
-          </select>
-        </label>
-        <label><input type="checkbox" id="save_to_output" checked>保存到简历库</label>
-        <button class="btn" id="genBtn">🚀 生成简历 PDF</button>
+      <div class="section-title">输入 JD 生成简历</div>
+
+      <div class="saved-jd-banner" id="savedJdBanner">
+        ✅ 已保存到 JD 列表 (<span id="savedJdName"></span>)
+        <button class="btn-mini" style="margin-left:10px" onclick="clearSavedJd()">清除</button>
       </div>
+
+      <div class="jd-form-row">
+        <div>
+          <label style="display:block;font-size:12px;color:#9aa3b2;margin-bottom:6px">公司名称</label>
+          <input id="jd_company" placeholder="例: 南威软件 / 小象超市 / 字节跳动"/>
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;color:#9aa3b2;margin-bottom:6px">岗位名称</label>
+          <input id="jd_title" placeholder="例: 跨境供应链负责人 / AI 产品经理"/>
+        </div>
+      </div>
+
+      <label style="display:block;font-size:12px;color:#9aa3b2;margin-bottom:6px">JD 内容 (粘贴完整岗位描述)</label>
+      <textarea id="jd_text" placeholder="公司: xxx
+岗位: xxx
+
+岗位职责:
+- 职责 1
+- 职责 2
+
+技能要求:
+- ...
+
+任职资格:
+- ..."></textarea>
+
+      <div class="btn-row">
+        <button class="btn-secondary btn-small" onclick="saveJD()">💾 保存 JD 到列表</button>
+        <button class="btn" id="genBtn">🚀 生成定制简历 (docx)</button>
+      </div>
+
       <div class="error-box" id="genErr"></div>
       <div class="result" id="genResult">
         <div class="result-title">✅ 简历生成成功</div>
         <div class="result-meta" id="genMeta"></div>
-        <a class="btn" id="downloadBtn" download>⬇ 下载简历 docx</a>
+        <a class="btn btn-small" id="downloadBtn" download>⬇ 下载 docx</a>
       </div>
     </div>
   </div>
@@ -134,27 +164,33 @@ textarea{min-height:280px;resize:vertical;font-family:ui-monospace,SFMono-Regula
   <div class="tab-content" id="tab-agents">
     <div class="section">
       <div class="section-title">AGENTS.md - 简历生成项目指南 (只读)</div>
-      <pre id="agentsContent" style="white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;line-height:1.6;color:#9aa3b2;max-height:600px;overflow:auto;background:rgba(0,0,0,.2);padding:16px;border-radius:8px">加载中...</pre>
+      <pre id="agentsContent" style="white-space:pre-wrap;font-family:ui-monospace,monospace;font-size:12px;line-height:1.6;color:#9aa3b2;max-height:600px;overflow:auto;background:rgba(0,0,0,.2);padding:16px;border-radius:8px">加载中...</pre>
     </div>
   </div>
 </main>
 
 <script>
 const $ = (s) => document.querySelector(s);
+const $$ = (s) => Array.from(document.querySelectorAll(s));
 
 // Tab 切换
-document.querySelectorAll('.tab').forEach(tab => {
+$$('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
     const target = tab.dataset.tab;
-    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === tab));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + target));
+    $$('.tab').forEach(t => t.classList.toggle('active', t === tab));
+    $$('.tab-content').forEach(c => c.classList.toggle('active', c.id === 'tab-' + target));
     if (target === 'list' && !window.__resumesLoaded) loadResumes();
     if (target === 'jds' && !window.__jdsLoaded) loadJDs();
     if (target === 'agents' && !window.__agentsLoaded) loadAgents();
   });
 });
 
-// 通用 alert 包装
+function fmtSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/1024/1024).toFixed(2) + ' MB';
+}
+
 function showError(id, msg) {
   const el = $(id);
   el.textContent = '❌ ' + msg;
@@ -162,33 +198,53 @@ function showError(id, msg) {
 }
 function hideError(id) { $(id).classList.remove('show'); }
 
-// 格式化 bytes
-function fmtSize(bytes) {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
-  return (bytes/1024/1024).toFixed(2) + ' MB';
+// 保存 JD 到列表
+async function saveJD() {
+  const company = $('#jd_company').value.trim();
+  const title = $('#jd_title').value.trim();
+  const jd_text = $('#jd_text').value.trim();
+  if (!company || !title || jd_text.length < 10) {
+    showError('#genErr', '公司 / 岗位 / JD 都必填 (JD 至少 10 字符)');
+    return;
+  }
+  hideError('#genErr');
+  try {
+    const fd = new FormData();
+    fd.append('company', company);
+    fd.append('title', title);
+    fd.append('jd_text', jd_text);
+    const r = await fetch('/api/resume/jds/save', { method: 'POST', body: fd });
+    const data = await r.json();
+    if (!data.ok) throw new Error(data.error || 'save failed');
+    $('#savedJdName').textContent = data.filename;
+    $('#savedJdBanner').classList.add('show');
+  } catch (e) {
+    showError('#genErr', '保存 JD 失败: ' + e.message);
+  }
 }
 
-// ============ 生成简历 ============
-const genBtn = $('#genBtn');
-const genErr = $('#genErr');
-const genResult = $('#genResult');
-const downloadBtn = $('#downloadBtn');
-let lastDownloadUrl = null;
+function clearSavedJd() {
+  $('#savedJdBanner').classList.remove('show');
+}
 
+// 生成简历
+const genBtn = $('#genBtn');
 genBtn.addEventListener('click', async () => {
+  const company = $('#jd_company').value.trim();
+  const title = $('#jd_title').value.trim();
   const jd_text = $('#jd_text').value.trim();
   if (jd_text.length < 10) {
     showError('#genErr', 'JD 内容太短, 至少 10 字符');
     return;
   }
   hideError('#genErr');
-  genResult.classList.remove('show');
+  $('#genResult').classList.remove('show');
 
   const fd = new FormData();
   fd.append('jd_text', jd_text);
-  fd.append('template_lang', $('#template_lang').value);
-  fd.append('save_to_output', $('#save_to_output').checked ? 'true' : 'false');
+  fd.append('company', company);
+  fd.append('title', title);
+  fd.append('save_to_output', 'true');
 
   genBtn.disabled = true;
   const oldText = genBtn.innerHTML;
@@ -205,17 +261,19 @@ genBtn.addEventListener('click', async () => {
     const data = await r.json();
     if (!data.ok) throw new Error(data.error || 'unknown error');
 
-    const downloadUrl = data.download_url || ('/api/resume/download?file=' + data.filename);
     $('#genMeta').innerHTML =
-      '文件: <b>' + data.filename + '</b> · ' +
+      '文件: <b>' + escapeHtml(data.filename) + '</b><br>' +
+      '公司: <b>' + escapeHtml(data.company || '-') + '</b> · ' +
+      '岗位: <b>' + escapeHtml(data.title || '-') + '</b><br>' +
       '大小: <b>' + fmtSize(data.size) + '</b> · ' +
       '耗时: <b>' + elapsed + 'ms</b> · ' +
       '匹配关键词: <b>' + (data.matched_keywords_count || 0) + '</b> 个';
-    downloadBtn.href = downloadUrl;
-    downloadBtn.download = data.filename;
-    lastDownloadUrl = downloadUrl;
-    genResult.classList.add('show');
-    genResult.scrollIntoView({behavior:'smooth', block:'center'});
+    $('#downloadBtn').href = data.download_url;
+    $('#downloadBtn').download = data.filename;
+    $('#genResult').classList.add('show');
+    $('#genResult').scrollIntoView({behavior:'smooth', block:'center'});
+    // 刷新简历列表
+    window.__resumesLoaded = false;
   } catch (e) {
     showError('#genErr', e.message);
   } finally {
@@ -224,11 +282,9 @@ genBtn.addEventListener('click', async () => {
   }
 });
 
-// ============ 简历列表 ============
 async function loadResumes() {
   try {
     const r = await fetch('/api/resume/list');
-    if (!r.ok) throw new Error('HTTP ' + r.status);
     const data = await r.json();
     const list = $('#resumeList');
     if (!data.resumes || data.resumes.length === 0) {
@@ -237,14 +293,13 @@ async function loadResumes() {
       return;
     }
     list.innerHTML = data.resumes.map(f => {
-      const ext = f.type;
       return '<div class="file-item">' +
-        '<span class="file-type type-' + ext + '">' + ext + '</span>' +
+        '<span class="file-type" style="background:#2563eb;color:#fff;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;margin-right:10px">' + f.type.toUpperCase() + '</span>' +
         '<div class="file-info">' +
           '<div class="file-name">' + escapeHtml(f.name) + '</div>' +
           '<div class="file-meta">' + fmtSize(f.size) + '</div>' +
         '</div>' +
-        '<a class="btn" href="/api/resume/download?file=' + encodeURIComponent(f.name) + '" download>⬇ 下载</a>' +
+        '<a class="btn-mini" href="/api/resume/download?file=' + encodeURIComponent(f.name) + '" download>⬇ 下载</a>' +
         '</div>';
     }).join('');
     window.__resumesLoaded = true;
@@ -253,11 +308,9 @@ async function loadResumes() {
   }
 }
 
-// ============ JD 列表 ============
 async function loadJDs() {
   try {
     const r = await fetch('/api/resume/jds');
-    if (!r.ok) throw new Error('HTTP ' + r.status);
     const data = await r.json();
     const list = $('#jdList');
     if (!data.jds || data.jds.length === 0) {
@@ -267,12 +320,13 @@ async function loadJDs() {
     }
     list.innerHTML = data.jds.map(j => {
       return '<div class="file-item">' +
-        '<span class="file-type type-docx" style="background:#10b981">JD</span>' +
+        '<span style="background:#10b981;color:#fff;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;margin-right:10px">JD</span>' +
         '<div class="file-info">' +
           '<div class="file-name">' + escapeHtml(j.name) + '</div>' +
-          '<div class="file-meta">' + fmtSize(j.size) + (j.preview ? ' · ' + escapeHtml(j.preview.slice(0, 80)) + '...' : '') + '</div>' +
+          '<div class="file-meta">' + fmtSize(j.size) + '</div>' +
         '</div>' +
-        '<button class="btn btn-secondary" onclick="loadJDForGen(\\\'' + escapeJs(j.name) + '\\\')">使用此 JD</button>' +
+        '<button class="btn-mini" onclick="loadJDToGen(\\'' + escapeJs(j.name) + '\\'')">使用此 JD</button>' +
+        '<button class="btn-mini" style="margin-left:6px;background:rgba(239,68,68,.2);color:#fca5a5" onclick="deleteJD(\\'' + escapeJs(j.name) + '\\'')">删</button>' +
         '</div>';
     }).join('');
     window.__jdsLoaded = true;
@@ -281,32 +335,39 @@ async function loadJDs() {
   }
 }
 
-// 点击"使用此 JD" -> 拉 JD 全文 -> 填入生成区
-async function loadJDForGen(name) {
+// 点击"使用此 JD" -> 加载 JD 全文 + 公司 + 岗位
+async function loadJDToGen(name) {
   try {
-    const r = await fetch('/api/resume/jds');
+    const r = await fetch('/api/resume/jds/get?name=' + encodeURIComponent(name));
     const data = await r.json();
-    const jd = data.jds.find(j => j.name === name);
-    if (!jd) return;
-    // 直接用 preview 不够, 拉全文
-    const tplR = await fetch('/api/resume/template?lang=zh');
-    // 改用 preview (实际可以再加 GET /api/resume/jd-file 端点, 先用 preview 凑合)
-    $('#jd_text').value = jd.preview + '\\n\\n... (这是预览, 完整 JD 请复制到此处)';
-    // 切到生成 tab
-    document.querySelector('.tab[data-tab="generate"]').click();
+    if (data.error) throw new Error(data.error);
+    $('#jd_company').value = data.company || '';
+    $('#jd_title').value = data.title || '';
+    $('#jd_text').value = data.jd_text || '';
+    $$('.tab').find(t => t.dataset.tab === 'generate').click();
     $('#jd_text').focus();
-    showError('#genErr', '');
     hideError('#genErr');
   } catch (e) {
     showError('#genErr', '加载 JD 失败: ' + e.message);
   }
 }
 
-// ============ AGENTS.md ============
+async function deleteJD(name) {
+  if (!confirm('确认删除 JD "' + name + '"?')) return;
+  try {
+    const r = await fetch('/api/resume/jds/delete?name=' + encodeURIComponent(name), { method: 'DELETE' });
+    const data = await r.json();
+    if (!data.ok) throw new Error(data.error || 'delete failed');
+    window.__jdsLoaded = false;
+    loadJDs();
+  } catch (e) {
+    alert('删除失败: ' + e.message);
+  }
+}
+
 async function loadAgents() {
   try {
     const r = await fetch('/api/resume/agents');
-    if (!r.ok) throw new Error('HTTP ' + r.status);
     const txt = await r.text();
     $('#agentsContent').textContent = txt;
     window.__agentsLoaded = true;
@@ -315,7 +376,6 @@ async function loadAgents() {
   }
 }
 
-// ============ utils ============
 function escapeHtml(s) {
   return String(s || '').replace(/[&<>"]/g, c => ({'&':'&','<':'<','>':'>','"':'"'}[c]));
 }
@@ -323,7 +383,6 @@ function escapeJs(s) {
   return String(s || '').replace(/['\\]/g, '\\\\$&');
 }
 
-// 初始加载 (默认 tab)
 window.__resumesLoaded = window.__jdsLoaded = window.__agentsLoaded = false;
 </script>
 </body>
