@@ -1,9 +1,21 @@
+"""image-tools microservice - backend for /image-bg.html on tools-frontend (31313).
+
+Endpoints:
+  GET  /api/health
+  POST /api/remove-bg  -> PNG with transparent bg
+  POST /api/compress   -> JPEG (configurable quality + optional resize)
+  POST /api/process    -> JPEG with white bg + compressed
+
+RFC 5987 encoding for Chinese/special chars in download filename (gunicorn 21 strict).
+"""
 import io
 import os
 import time
+import threading
 import traceback
 import urllib.request
-from flask import Flask, request, jsonify, send_file, Response
+import urllib.parse
+from flask import Flask, request, jsonify, Response
 from PIL import Image
 
 MODEL_PATH = "/app/.u2net/u2net.onnx"
@@ -49,20 +61,32 @@ from rembg import remove
 
 @app.route("/api/health")
 def health():
-    return jsonify({"ok": True, "service": "image-tools", "version": "1.0.0", "uptime_sec": round(time.time() - START_TIME, 1), "model_ready": MODEL_READY[0], "model_error": MODEL_ERROR[0]})
+    return jsonify({
+        "ok": True, "service": "image-tools", "version": "1.0.0",
+        "uptime_sec": round(time.time() - START_TIME, 1),
+        "model_ready": MODEL_READY[0], "model_error": MODEL_ERROR[0]
+    })
 
 def _need_model():
     if MODEL_READY[0]:
         return None
     return jsonify({"error": "model not ready", "model_ready": False}), 503
 
+def _safe_filename(name):
+    """RFC 5987 编码: 中文/特殊字符 filename 用 percent-encoding."""
+    try:
+        name.encode("ascii")
+        return f'filename="{name}"'  # 纯 ASCII, 简单形式
+    except UnicodeEncodeError:
+        quoted = urllib.parse.quote(name, safe="")
+        return f"filename={quoted!r}; filename*=UTF-8\\x27\\x27{quoted}"
+
 def _send(data, mimetype, download_name, proc_ms=None, orig_size=None):
-    headers = {}
-    if proc_ms: headers["X-Process-Time-Ms"] = str(proc_ms)
-    if orig_size is not None: headers["X-Original-Size"] = str(orig_size)
-    headers["X-Output-Size"] = str(len(data))
-    h = dict(headers)
-    h["Content-Disposition"] = f"attachment; filename={download_name}"
+    h = {}
+    if proc_ms is not None: h["X-Process-Time-Ms"] = str(proc_ms)
+    if orig_size is not None: h["X-Original-Size"] = str(orig_size)
+    h["X-Output-Size"] = str(len(data))
+    h["Content-Disposition"] = "attachment; " + _safe_filename(download_name)
     return Response(data, mimetype=mimetype, headers=h)
 
 @app.route("/api/remove-bg", methods=["POST"])
