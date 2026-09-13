@@ -81,7 +81,6 @@ textarea{min-height:280px;resize:vertical;font-family:ui-monospace,SFMono-Regula
 
   <div class="header">
     <h1>📄 简历管理 · Resume Manager</h1>
-    <p>基于南威 docx 模板定制生成 · 列出所有已有简历</p>
   </div>
 
   <div class="tabs">
@@ -112,7 +111,7 @@ textarea{min-height:280px;resize:vertical;font-family:ui-monospace,SFMono-Regula
         </div>
       </div>
 
-      
+
       <textarea id="jd_text"></textarea>
 
       <div class="btn-row">
@@ -314,8 +313,8 @@ async function loadJDs() {
           '<div class="file-name">' + escapeHtml(j.name) + '</div>' +
           '<div class="file-meta">' + fmtSize(j.size) + '</div>' +
         '</div>' +
-        '<button class="btn-mini" data-jd-action="use" data-jd-name="' + escapeHtml(j.name) + '" onclick="loadJDToGen(this.dataset.jdName)">使用此 JD</button>' +
-        '<button class="btn-mini" style="margin-left:6px;background:rgba(239,68,68,.2);color:#fca5a5" data-jd-action="del" data-jd-name="' + escapeHtml(j.name) + '" onclick="deleteJD(this.dataset.jdName)">删</button>' +
+        '<button class="btn-mini" data-jd-action="use" data-jd-name="' + escapeHtml(j.name) + '">使用此 JD</button>' +
+        '<button class="btn-mini" style="margin-left:6px;background:rgba(239,68,68,.2);color:#fca5a5" data-jd-action="del" data-jd-name="' + escapeHtml(j.name) + '">删</button>' +
         '</div>';
     }).join('');
     window.__jdsLoaded = true;
@@ -366,14 +365,14 @@ async function loadAgents() {
 }
 
 function escapeHtml(s) {
-  return String(s || '').replace(/[&<>"]/g, c => ({'&':'&','<':'<','>':'>','"':'"'}[c]));
+  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 function escapeJs(s) {
   return String(s || '').replace(/['\\]/g, '\\\\$&');
 }
 
 window.__resumesLoaded = window.__jdsLoaded = window.__agentsLoaded = false;
-# Event delegation for JD buttons (避免 inline onclick string escape 问题)
+// Event delegation for JD buttons (avoid inline onclick string escape issues)
 document.addEventListener("click", function(e){
   var btn = e.target.closest("[data-jd-action]");
   if (!btn) return;
