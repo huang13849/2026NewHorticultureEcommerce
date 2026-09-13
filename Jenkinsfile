@@ -76,6 +76,14 @@ pipeline {
             """
           }
         }
+        stage('tools-frontend') {
+          steps {
+            sh """
+              docker build -t \${REGISTRY}/tools:latest -f tools/Dockerfile tools
+              docker push \${REGISTRY}/tools:latest
+            """
+          }
+        }
       }
     }
 
@@ -87,7 +95,9 @@ pipeline {
           for svc in flower-api flower-next supplier-map dealer-map seo-service; do
             kubectl -n \${NAMESPACE} rollout restart deployment \$svc || true
           done
-          for svc in flower-api flower-next supplier-map dealer-map seo-service; do
+          kubectl -n \${NAMESPACE} set image deployment/tools-frontend tools-frontend=\${REGISTRY}/tools:latest
+          kubectl -n \${NAMESPACE} rollout restart deployment tools-frontend
+          for svc in flower-api flower-next supplier-map dealer-map seo-service tools-frontend; do
             kubectl -n \${NAMESPACE} rollout status deployment \$svc --timeout=180s
           done
         """
@@ -104,6 +114,7 @@ pipeline {
           curl -sf http://100.96.54.109:31307/ | head -c 100 || echo "supplier-map not ready"
           curl -sf http://100.96.54.109:31308/ | head -c 100 || echo "dealer-map not ready"
           curl -sf http://100.96.54.109:31011/ || echo "seo-service not ready"
+          curl -sf http://100.96.54.109:31313/resume.html | grep -q "Resume Manager"
           echo "--- image isolation test ---"
           bash system-test/image-isolation.sh
           echo "System test OK"
@@ -121,4 +132,3 @@ pipeline {
     }
   }
 }
-
