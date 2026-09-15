@@ -41,7 +41,7 @@ export async function onRequest(context) {
   headers.delete('cf-ray');
   headers.delete('cf-visitor');
 
-  const init = { method: request.method, headers, redirect: 'manual' };
+  const init = { method: request.method, headers, redirect: "follow" };
   if (!['GET', 'HEAD'].includes(request.method)) init.body = request.body;
 
   const upstream = await fetch(target.toString(), init);

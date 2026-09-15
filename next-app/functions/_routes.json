@@ -1,5 +1,5 @@
 {
   "version": 1,
-  "include": ["/api/*", "/minio/*", "/seo-api/*"],
+  "include": ["/api/*", "/minio/*"],
   "exclude": ["/_next/static/*", "/favicon.ico", "/robots.txt", "/sitemap.xml", "/brand/*"]
 }
