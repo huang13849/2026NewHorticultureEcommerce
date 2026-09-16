@@ -1,91 +1,259 @@
 {
+  "admin": {
+    "alipay": {
+      "appId": "应用ID",
+      "callbackUrl": "支付回调地址",
+      "privateKey": "应用私钥",
+      "publicKey": "支付宝公钥"
+    },
+    "alipayConfig": "支付宝配置",
+    "alreadySet": "已设置）",
+    "config": "配置",
+    "configFirst": "配置完成后再启用",
+    "configured": "已配置",
+    "enableAlipay": "启用支付宝",
+    "enableWechat": "启用微信支付",
+    "enabled": "已启用",
+    "keepEmpty": "留空保留原值",
+    "notConfigured": "未配置",
+    "notEnabled": "未启用",
+    "paymentConfig": "支付配置",
+    "saveConfig": "保存配置",
+    "systemStatus": "系统状态",
+    "testConnection": "测试连接",
+    "testFailed": "连接失败",
+    "testSuccess": "连接成功",
+    "testing": "测试中...",
+    "title": "管理后台",
+    "wechat": {
+      "apiKeyV3": "API v3 密钥",
+      "appId": "AppID",
+      "callbackUrl": "支付回调地址",
+      "certSerial": "证书序列号",
+      "merchantId": "商户号",
+      "privateKey": "商户私钥"
+    },
+    "wechatConfig": "微信支付配置"
+  },
+  "auction": {
+    "amount": "出价",
+    "bidFailed": "竞价失败",
+    "bidHistory": "竞拍记录",
+    "bidNow": "立即出价",
+    "bidRecord": "竞拍记录",
+    "bidSuccess": "竞价成功！",
+    "bidder": "竞拍人",
+    "bidders": "竞拍人",
+    "bidding": "出价中...",
+    "countdown": "倒计时",
+    "countdownEnd": "{sec}秒后结束",
+    "currentLot": "当前拍品",
+    "currentPrice": "当前价",
+    "ended": "已结束",
+    "lot": "拍品",
+    "lotNumber": "拍品编号",
+    "minIncrement": "每次加价{amount}元",
+    "nextBid": "下一口价",
+    "noAuction": "暂无拍卖",
+    "noBids": "暂无竞拍记录",
+    "placeBid": "出价",
+    "realtimeBid": "全国认证苗木分布 · 实时竞拍状态",
+    "round": "轮",
+    "rules": "拍卖规则",
+    "rulesDesc": "只展示乔灌木类拍品；倒计时10分钟，每次竞价加价5元",
+    "starting": "即将开始",
+    "startingPrice": "起拍价",
+    "subtitle": "乔灌木批发拍卖",
+    "time": "时间",
+    "timeLeft": "剩余",
+    "title": "苗木拍卖",
+    "treeAuction": "🌳 苗木拍卖"
+  },
+  "auth": {
+    "brandTitle": "植物收藏家 · 林草二十年",
+    "emailPlaceholder": "you@example.com",
+    "errExists": "该账号已注册，请直接登录",
+    "errGeneric": "操作失败",
+    "errInvalidCreds": "用户名或密码错误",
+    "errInvalidPhone": "手机号格式不正确",
+    "errMissing": "请填写所有必填字段",
+    "errPwdMismatch": "两次密码不一致",
+    "errWeakPwd": "密码强度不够（至少 8 位，含字母数字）",
+    "goLogin": "前往登录",
+    "hasAccount": "已有账号？",
+    "labelEmail": "邮箱",
+    "labelFirstName": "姓",
+    "labelLastName": "名",
+    "labelPassword": "密码",
+    "labelPhone": "手机号",
+    "labelPwdConfirm": "确认密码",
+    "loginSubmitting": "登录中…",
+    "loginSubtitle": "登录以查看订单、收藏与共享供应链",
+    "noAccount": "还没有账号？",
+    "optional": "选填",
+    "phonePlaceholder": "例如 13800138000 或 +86 138 0000 0000",
+    "pwdHint": "至少 8 位，含字母和数字",
+    "pwdOnlyRetry": "密码错误，请重新输入密码",
+    "registerOk": "注册成功！请前往登录。",
+    "registerSubtitle": "注册后自动加入「植物收藏家」标签体系",
+    "registerTitle": "成为植物收藏家",
+    "submitting": "提交中…",
+    "tabEmail": "邮箱",
+    "tabPhone": "手机号"
+  },
+  "cart": {
+    "checkout": "去支付",
+    "clear": "清空",
+    "deleteSelected": "删除选中",
+    "empty": "购物车是空的",
+    "flowerCart": "🛒 购物车",
+    "goShop": "去逛逛",
+    "goShopping": "去逛逛",
+    "products": "商品 (",
+    "selectAll": "全选",
+    "subtotal": "小计",
+    "title": "购物车",
+    "totalItems": "件)"
+  },
   "common": {
-    "loading": "加载中...",
-    "save": "保存",
-    "saving": "保存中...",
-    "saveFailed": "保存失败",
-    "cancel": "取消",
-    "delete": "删除",
-    "confirm": "确认",
-    "login": "登录",
-    "logout": "退出登录",
-    "back": "返回",
-    "submit": "提交",
-    "search": "搜索",
-    "all": "全部",
-    "select": "选择",
-    "edit": "编辑",
-    "close": "关闭",
-    "retry": "重试",
-    "networkError": "网络错误",
-    "noData": "暂无数据",
-    "success": "操作成功",
-    "error": "操作失败",
-    "freeShipping": "免运费",
-    "total": "合计",
-    "price": "价格",
-    "quantity": "数量",
-    "status": "状态",
     "action": "操作",
-    "name": "名称",
-    "phone": "手机号",
     "address": "地址",
+    "all": "全部",
+    "back": "返回",
+    "cancel": "取消",
     "category": "分类",
-    "image": "图片",
-    "copy": "复制",
-    "download": "下载",
+    "close": "关闭",
+    "cny": "元",
+    "confirm": "确认",
     "confirmDelete": "确定删除？",
     "copied": "已复制",
-    "cny": "元",
-    "register": "注册"
+    "copy": "复制",
+    "delete": "删除",
+    "download": "下载",
+    "edit": "编辑",
+    "error": "操作失败",
+    "freeShipping": "免运费",
+    "image": "图片",
+    "loading": "加载中...",
+    "login": "登录",
+    "logout": "退出登录",
+    "name": "名称",
+    "networkError": "网络错误",
+    "noData": "暂无数据",
+    "phone": "手机号",
+    "price": "价格",
+    "quantity": "数量",
+    "register": "注册",
+    "retry": "重试",
+    "save": "保存",
+    "saveFailed": "保存失败",
+    "saving": "保存中...",
+    "search": "搜索",
+    "select": "选择",
+    "status": "状态",
+    "submit": "提交",
+    "success": "操作成功",
+    "total": "合计"
   },
-  "nav": {
-    "home": "首页",
-    "map": "地图",
-    "auction": "苗木拍卖",
-    "reverseAuction": "鲜花拍卖",
-    "shop": "商店",
-    "garden": "花园",
-    "profile": "我的",
-    "flowerShop": "植物收藏家"
+  "error": {
+    "pageError": "页面加载遇到问题",
+    "reload": "重新加载",
+    "retry": "重试",
+    "title": "出错了",
+    "unknown": "未知错误"
+  },
+  "garden": {
+    "achievements": "种花成就",
+    "age": "树龄",
+    "carbonValue": "碳汇值",
+    "cm": "厘米",
+    "dbh": "胸径",
+    "fertilize": "施肥",
+    "growing": "生长中",
+    "harvest": "收获",
+    "health": "健康评分",
+    "height": "树高",
+    "mature": "已成熟",
+    "myGarden": "🌱 我的花园",
+    "noPlants": "暂无可种植花卉",
+    "noPlots": "花园空空如也，去种花吧！",
+    "origin": "产地",
+    "plant": "种花",
+    "plantFailed": "种花失败",
+    "plantSuccess": "种花成功！",
+    "plantable": "可种植的花卉",
+    "planted": "已种植",
+    "planting": "种植中...",
+    "subtitle": "可种植的花卉",
+    "title": "我的花园",
+    "treeDNA": "🧬 树木基因",
+    "treePassport": "🌳 树木护照",
+    "variety": "品种",
+    "water": "浇水",
+    "withered": "已枯萎"
   },
   "home": {
-    "title": "植物收藏家",
-    "subtitle": "供应链新体验",
+    "clearSearch": "清除搜索",
     "desc": "从产地到庭院，智能撮合交易。苗木拍卖、鲜花拍卖、地图购花、花园种植——植物收藏家，你的花卉供应链新体验。",
     "enterAuction": "进入拍卖",
     "flowerReverse": "鲜花拍卖",
-    "quickEntry": {
-      "auction": {
-        "title": "苗木拍卖",
-        "desc": "批发乔灌木竞价拍卖"
-      },
-      "reverse": {
-        "title": "鲜花拍卖",
-        "desc": "鲜花竞拍越快越新鲜"
-      },
-      "map": {
-        "title": "地图购花",
-        "desc": "附近花卉一键购买"
-      },
-      "shop": {
-        "title": "花卉商城",
-        "desc": "精选好物限时优惠"
-      }
+    "footer": {
+      "address": "地址",
+      "addressValue": "中国北京市丰台区新宫",
+      "beian_url": "https://beian.miit.gov.cn/",
+      "copyright": "植物收藏家 · 供应链新体验 © 2026",
+      "email": "邮箱",
+      "icp": "京ICP备2026007606号-2",
+      "name": "植物收藏家",
+      "phone": "电话"
     },
-    "recommendTitle": "推荐商品",
-    "viewMore": "查看更多 →",
-    "noProducts": "暂无推荐商品",
-    "unnamed": "未命名",
     "greenCert": {
-      "subtitle": "Green Certification · Carbon Credit",
-      "title": "苗木绿色认证 & 碳币体系",
+      "apply": "申请绿色认证 →",
       "desc": "每棵认证苗木都可溯源、可计量、可交易。从种植到碳汇，构建可信的绿色价值链。",
-      "stats": {
-        "trees": {
-          "label": "已认证树木",
-          "unit": "棵"
+      "features": {
+        "bind": {
+          "desc": "认证树木与种植者/养护人实名绑定，责任到人。定期上传与植物合照，确保树木存活与养护质量。",
+          "details": [
+            "实名认证绑定",
+            "季度拍照打卡",
+            "AI 存活识别",
+            "养护评分体系"
+          ],
+          "title": "人树绑定"
         },
+        "measure": {
+          "desc": "基于树种、胸径、树龄等参数，按 IPCC 标准计算碳汇量。每季度更新碳储量数据，透明可审计。",
+          "details": [
+            "IPCC 碳汇公式",
+            "季度碳储量更新",
+            "树种系数库",
+            "碳汇证书发放"
+          ],
+          "title": "碳计量"
+        },
+        "trace": {
+          "desc": "每棵认证苗木拥有唯一溯源 ID，从种苗到成树全生命周期记录。品种、产地、种植者、养护记录一目了然。",
+          "details": [
+            "区块链存证",
+            "GPS 种植定位",
+            "全生命周期档案",
+            "QR 码一扫即查"
+          ],
+          "title": "苗木溯源"
+        },
+        "trade": {
+          "desc": "碳汇量自动转换为碳币（CC），可用于平台购物抵扣、碳积分兑换，也可在碳币市场自由交易。",
+          "details": [
+            "自动碳币铸造",
+            "购物抵扣支付",
+            "碳币市场交易",
+            "提现与转让"
+          ],
+          "title": "碳币交易"
+        }
+      },
+      "flowTitle": "认证流程",
+      "stats": {
         "carbon": {
           "label": "碳汇累计",
           "unit": "吨 CO₂"
@@ -94,739 +262,573 @@
           "label": "碳币流通",
           "unit": "CC"
         },
+        "trees": {
+          "label": "已认证树木",
+          "unit": "棵"
+        },
         "users": {
           "label": "参与用户",
           "unit": "人"
         }
       },
-      "features": {
-        "trace": {
-          "title": "苗木溯源",
-          "desc": "每棵认证苗木拥有唯一溯源 ID，从种苗到成树全生命周期记录。品种、产地、种植者、养护记录一目了然。",
-          "details": [
-            "区块链存证",
-            "GPS 种植定位",
-            "全生命周期档案",
-            "QR 码一扫即查"
-          ]
-        },
-        "bind": {
-          "title": "人树绑定",
-          "desc": "认证树木与种植者/养护人实名绑定，责任到人。定期上传与植物合照，确保树木存活与养护质量。",
-          "details": [
-            "实名认证绑定",
-            "季度拍照打卡",
-            "AI 存活识别",
-            "养护评分体系"
-          ]
-        },
-        "measure": {
-          "title": "碳计量",
-          "desc": "基于树种、胸径、树龄等参数，按 IPCC 标准计算碳汇量。每季度更新碳储量数据，透明可审计。",
-          "details": [
-            "IPCC 碳汇公式",
-            "季度碳储量更新",
-            "树种系数库",
-            "碳汇证书发放"
-          ]
-        },
-        "trade": {
-          "title": "碳币交易",
-          "desc": "碳汇量自动转换为碳币（CC），可用于平台购物抵扣、碳积分兑换，也可在碳币市场自由交易。",
-          "details": [
-            "自动碳币铸造",
-            "购物抵扣支付",
-            "碳币市场交易",
-            "提现与转让"
-          ]
-        }
-      },
       "steps": {
-        "submit": {
-          "title": "提交认证",
-          "desc": "上传苗木信息 + 实名认证 + GPS 定位"
-        },
-        "review": {
-          "title": "审核通过",
-          "desc": "平台审核苗木信息，发放绿色认证标签"
-        },
         "bind": {
-          "title": "人树绑定",
-          "desc": "种植者与树木绑定，开始碳计量"
+          "desc": "种植者与树木绑定，开始碳计量",
+          "title": "人树绑定"
         },
         "checkin": {
-          "title": "季度打卡",
-          "desc": "每季度上传与植物合照 + 生长数据"
+          "desc": "每季度上传与植物合照 + 生长数据",
+          "title": "季度打卡"
         },
         "issue": {
-          "title": "碳币发放",
-          "desc": "根据碳汇量自动发放碳币到账户"
+          "desc": "根据碳汇量自动发放碳币到账户",
+          "title": "碳币发放"
+        },
+        "review": {
+          "desc": "平台审核苗木信息，发放绿色认证标签",
+          "title": "审核通过"
+        },
+        "submit": {
+          "desc": "上传苗木信息 + 实名认证 + GPS 定位",
+          "title": "提交认证"
         },
         "use": {
-          "title": "交易抵扣",
-          "desc": "碳币可用于购物抵扣或市场交易"
+          "desc": "碳币可用于购物抵扣或市场交易",
+          "title": "交易抵扣"
         }
       },
-      "apply": "申请绿色认证 →",
-      "flowTitle": "认证流程"
+      "subtitle": "Green Certification · Carbon Credit",
+      "title": "苗木绿色认证 & 碳币体系"
     },
-    "successStories": {
-      "subtitle": "Success Stories",
-      "title": "庭院园林 · 成功案例",
-      "desc": "从别墅庭院到阳台花园，每一个项目都用心交付",
-      "items": [
-        {
-          "title": "北京别墅庭院改造",
-          "desc": "25棵白皮松 + 80棵月季，30天从裸地到花园",
-          "tag": "别墅庭院"
-        },
-        {
-          "title": "天津婚礼花艺布置",
-          "desc": "2000支百合 + 500支玫瑰，48小时交付",
-          "tag": "婚礼花艺"
-        },
-        {
-          "title": "廊坊小区绿化工程",
-          "desc": "乔灌木混植 300棵，季度养护全包",
-          "tag": "社区绿化"
-        },
-        {
-          "title": "顺义温室大棚供货",
-          "desc": "每周2000盆盆花稳定配送",
-          "tag": "商业供货"
-        },
-        {
-          "title": "保定陵园景观设计",
-          "desc": "常青树 + 时令花卉四季常青",
-          "tag": "园林景观"
-        },
-        {
-          "title": "丰台阳台花园改造",
-          "desc": "2米空间打造微型花园",
-          "tag": "阳台花园"
-        }
-      ]
+    "greenCertSubtitle": "Green Certification · Carbon Credit",
+    "intelligentSupply": "供应链新体验",
+    "noProducts": "暂无推荐商品",
+    "quickEntry": {
+      "auction": {
+        "desc": "批发乔灌木竞价拍卖",
+        "title": "苗木拍卖"
+      },
+      "map": {
+        "desc": "附近花卉一键购买",
+        "title": "地图购花"
+      },
+      "reverse": {
+        "desc": "鲜花竞拍越快越新鲜",
+        "title": "鲜花拍卖"
+      },
+      "shop": {
+        "desc": "精选好物限时优惠",
+        "title": "花卉商城"
+      }
     },
+    "recommendTitle": "推荐商品",
     "reviews": {
-      "subtitle": "Customer Reviews",
-      "title": "客户好评",
       "desc": "来自真实采购商的声音",
       "items": [
         {
-          "name": "张先生",
           "loc": "北京朝阳",
+          "name": "张先生",
           "text": "白皮松成活率95%以上，一年后依然长势喜人，比花鸟市场靠谱多了！"
         },
         {
-          "name": "李女士",
           "loc": "天津南开",
+          "name": "李女士",
           "text": "婚礼鲜花全程冷链，百合开得特别饱满，宾客都问在哪订的。"
         },
         {
-          "name": "王经理",
           "loc": "廊坊开发区",
+          "name": "王经理",
           "text": "小区绿化一键下单，送货上门还包种植，物业费省了一大笔。"
         },
         {
-          "name": "赵总",
           "loc": "顺义花卉市场",
+          "name": "赵总",
           "text": "每周稳定供货2000盆，品质统一，客户回头率明显提升。"
         },
         {
-          "name": "刘女士",
           "loc": "保定",
+          "name": "刘女士",
           "text": "陵园四季常青方案很专业，家属反馈很满意，会长期合作。"
         },
         {
-          "name": "陈先生",
           "loc": "丰台",
+          "name": "陈先生",
           "text": "2米阳台变成了小花园，老婆说这是今年最好的礼物！"
         }
-      ]
+      ],
+      "subtitle": "Customer Reviews",
+      "title": "客户好评"
     },
-    "footer": {
-      "name": "植物收藏家",
-      "copyright": "植物收藏家 · 供应链新体验 © 2026",
-      "phone": "电话",
-      "email": "邮箱",
-      "address": "地址",
-      "addressValue": "中国北京市丰台区新宫"
-    },
-    "intelligentSupply": "供应链新体验",
-    "greenCertSubtitle": "Green Certification · Carbon Credit",
-    "step": "Step {n}",
-    "searchTitle": "搜索商品",
-    "searchSubtitle": "精选苗木 · 珍稀花卉 · 场景园艺",
     "searchPlaceholder": "搜花卉、苗木、品类、供应商关键词…",
-    "searching": "搜索中…",
-    "clearSearch": "清除搜索",
     "searchProductsTitle": "搜索结果",
-    "searchResultMeta": "关键词“{keyword}”找到 {count} 个相关商品"
+    "searchResultMeta": "关键词“{keyword}”找到 {count} 个相关商品",
+    "searchSubtitle": "精选苗木 · 珍稀花卉 · 场景园艺",
+    "searchTitle": "搜索商品",
+    "searching": "搜索中…",
+    "step": "Step {n}",
+    "subtitle": "供应链新体验",
+    "successStories": {
+      "desc": "从别墅庭院到阳台花园，每一个项目都用心交付",
+      "items": [
+        {
+          "desc": "25棵白皮松 + 80棵月季，30天从裸地到花园",
+          "tag": "别墅庭院",
+          "title": "北京别墅庭院改造"
+        },
+        {
+          "desc": "2000支百合 + 500支玫瑰，48小时交付",
+          "tag": "婚礼花艺",
+          "title": "天津婚礼花艺布置"
+        },
+        {
+          "desc": "乔灌木混植 300棵，季度养护全包",
+          "tag": "社区绿化",
+          "title": "廊坊小区绿化工程"
+        },
+        {
+          "desc": "每周2000盆盆花稳定配送",
+          "tag": "商业供货",
+          "title": "顺义温室大棚供货"
+        },
+        {
+          "desc": "常青树 + 时令花卉四季常青",
+          "tag": "园林景观",
+          "title": "保定陵园景观设计"
+        },
+        {
+          "desc": "2米空间打造微型花园",
+          "tag": "阳台花园",
+          "title": "丰台阳台花园改造"
+        }
+      ],
+      "subtitle": "Success Stories",
+      "title": "庭院园林 · 成功案例"
+    },
+    "title": "植物收藏家",
+    "unnamed": "未命名",
+    "viewMore": "查看更多 →"
   },
-  "auction": {
-    "title": "苗木拍卖",
-    "subtitle": "乔灌木批发拍卖",
-    "currentLot": "当前拍品",
-    "bidHistory": "竞拍记录",
-    "placeBid": "出价",
-    "bidding": "出价中...",
-    "bidSuccess": "竞价成功！",
-    "bidFailed": "竞价失败",
-    "startingPrice": "起拍价",
-    "currentPrice": "当前价",
-    "nextBid": "下一口价",
-    "countdown": "倒计时",
-    "ended": "已结束",
-    "starting": "即将开始",
-    "noAuction": "暂无拍卖",
-    "round": "轮",
-    "lot": "拍品",
-    "lotNumber": "拍品编号",
-    "bidders": "竞拍人",
-    "timeLeft": "剩余",
-    "rules": "拍卖规则",
-    "rulesDesc": "只展示乔灌木类拍品；倒计时10分钟，每次竞价加价5元",
-    "treeAuction": "🌳 苗木拍卖",
-    "realtimeBid": "全国认证苗木分布 · 实时竞拍状态",
-    "bidRecord": "竞拍记录",
-    "bidder": "竞拍人",
-    "amount": "出价",
-    "time": "时间",
-    "noBids": "暂无竞拍记录",
-    "bidNow": "立即出价",
-    "minIncrement": "每次加价{amount}元",
-    "countdownEnd": "{sec}秒后结束"
+  "langSwitch": {
+    "ar": "العربية",
+    "de": "Deutsch",
+    "en": "English",
+    "fr": "Français",
+    "ja": "日本語",
+    "zh": "中文"
   },
-  "reverseAuction": {
-    "title": "鲜花拍卖",
-    "subtitle": "鲜花竞拍越快越新鲜",
-    "live": "倒拍 LIVE",
-    "currentPrice": "当前价",
-    "nextDrop": "下次降",
-    "nextDropIn": "{min}分钟自动降价",
-    "timeLeft": "剩余",
-    "round": "一轮倒拍",
-    "buyNow": "立即抢购",
-    "bought": "已抢购",
-    "priceHistory": "价格历史",
-    "auctionRules": "倒拍规则",
-    "rulesDesc": "价格每隔几分钟自动下降，越等越便宜！但别人可能随时买走，果断出手！",
-    "lilyAuction": "🌷 鲜花拍卖",
-    "countdown": "倒计时",
-    "freeClaim": "免费领取",
-    "dropDiscount": "降价优惠",
-    "minAgo": "{min}分钟前",
-    "followers": "人关注",
-    "lowRisk": "低风险",
-    "lily": "百合",
-    "cutFlower": "切花"
+  "login": {
+    "adminHint": "管理员使用手机号+密码登录",
+    "alreadyLoggedIn": "已登录，正在跳转...",
+    "appSlogan": "探索绿植花卉，体验供应链新范式",
+    "appTitle": "植物收藏家",
+    "codeHint": "验证码输入 123456 即可登录",
+    "codeLogin": "验证码登录",
+    "enterCode": "请输入验证码",
+    "enterPassword": "请输入密码",
+    "getCode": "获取验证码",
+    "invalidPhone": "请输入正确的手机号",
+    "loggingIn": "登录中...",
+    "loginButton": "登录",
+    "loginFailed": "登录失败",
+    "loginSuccess": "登录成功",
+    "noAccount": "还没有账号？",
+    "password": "密码",
+    "passwordPlaceholder": "密码",
+    "phoneLogin": "密码登录",
+    "phoneNumber": "手机号",
+    "phonePlaceholder": "手机号",
+    "register": "注册",
+    "title": "登录",
+    "verifyCode": "验证码"
   },
-  "shop": {
-    "title": "花卉商城",
-    "subtitle": "精选好物限时优惠",
-    "addToCart": "加入购物车",
-    "added": "已加入",
-    "cart": "购物车",
-    "items": "件商品",
-    "noProducts": "暂无商品",
-    "category": "分类",
-    "priceRange": "价格区间",
-    "sort": "排序",
-    "default": "默认",
-    "priceAsc": "价格升序",
-    "priceDesc": "价格降序",
-    "newest": "最新",
-    "flowerShop": "🛒 花卉商城",
-    "searchPlaceholder": "搜索花卉...",
-    "cartCount": "{count}件商品"
+  "map": {
+    "dealerMap": "🏪 经销商地图",
+    "flowerMap": "🗺 地图购花",
+    "locateFailed": "定位失败",
+    "locationFailed": "定位失败",
+    "nearbyShops": "附近花店",
+    "originProof": "产地溯源证明",
+    "relocate": "重新定位",
+    "shopShortVideo": "产地实拍 · 商家短视频",
+    "shopVideo": "商家短视频",
+    "subtitle": "附近花卉一键购买",
+    "supplierMap": "🗺 供应商地图",
+    "title": "地图购花"
   },
-  "cart": {
-    "title": "购物车",
-    "empty": "购物车是空的",
-    "goShopping": "去逛逛",
-    "selectAll": "全选",
-    "deleteSelected": "删除选中",
-    "subtotal": "小计",
-    "totalItems": "件)",
-    "checkout": "去支付",
-    "products": "商品 (",
-    "flowerCart": "🛒 购物车",
-    "goShop": "去逛逛",
-    "clear": "清空"
+  "nav": {
+    "auction": "苗木拍卖",
+    "flowerShop": "植物收藏家",
+    "garden": "花园",
+    "home": "首页",
+    "map": "地图",
+    "profile": "我的",
+    "reverseAuction": "鲜花拍卖",
+    "shop": "商店"
+  },
+  "order": {
+    "status": {
+      "cancelled": "已取消",
+      "completed": "已完成",
+      "paid": "已支付",
+      "pending": "待支付",
+      "shipped": "已发货"
+    }
   },
   "payment": {
-    "title": "确认支付",
-    "orderInfo": "订单信息",
-    "shippingAddress": "收货地址",
-    "paymentMethod": "支付方式",
-    "wechatPay": "微信支付",
-    "alipay": "支付宝",
-    "mockPay": "模拟支付",
-    "payNow": "去支付",
-    "paying": "支付中...",
-    "paySuccess": "支付成功！",
-    "payFailed": "支付失败",
-    "orderTotal": "订单合计",
-    "createOrderFailed": "创建订单失败",
-    "orderAmount": "订单金额",
-    "confirmPay": "确认支付",
-    "orderCreated": "支付流程已创建",
-    "mockPayDesc": "模拟支付（测试环境）",
+    "addOrChangeAddress": "+ 新增/改用其他地址",
+    "addressDeleted": "地址已删除",
+    "addressIncomplete": "没有完整收货地址，不能支付",
+    "addressIncompleteHint": "没有完整收货地址，支付按钮不可用。",
+    "addressRequired": "请把收货人、电话、省市区和详细地址都填完整",
+    "addressSaved": "收货地址已保存",
+    "addressTip": "支付前必须填写完整地址，订单会同步到购买订单管理",
     "aggregatePayment": "聚合支付",
-    "internationalVersion": "国际版",
-    "orderSummary": "订单摘要",
-    "total": "合计",
+    "alipay": "支付宝",
+    "amountDue": "应付金额",
+    "city": "城市",
+    "cnVersion": "国内版",
+    "configured": "已配置",
+    "confirmPay": "确认支付",
+    "createOrderFailed": "创建订单失败",
+    "creating": "创建中…",
+    "defaultLabel": "默认",
+    "defaultSet": "已设为默认",
+    "deleteAddress": "删除",
+    "detailAddress": "详细地址：街道、门牌号",
+    "district": "区/县",
+    "fillAddressFirst": "请先填写完整收货地址，再进行支付。",
+    "fillAddressToPay": "请先填写收货地址",
+    "filled": "已填写",
+    "globalVersion": "国际版",
     "goodsCountTip": "{count}件商品 · Stripe / PayPal",
     "goodsCountTipCN": "{count}件商品 · 支付宝 / 微信支付",
     "goodsCountTipDev": "{count}件商品 · 支持多种支付方式",
-    "filled": "已填写",
+    "internationalVersion": "国际版",
+    "mockPay": "模拟支付",
+    "mockPayDesc": "模拟支付（测试环境）",
+    "notConfigured": "未配置，当前走模拟",
     "notFilled": "待填写",
-    "addressTip": "支付前必须填写完整地址，订单会同步到购买订单管理",
-    "use": "使用",
-    "addOrChangeAddress": "+ 新增/改用其他地址",
-    "selectPaymentMethod": "选择支付方式",
-    "payWithStripe": "使用 Stripe 支付",
+    "orderAmount": "订单金额",
+    "orderCreated": "支付流程已创建",
+    "orderInfo": "订单信息",
+    "orderNumber": "订单号",
+    "orderSummary": "订单摘要",
+    "orderTotal": "订单合计",
+    "payFailed": "支付失败",
+    "payNow": "去支付",
+    "paySuccess": "支付成功！",
     "payWith": "使用 {method} 支付",
+    "payWithStripe": "使用 Stripe 支付",
+    "paying": "支付中...",
+    "paymentMethod": "支付方式",
+    "phone": "联系电话",
+    "pleaseLogin": "请先登录",
+    "province": "省/直辖市",
+    "recipient": "收货人",
+    "redirecting": "跳转中…",
     "saveAndUse": "保存并用于本次支付",
     "saving": "保存中…",
-    "addressSaved": "收货地址已保存",
-    "addressRequired": "请把收货人、电话、省市区和详细地址都填完整",
-    "addressIncomplete": "没有完整收货地址，不能支付",
-    "addressIncompleteHint": "没有完整收货地址，支付按钮不可用。",
-    "fillAddressFirst": "请先填写完整收货地址，再进行支付。",
-    "fillAddressToPay": "请先填写收货地址",
-    "creating": "创建中…",
-    "redirecting": "跳转中…",
-    "orderNumber": "订单号",
-    "amountDue": "应付金额",
+    "selectPaymentMethod": "选择支付方式",
+    "setDefault": "设为默认",
+    "shippingAddress": "收货地址",
+    "title": "确认支付",
+    "total": "合计",
+    "use": "使用",
     "viewOrder": "📋 查看订单",
-    "wechatScanPay": "请用微信扫描二维码完成支付",
-    "wechatInApp": "请在微信内完成支付",
-    "wechatScan": "📱 扫码支付",
     "wechatH5": "🌐 H5 支付",
-    "configured": "已配置",
-    "notConfigured": "未配置，当前走模拟",
-    "wechatTagline": "微信扫码 / H5 / JSAPI",
-    "cnVersion": "国内版",
-    "globalVersion": "国际版",
-    "pleaseLogin": "请先登录",
-    "recipient": "收货人",
-    "phone": "联系电话",
-    "province": "省/直辖市",
-    "city": "城市",
-    "district": "区/县",
-    "detailAddress": "详细地址：街道、门牌号",
-    "addressDeleted": "地址已删除",
-    "defaultSet": "已设为默认",
-    "defaultLabel": "默认",
-    "setDefault": "设为默认",
-    "deleteAddress": "删除"
+    "wechatInApp": "请在微信内完成支付",
+    "wechatPay": "微信支付",
+    "wechatScan": "📱 扫码支付",
+    "wechatScanPay": "请用微信扫描二维码完成支付",
+    "wechatTagline": "微信扫码 / H5 / JSAPI"
   },
-  "login": {
-    "title": "登录",
-    "phoneLogin": "密码登录",
-    "phoneNumber": "手机号",
-    "password": "密码",
-    "loginButton": "登录",
-    "loggingIn": "登录中...",
-    "loginSuccess": "登录成功",
-    "loginFailed": "登录失败",
-    "noAccount": "还没有账号？",
-    "register": "注册",
-    "codeLogin": "验证码登录",
-    "verifyCode": "验证码",
-    "getCode": "获取验证码",
-    "phonePlaceholder": "手机号",
-    "passwordPlaceholder": "密码",
-    "codeHint": "验证码输入 123456 即可登录",
-    "adminHint": "管理员使用手机号+密码登录",
-    "alreadyLoggedIn": "已登录，正在跳转...",
-    "invalidPhone": "请输入正确的手机号",
-    "enterPassword": "请输入密码",
-    "enterCode": "请输入验证码",
-    "appTitle": "植物收藏家",
-    "appSlogan": "探索绿植花卉，体验供应链新范式"
-  },
-  "profile": {
-    "title": "个人中心",
-    "myOrders": "我的订单",
-    "myGarden": "我的花园",
-    "settings": "设置",
-    "flowerProfile": "👤 我的",
-    "certifiedBuyer": "认证采购商",
-    "superAdmin": "超级管理员",
-    "flowerFriend": "猎人",
-    "health": "健康",
-    "achievements": "种花成就",
-    "flowerCompanion": "植物收藏家",
-    "adminCenter": "管理后台",
-    "logout": "退出登录",
-    "score": "综合评分",
-    "experience": "从业",
-    "years": "年",
-    "address": "收货地址",
-    "contactService": "联系客服",
-    "addNew": "+ 新增",
-    "default": "默认",
-    "edit": "编辑",
-    "editAddress": "编辑地址",
-    "newAddress": "新增地址",
-    "name": "姓名",
-    "province": "省",
-    "city": "市",
-    "district": "区/县",
-    "detailAddress": "详细地址",
-    "setDefault": "设为默认",
-    "addressSaved": "地址已保存",
-    "fillRequired": "请填写姓名、手机号和详细地址",
-    "loginPrompt": "登录后查看个人中心",
-    "paymentConfig": "支付配置、系统管理",
-    "planted": "已种植",
-    "matured": "已成熟",
-    "gifted": "已获赠"
-  },
-  "map": {
-    "title": "地图购花",
-    "subtitle": "附近花卉一键购买",
-    "relocate": "重新定位",
-    "locateFailed": "定位失败",
-    "supplierMap": "🗺 供应商地图",
-    "dealerMap": "🏪 经销商地图",
-    "nearbyShops": "附近花店",
-    "originProof": "产地溯源证明",
-    "shopVideo": "商家短视频",
-    "shopShortVideo": "产地实拍 · 商家短视频",
-    "flowerMap": "🗺 地图购花",
-    "locationFailed": "定位失败"
-  },
-  "garden": {
-    "title": "我的花园",
-    "subtitle": "可种植的花卉",
-    "plant": "种花",
-    "planting": "种植中...",
-    "plantSuccess": "种花成功！",
-    "plantFailed": "种花失败",
-    "water": "浇水",
-    "fertilize": "施肥",
-    "harvest": "收获",
-    "myGarden": "🌱 我的花园",
-    "plantable": "可种植的花卉",
-    "achievements": "种花成就",
-    "treeDNA": "🧬 树木基因",
-    "treePassport": "🌳 树木护照",
-    "height": "树高",
-    "dbh": "胸径",
-    "age": "树龄",
-    "health": "健康评分",
-    "origin": "产地",
-    "variety": "品种",
-    "carbonValue": "碳汇值",
-    "noPlants": "暂无可种植花卉",
-    "planted": "已种植",
-    "growing": "生长中",
-    "mature": "已成熟",
-    "withered": "已枯萎",
-    "cm": "厘米",
-    "noPlots": "花园空空如也，去种花吧！"
-  },
-  "admin": {
-    "title": "管理后台",
-    "config": "配置",
-    "testConnection": "测试连接",
-    "testing": "测试中...",
-    "testSuccess": "连接成功",
-    "testFailed": "连接失败",
-    "saveConfig": "保存配置",
-    "enableWechat": "启用微信支付",
-    "enableAlipay": "启用支付宝",
-    "enabled": "已启用",
-    "configured": "已配置",
-    "notConfigured": "未配置",
-    "notEnabled": "未启用",
-    "configFirst": "配置完成后再启用",
-    "keepEmpty": "留空保留原值",
-    "alreadySet": "已设置）",
-    "wechat": {
-      "merchantId": "商户号",
-      "appId": "AppID",
-      "apiKeyV3": "API v3 密钥",
-      "certSerial": "证书序列号",
-      "privateKey": "商户私钥",
-      "callbackUrl": "支付回调地址"
+  "peonyRegister": {
+    "alliance": {
+      "branch": {
+        "emoji": "🌸",
+        "sub": "菏泽/洛阳/北京/云南/新疆",
+        "title": "分部"
+      },
+      "hq": {
+        "emoji": "🏛",
+        "sub": "菏泽/曹州牡丹园",
+        "title": "总部"
+      },
+      "overseas": {
+        "emoji": "🌍",
+        "sub": "全球芍药爱好者",
+        "title": "海外用户"
+      },
+      "partner": {
+        "emoji": "🤝",
+        "sub": "国际经销/展会",
+        "title": "海外合伙人"
+      }
     },
-    "alipay": {
-      "appId": "应用ID",
-      "privateKey": "应用私钥",
-      "publicKey": "支付宝公钥",
-      "callbackUrl": "支付回调地址"
+    "back": "上一步",
+    "badge": {
+      "bloom": "盛放联盟",
+      "budding": "含苞待放",
+      "rooted": "稳步成长",
+      "seedling": "花开新芽",
+      "sprout": "破土青苗"
     },
-    "wechatConfig": "微信支付配置",
-    "alipayConfig": "支付宝配置",
-    "systemStatus": "系统状态",
-    "paymentConfig": "支付配置"
-  },
-  "supplierVideos": {
-    "title": "视频逛店",
-    "subtitle": "产地实拍 · 商家短视频",
-    "supplier": "供应商"
-  },
-  "error": {
-    "title": "出错了",
-    "retry": "重试",
-    "pageError": "页面加载遇到问题",
-    "unknown": "未知错误",
-    "reload": "重新加载"
+    "done": {
+      "enter": "进入芍药联盟",
+      "sub": "您已加入芍药联盟,徽章将随您的贡献成长",
+      "title": "入驻成功 · 花开新芽"
+    },
+    "footer": "© 芍药联盟 · Peony Alliance",
+    "identity": {
+      "admin": {
+        "emoji": "👑",
+        "sub": "创建组织 · 邀请成员",
+        "title": "管理员"
+      },
+      "staff": {
+        "emoji": "🧑‍🌾",
+        "sub": "通过邀请码加入",
+        "title": "成员"
+      }
+    },
+    "next": "下一步",
+    "position": {
+      "aftersales": {
+        "emoji": "💬",
+        "label": "售后"
+      },
+      "info": {
+        "emoji": "📋",
+        "label": "信息员"
+      },
+      "operation": {
+        "emoji": "🌱",
+        "label": "运营"
+      },
+      "sales": {
+        "emoji": "💐",
+        "label": "销售"
+      }
+    },
+    "pwSaveFailed": "浏览器未能保存您的密码。请确认已允许密码自动填充。",
+    "pwSaveUnsupported": "您的浏览器不支持自动保存密码。为保障您下次登录体验，请使用 Chrome / Edge / Safari 最新版本。",
+    "species": {
+      "cutflower": "鲜切花",
+      "moutan": "牡丹",
+      "other": "其他",
+      "peony": "芍药",
+      "potted": "盆栽",
+      "seedling": "种苗"
+    },
+    "step1": {
+      "confirm": "再次输入密码",
+      "confirmPh": "两次一致",
+      "mismatch": "两次密码不一致",
+      "password": "登录密码",
+      "passwordPh": "至少 6 位",
+      "phone": "手机号 / 账号",
+      "phonePh": "11 位手机号",
+      "pwSaveAck": "我理解并同意浏览器保存密码 — 未保存则无法完成注册,以保障下次登录顺畅。",
+      "sub": "手机号即为登录账号,浏览器自动保存密码",
+      "title": "账号密钥"
+    },
+    "step2": {
+      "sub": "选择您所在的联盟分支",
+      "title": "联盟归属"
+    },
+    "step3": {
+      "sub": "决定后续能做的事",
+      "title": "我的身份"
+    },
+    "step4": {
+      "address": "详细地址",
+      "addressPh": "街道 · 门牌 · 园区",
+      "capacity": "种植规模（亩）",
+      "capacityPh": "预估亩数",
+      "city": "市",
+      "district": "区/县",
+      "entity": "实体名称",
+      "entityPh": "公司/合作社/园艺场 全称",
+      "inviteCode": "邀请码",
+      "inviteCodePh": "6 位字母数字组合",
+      "positions": "岗位（可多选）",
+      "province": "省",
+      "species": "主营品类",
+      "sub": "再一步就完成入驻",
+      "title": "完善资料"
+    },
+    "submit": "开启入驻",
+    "submitFailed": "注册失败",
+    "submitting": "花开中…",
+    "subtitle": "国花芍药 · 四海同盟 · 手机号即账号",
+    "title": "芍药联盟入驻"
   },
   "product": {
     "addToCart": "加入",
     "price": "¥{price}",
     "unit": "{count}棵"
   },
-  "order": {
-    "status": {
-      "pending": "待支付",
-      "paid": "已支付",
-      "shipped": "已发货",
-      "completed": "已完成",
-      "cancelled": "已取消"
-    }
-  },
-  "langSwitch": {
-    "zh": "中文",
-    "en": "English",
-    "de": "Deutsch",
-    "ja": "日本語",
-    "fr": "Français",
-    "ar": "العربية"
+  "profile": {
+    "achievements": "种花成就",
+    "addNew": "+ 新增",
+    "address": "收货地址",
+    "addressSaved": "地址已保存",
+    "adminCenter": "管理后台",
+    "certifiedBuyer": "认证采购商",
+    "city": "市",
+    "contactService": "联系客服",
+    "default": "默认",
+    "detailAddress": "详细地址",
+    "district": "区/县",
+    "edit": "编辑",
+    "editAddress": "编辑地址",
+    "experience": "从业",
+    "fillRequired": "请填写姓名、手机号和详细地址",
+    "flowerCompanion": "植物收藏家",
+    "flowerFriend": "猎人",
+    "flowerProfile": "👤 我的",
+    "gifted": "已获赠",
+    "health": "健康",
+    "loginPrompt": "登录后查看个人中心",
+    "logout": "退出登录",
+    "matured": "已成熟",
+    "myGarden": "我的花园",
+    "myOrders": "我的订单",
+    "name": "姓名",
+    "newAddress": "新增地址",
+    "paymentConfig": "支付配置、系统管理",
+    "planted": "已种植",
+    "province": "省",
+    "score": "综合评分",
+    "setDefault": "设为默认",
+    "settings": "设置",
+    "superAdmin": "超级管理员",
+    "title": "个人中心",
+    "years": "年"
   },
   "regionSwitch": {
-    "title": "语言 / 地区",
-    "section": "语言与地区",
-    "useCurrent": "📍 使用当前位置",
+    "currentDetected": "已用当前位置识别：{region}",
     "locating": "正在定位…",
-    "recommended": "推荐",
-    "selected": "当前",
-    "preciseUnavailable": "浏览器精确定位不可用",
-    "preciseFailed": "精确定位失败",
     "networkDetected": "已用网络位置识别：{region}",
+    "preciseFailed": "精确定位失败",
+    "preciseUnavailable": "浏览器精确定位不可用",
+    "recommended": "推荐",
+    "section": "语言与地区",
+    "selected": "当前",
     "timezoneDetected": "{reason}，已按时区识别：{region}",
-    "currentDetected": "已用当前位置识别：{region}"
+    "title": "语言 / 地区",
+    "useCurrent": "📍 使用当前位置"
   },
   "regions": {
     "cn": {
-      "name": "中国",
-      "short": "中国",
       "badge": "中国区 · 中式园林供应链",
-      "title": "植物收藏家",
-      "subtitle": "供应链新体验",
       "desc": "以中式园林与北方花木为核心，汇集名贵苗木、时令花卉与国风盆景，为植物收藏家精选每一株好物。",
-      "plantLine": "精选：牡丹、罗汉松、白皮松、桂花、月季、国风盆景"
-    },
-    "us": {
-      "name": "美国",
-      "short": "美国",
-      "badge": "美国区 · 美式花园供应链",
-      "title": "植物收藏家",
+      "name": "中国",
+      "plantLine": "精选：牡丹、罗汉松、白皮松、桂花、月季、国风盆景",
+      "short": "中国",
       "subtitle": "供应链新体验",
-      "desc": "面向美式庭院、花园中心与社区绿化场景，突出原产地直连、地图采购和稳定履约，让绿植花卉采购更像一次植物狩猎。",
-      "plantLine": "推荐：绣球、薰衣草、玫瑰、多肉、观赏草、庭院乔木"
+      "title": "植物收藏家"
     },
     "de": {
-      "name": "德国",
-      "short": "德国",
       "badge": "德国区 · 欧式森林花园供应链",
-      "title": "植物收藏家",
-      "subtitle": "供应链新体验",
       "desc": "面向欧式花园、森林系景观和可持续园艺采购，强调绿色认证、碳汇价值、产地追踪与严谨的供应链履约。",
-      "plantLine": "推荐：铁线莲、矢车菊、香草植物、球根花卉、云杉、欧洲山毛榉"
-    },
-    "jp": {
-      "name": "日本",
-      "short": "日本",
-      "badge": "日本区 · 和风庭园供应链",
-      "title": "植物收藏家",
+      "name": "德国",
+      "plantLine": "推荐：铁线莲、矢车菊、香草植物、球根花卉、云杉、欧洲山毛榉",
+      "short": "德国",
       "subtitle": "供应链新体验",
-      "desc": "面向和风庭园、屋上绿化和精品园艺场景，强调严选产地、精细履约与季节花材供给。",
-      "plantLine": "推荐：樱花、枫树、绣球、山茶、黑松、苔藓庭园植物"
+      "title": "植物收藏家"
     },
     "fr": {
-      "name": "法国",
-      "short": "法国",
       "badge": "法国区 · 法式花园供应链",
-      "title": "植物收藏家",
-      "subtitle": "供应链新体验",
       "desc": "面向法式花园、庄园景观与城市花艺场景，突出浪漫花境、产区风土和精品园艺履约。",
-      "plantLine": "推荐：薰衣草、鸢尾、玫瑰、梧桐、葡萄藤、法式花境植物"
+      "name": "法国",
+      "plantLine": "推荐：薰衣草、鸢尾、玫瑰、梧桐、葡萄藤、法式花境植物",
+      "short": "法国",
+      "subtitle": "供应链新体验",
+      "title": "植物收藏家"
+    },
+    "jp": {
+      "badge": "日本区 · 和风庭园供应链",
+      "desc": "面向和风庭园、屋上绿化和精品园艺场景，强调严选产地、精细履约与季节花材供给。",
+      "name": "日本",
+      "plantLine": "推荐：樱花、枫树、绣球、山茶、黑松、苔藓庭园植物",
+      "short": "日本",
+      "subtitle": "供应链新体验",
+      "title": "植物收藏家"
     },
     "sa": {
-      "name": "沙特阿拉伯",
-      "short": "沙特",
       "badge": "沙特区 · 沙漠绿洲供应链",
-      "title": "植物收藏家",
-      "subtitle": "供应链新体验",
       "desc": "面向沙漠绿洲、耐旱景观和高端城市绿化场景，突出耐热植物、水资源效率与稳定跨区域履约。",
-      "plantLine": "推荐：椰枣、棕榈、九重葛、沙漠玫瑰、橄榄、耐旱草本"
+      "name": "沙特阿拉伯",
+      "plantLine": "推荐：椰枣、棕榈、九重葛、沙漠玫瑰、橄榄、耐旱草本",
+      "short": "沙特",
+      "subtitle": "供应链新体验",
+      "title": "植物收藏家"
+    },
+    "us": {
+      "badge": "美国区 · 美式花园供应链",
+      "desc": "面向美式庭院、花园中心与社区绿化场景，突出原产地直连、地图采购和稳定履约，让绿植花卉采购更像一次植物狩猎。",
+      "name": "美国",
+      "plantLine": "推荐：绣球、薰衣草、玫瑰、多肉、观赏草、庭院乔木",
+      "short": "美国",
+      "subtitle": "供应链新体验",
+      "title": "植物收藏家"
     }
+  },
+  "reverseAuction": {
+    "auctionRules": "倒拍规则",
+    "bought": "已抢购",
+    "buyNow": "立即抢购",
+    "countdown": "倒计时",
+    "currentPrice": "当前价",
+    "cutFlower": "切花",
+    "dropDiscount": "降价优惠",
+    "followers": "人关注",
+    "freeClaim": "免费领取",
+    "lily": "百合",
+    "lilyAuction": "🌷 鲜花拍卖",
+    "live": "倒拍 LIVE",
+    "lowRisk": "低风险",
+    "minAgo": "{min}分钟前",
+    "nextDrop": "下次降",
+    "nextDropIn": "{min}分钟自动降价",
+    "priceHistory": "价格历史",
+    "round": "一轮倒拍",
+    "rulesDesc": "价格每隔几分钟自动下降，越等越便宜！但别人可能随时买走，果断出手！",
+    "subtitle": "鲜花竞拍越快越新鲜",
+    "timeLeft": "剩余",
+    "title": "鲜花拍卖"
+  },
+  "shop": {
+    "addToCart": "加入购物车",
+    "added": "已加入",
+    "cart": "购物车",
+    "cartCount": "{count}件商品",
+    "category": "分类",
+    "default": "默认",
+    "flowerShop": "🛒 花卉商城",
+    "items": "件商品",
+    "newest": "最新",
+    "noProducts": "暂无商品",
+    "priceAsc": "价格升序",
+    "priceDesc": "价格降序",
+    "priceRange": "价格区间",
+    "searchPlaceholder": "搜索花卉...",
+    "sort": "排序",
+    "subtitle": "精选好物限时优惠",
+    "title": "花卉商城"
+  },
+  "supplierVideos": {
+    "subtitle": "产地实拍 · 商家短视频",
+    "supplier": "供应商",
+    "title": "视频逛店"
   },
   "tabbar": {
     "collector": "收藏家",
     "map": "地图",
-    "seedlingAuction": "苗木拍卖",
+    "mine": "我的",
     "reverseFlowerAuction": "鲜花拍卖",
-    "shop": "商店",
-    "mine": "我的"
-  },
-  "peonyRegister": {
-    "title": "芍药联盟入驻",
-    "subtitle": "国花芍药 · 四海同盟 · 手机号即账号",
-    "back": "上一步",
-    "next": "下一步",
-    "submit": "开启入驻",
-    "submitting": "花开中…",
-    "submitFailed": "注册失败",
-    "pwSaveUnsupported": "您的浏览器不支持自动保存密码。为保障您下次登录体验，请使用 Chrome / Edge / Safari 最新版本。",
-    "pwSaveFailed": "浏览器未能保存您的密码。请确认已允许密码自动填充。",
-    "footer": "© 芍药联盟 · Peony Alliance",
-    "step1": {
-      "title": "账号密钥",
-      "sub": "手机号即为登录账号,浏览器自动保存密码",
-      "phone": "手机号 / 账号",
-      "phonePh": "11 位手机号",
-      "password": "登录密码",
-      "passwordPh": "至少 6 位",
-      "confirm": "再次输入密码",
-      "confirmPh": "两次一致",
-      "mismatch": "两次密码不一致",
-      "pwSaveAck": "我理解并同意浏览器保存密码 — 未保存则无法完成注册,以保障下次登录顺畅。"
-    },
-    "step2": {
-      "title": "联盟归属",
-      "sub": "选择您所在的联盟分支"
-    },
-    "step3": {
-      "title": "我的身份",
-      "sub": "决定后续能做的事"
-    },
-    "step4": {
-      "title": "完善资料",
-      "sub": "再一步就完成入驻",
-      "positions": "岗位（可多选）",
-      "entity": "实体名称",
-      "entityPh": "公司/合作社/园艺场 全称",
-      "province": "省",
-      "city": "市",
-      "district": "区/县",
-      "address": "详细地址",
-      "addressPh": "街道 · 门牌 · 园区",
-      "species": "主营品类",
-      "capacity": "种植规模（亩）",
-      "capacityPh": "预估亩数",
-      "inviteCode": "邀请码",
-      "inviteCodePh": "6 位字母数字组合"
-    },
-    "alliance": {
-      "hq": {
-        "emoji": "🏛",
-        "title": "总部",
-        "sub": "菏泽/曹州牡丹园"
-      },
-      "branch": {
-        "emoji": "🌸",
-        "title": "分部",
-        "sub": "菏泽/洛阳/北京/云南/新疆"
-      },
-      "overseas": {
-        "emoji": "🌍",
-        "title": "海外用户",
-        "sub": "全球芍药爱好者"
-      },
-      "partner": {
-        "emoji": "🤝",
-        "title": "海外合伙人",
-        "sub": "国际经销/展会"
-      }
-    },
-    "identity": {
-      "admin": {
-        "emoji": "👑",
-        "title": "管理员",
-        "sub": "创建组织 · 邀请成员"
-      },
-      "staff": {
-        "emoji": "🧑‍🌾",
-        "title": "成员",
-        "sub": "通过邀请码加入"
-      }
-    },
-    "position": {
-      "sales": {
-        "emoji": "💐",
-        "label": "销售"
-      },
-      "operation": {
-        "emoji": "🌱",
-        "label": "运营"
-      },
-      "info": {
-        "emoji": "📋",
-        "label": "信息员"
-      },
-      "aftersales": {
-        "emoji": "💬",
-        "label": "售后"
-      }
-    },
-    "species": {
-      "peony": "芍药",
-      "moutan": "牡丹",
-      "cutflower": "鲜切花",
-      "seedling": "种苗",
-      "potted": "盆栽",
-      "other": "其他"
-    },
-    "badge": {
-      "seedling": "花开新芽",
-      "sprout": "破土青苗",
-      "rooted": "稳步成长",
-      "budding": "含苞待放",
-      "bloom": "盛放联盟"
-    },
-    "done": {
-      "title": "入驻成功 · 花开新芽",
-      "sub": "您已加入芍药联盟,徽章将随您的贡献成长",
-      "enter": "进入芍药联盟"
-    }
-  },
-  "auth": {
-    "brandTitle": "植物收藏家 · 林草二十年",
-    "loginSubtitle": "登录以查看订单、收藏与共享供应链",
-    "registerTitle": "成为植物收藏家",
-    "registerSubtitle": "注册后自动加入「植物收藏家」标签体系",
-    "registerOk": "注册成功！请前往登录。",
-    "tabPhone": "手机号",
-    "tabEmail": "邮箱",
-    "labelPhone": "手机号",
-    "labelEmail": "邮箱",
-    "labelPassword": "密码",
-    "labelFirstName": "姓",
-    "labelLastName": "名",
-    "phonePlaceholder": "例如 13800138000 或 +86 138 0000 0000",
-    "emailPlaceholder": "you@example.com",
-    "pwdHint": "至少 8 位，含字母和数字",
-    "optional": "选填",
-    "noAccount": "还没有账号？",
-    "hasAccount": "已有账号？",
-    "errInvalidCreds": "用户名或密码错误",
-    "errMissing": "请填写所有必填字段",
-    "errExists": "该账号已注册，请直接登录",
-    "errWeakPwd": "密码强度不够（至少 8 位，含字母数字）",
-    "errInvalidPhone": "手机号格式不正确",
-    "errGeneric": "操作失败",
-    "labelPwdConfirm": "确认密码",
-    "errPwdMismatch": "两次密码不一致",
-    "submitting": "提交中…",
-    "goLogin": "前往登录",
-    "loginSubmitting": "登录中…",
-    "pwdOnlyRetry": "密码错误，请重新输入密码"
+    "seedlingAuction": "苗木拍卖",
+    "shop": "商店"
   }
 }

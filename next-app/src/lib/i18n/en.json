@@ -1,91 +1,259 @@
 {
+  "admin": {
+    "alipay": {
+      "appId": "App ID",
+      "callbackUrl": "Payment Callback URL",
+      "privateKey": "App Private Key",
+      "publicKey": "Alipay Public Key"
+    },
+    "alipayConfig": "Alipay Config",
+    "alreadySet": "Already set)",
+    "config": "Configuration",
+    "configFirst": "Configure before enabling",
+    "configured": "Configured",
+    "enableAlipay": "Enable Alipay",
+    "enableWechat": "Enable WeChat Pay",
+    "enabled": "Enabled",
+    "keepEmpty": "Leave empty to keep current value",
+    "notConfigured": "Not configured",
+    "notEnabled": "Not enabled",
+    "paymentConfig": "Payment Config",
+    "saveConfig": "Save Config",
+    "systemStatus": "System Status",
+    "testConnection": "Test Connection",
+    "testFailed": "Connection failed",
+    "testSuccess": "Connection successful",
+    "testing": "Testing...",
+    "title": "Admin Panel",
+    "wechat": {
+      "apiKeyV3": "API v3 Key",
+      "appId": "AppID",
+      "callbackUrl": "Payment Callback URL",
+      "certSerial": "Certificate Serial",
+      "merchantId": "Merchant ID",
+      "privateKey": "Merchant Private Key"
+    },
+    "wechatConfig": "WeChat Pay Config"
+  },
+  "auction": {
+    "amount": "Amount",
+    "bidFailed": "Bid failed",
+    "bidHistory": "Bid History",
+    "bidNow": "Bid Now",
+    "bidRecord": "Bid History",
+    "bidSuccess": "Bid placed!",
+    "bidder": "Bidder",
+    "bidders": "Bidders",
+    "bidding": "Bidding...",
+    "countdown": "Countdown",
+    "countdownEnd": "Ends in {sec}s",
+    "currentLot": "Current Lot",
+    "currentPrice": "Current Price",
+    "ended": "Ended",
+    "lot": "Lot",
+    "lotNumber": "Lot #",
+    "minIncrement": "¥{amount} minimum increment",
+    "nextBid": "Next Bid",
+    "noAuction": "No active auction",
+    "noBids": "No bids yet",
+    "placeBid": "Place Bid",
+    "realtimeBid": "Certified tree distribution · Real-time bidding status",
+    "round": "Round",
+    "rules": "Auction Rules",
+    "rulesDesc": "Tree & shrub lots only; 10-min countdown, ¥5 minimum increment per bid",
+    "starting": "Starting Soon",
+    "startingPrice": "Starting Price",
+    "subtitle": "Wholesale Tree & Shrub Auction",
+    "time": "Time",
+    "timeLeft": "Time Left",
+    "title": "Tree Auction",
+    "treeAuction": "🌳 Tree Auction"
+  },
+  "auth": {
+    "brandTitle": "Plant Collector · Since 2006",
+    "emailPlaceholder": "you@example.com",
+    "errExists": "This account is already registered, please sign in",
+    "errGeneric": "Operation failed",
+    "errInvalidCreds": "Invalid username or password",
+    "errInvalidPhone": "Invalid phone number format",
+    "errMissing": "Please fill all required fields",
+    "errPwdMismatch": "Passwords do not match",
+    "errWeakPwd": "Password too weak (min 8 chars, letters + numbers)",
+    "goLogin": "Go to login",
+    "hasAccount": "Already have an account?",
+    "labelEmail": "Email",
+    "labelFirstName": "First name",
+    "labelLastName": "Last name",
+    "labelPassword": "Password",
+    "labelPhone": "Phone number",
+    "labelPwdConfirm": "Confirm password",
+    "loginSubmitting": "Signing in…",
+    "loginSubtitle": "Sign in to view orders, favorites and supply-chain",
+    "noAccount": "Don't have an account?",
+    "optional": "optional",
+    "phonePlaceholder": "e.g. +1 415 555 0100",
+    "pwdHint": "At least 8 chars, mixing letters and numbers",
+    "pwdOnlyRetry": "Wrong password. Please re-enter your password.",
+    "registerOk": "Signup successful! Please sign in.",
+    "registerSubtitle": "After signup you are auto-tagged into the Plant Collector tier",
+    "registerTitle": "Become a Plant Collector",
+    "submitting": "Submitting…",
+    "tabEmail": "Email",
+    "tabPhone": "Phone"
+  },
+  "cart": {
+    "checkout": "Checkout",
+    "clear": "Clear",
+    "deleteSelected": "Delete Selected",
+    "empty": "Your cart is empty",
+    "flowerCart": "🛒 Cart",
+    "goShop": "Browse Shop",
+    "goShopping": "Browse Shop",
+    "products": "Products (",
+    "selectAll": "Select All",
+    "subtotal": "Subtotal",
+    "title": "Shopping Cart",
+    "totalItems": "items)"
+  },
   "common": {
-    "loading": "Loading...",
-    "save": "Save",
-    "saving": "Saving...",
-    "saveFailed": "Save failed",
-    "cancel": "Cancel",
-    "delete": "Delete",
-    "confirm": "Confirm",
-    "login": "Sign in",
-    "logout": "Logout",
-    "back": "Back",
-    "submit": "Submit",
-    "search": "Search",
-    "all": "All",
-    "select": "Select",
-    "edit": "Edit",
-    "close": "Close",
-    "retry": "Retry",
-    "networkError": "Network Error",
-    "noData": "No Data",
-    "success": "Success",
-    "error": "Error",
-    "freeShipping": "Free Shipping",
-    "total": "Total",
-    "price": "Price",
-    "quantity": "Quantity",
-    "status": "Status",
     "action": "Action",
-    "name": "Name",
-    "phone": "Phone",
     "address": "Address",
+    "all": "All",
+    "back": "Back",
+    "cancel": "Cancel",
     "category": "Category",
-    "image": "Image",
-    "copy": "Copy",
-    "download": "Download",
+    "close": "Close",
+    "cny": "CNY",
+    "confirm": "Confirm",
     "confirmDelete": "Confirm delete?",
     "copied": "Copied",
-    "cny": "CNY",
-    "register": "Sign Up"
+    "copy": "Copy",
+    "delete": "Delete",
+    "download": "Download",
+    "edit": "Edit",
+    "error": "Error",
+    "freeShipping": "Free Shipping",
+    "image": "Image",
+    "loading": "Loading...",
+    "login": "Sign in",
+    "logout": "Logout",
+    "name": "Name",
+    "networkError": "Network Error",
+    "noData": "No Data",
+    "phone": "Phone",
+    "price": "Price",
+    "quantity": "Quantity",
+    "register": "Sign Up",
+    "retry": "Retry",
+    "save": "Save",
+    "saveFailed": "Save failed",
+    "saving": "Saving...",
+    "search": "Search",
+    "select": "Select",
+    "status": "Status",
+    "submit": "Submit",
+    "success": "Success",
+    "total": "Total"
   },
-  "nav": {
-    "home": "Home",
-    "map": "Map",
-    "auction": "Auction",
-    "reverseAuction": "Reverse Auction",
-    "shop": "Shop",
-    "garden": "Garden",
-    "profile": "Profile",
-    "flowerShop": "Smart Supply Chain"
+  "error": {
+    "pageError": "An error occurred while loading",
+    "reload": "Reload",
+    "retry": "Retry",
+    "title": "Something went wrong",
+    "unknown": "Unknown error"
+  },
+  "garden": {
+    "achievements": "Garden Achievements",
+    "age": "Age",
+    "carbonValue": "Carbon Value",
+    "cm": "cm",
+    "dbh": "DBH",
+    "fertilize": "Fertilize",
+    "growing": "Growing",
+    "harvest": "Harvest",
+    "health": "Health Score",
+    "height": "Height",
+    "mature": "Mature",
+    "myGarden": "🌱 My Garden",
+    "noPlants": "No plantable flowers available",
+    "noPlots": "Your garden is empty, go plant something!",
+    "origin": "Origin",
+    "plant": "Plant",
+    "plantFailed": "Planting failed",
+    "plantSuccess": "Planted successfully!",
+    "plantable": "Plantable Flowers",
+    "planted": "Planted",
+    "planting": "Planting...",
+    "subtitle": "Plantable Flowers",
+    "title": "My Garden",
+    "treeDNA": "🧬 Tree DNA",
+    "treePassport": "🌳 Tree Passport",
+    "variety": "Variety",
+    "water": "Water",
+    "withered": "Withered"
   },
   "home": {
-    "title": "Flower Supply Chain",
-    "subtitle": "New Experience",
+    "clearSearch": "Clear search",
     "desc": "Connecting origin to market with intelligent matchmaking. Wholesale auction, flower reverse auction, map shopping, garden planting — your one-stop flower supply chain platform.",
     "enterAuction": "Enter Auction",
     "flowerReverse": "Flower Reverse Auction",
-    "quickEntry": {
-      "auction": {
-        "title": "Tree Auction",
-        "desc": "Wholesale tree & shrub bidding"
-      },
-      "reverse": {
-        "title": "Flower Reverse Auction",
-        "desc": "Lily flowers get cheaper over time"
-      },
-      "map": {
-        "title": "Map Shopping",
-        "desc": "Buy flowers nearby with one click"
-      },
-      "shop": {
-        "title": "Flower Shop",
-        "desc": "Curated picks & limited offers"
-      }
+    "footer": {
+      "address": "Address",
+      "addressValue": "Xingong, Fengtai, Beijing, China",
+      "beian_url": "",
+      "copyright": "Beijing-Tianjin-Hebei Flower Supply Chain Platform © 2026",
+      "email": "Email",
+      "icp": "",
+      "name": "Smart Supply Chain",
+      "phone": "Phone"
     },
-    "recommendTitle": "Recommended",
-    "viewMore": "View More →",
-    "noProducts": "No recommendations yet",
-    "unnamed": "Unnamed",
     "greenCert": {
-      "subtitle": "Green Certification · Carbon Credit",
-      "title": "Tree Green Certification & Carbon Credits",
+      "apply": "Apply for Green Certification →",
       "desc": "Every certified tree is traceable, measurable, and tradable. Building a trusted green value chain from planting to carbon sink.",
-      "stats": {
-        "trees": {
-          "label": "Certified Trees",
-          "unit": "trees"
+      "features": {
+        "bind": {
+          "desc": "Certified trees are bound to real-name planters/caretakers. Regular photo check-ins ensure tree survival and care quality.",
+          "details": [
+            "Real-name Binding",
+            "Quarterly Photo Check-in",
+            "AI Survival Detection",
+            "Care Rating System"
+          ],
+          "title": "Person-Tree Binding"
         },
+        "measure": {
+          "desc": "Calculate carbon sink based on species, DBH, age using IPCC standards. Quarterly updates, transparent and auditable.",
+          "details": [
+            "IPCC Carbon Formula",
+            "Quarterly Carbon Updates",
+            "Species Coefficient Database",
+            "Carbon Certificates"
+          ],
+          "title": "Carbon Measurement"
+        },
+        "trace": {
+          "desc": "Each certified tree has a unique traceability ID. Full lifecycle records from seedling to mature tree.",
+          "details": [
+            "Blockchain Evidence",
+            "GPS Planting Location",
+            "Full Lifecycle Records",
+            "QR Code Instant Lookup"
+          ],
+          "title": "Tree Traceability"
+        },
+        "trade": {
+          "desc": "Carbon sink automatically converts to Carbon Coins (CC) for shopping discounts, point redemption, or free market trading.",
+          "details": [
+            "Automatic Coin Minting",
+            "Shopping Discounts",
+            "Market Trading",
+            "Withdrawal & Transfer"
+          ],
+          "title": "Carbon Coin Trading"
+        }
+      },
+      "flowTitle": "Certification Flow",
+      "stats": {
         "carbon": {
           "label": "Carbon Sink",
           "unit": "tons CO₂"
@@ -94,739 +262,573 @@
           "label": "Carbon Coins",
           "unit": "CC"
         },
+        "trees": {
+          "label": "Certified Trees",
+          "unit": "trees"
+        },
         "users": {
           "label": "Participants",
           "unit": "users"
         }
       },
-      "features": {
-        "trace": {
-          "title": "Tree Traceability",
-          "desc": "Each certified tree has a unique traceability ID. Full lifecycle records from seedling to mature tree.",
-          "details": [
-            "Blockchain Evidence",
-            "GPS Planting Location",
-            "Full Lifecycle Records",
-            "QR Code Instant Lookup"
-          ]
-        },
-        "bind": {
-          "title": "Person-Tree Binding",
-          "desc": "Certified trees are bound to real-name planters/caretakers. Regular photo check-ins ensure tree survival and care quality.",
-          "details": [
-            "Real-name Binding",
-            "Quarterly Photo Check-in",
-            "AI Survival Detection",
-            "Care Rating System"
-          ]
-        },
-        "measure": {
-          "title": "Carbon Measurement",
-          "desc": "Calculate carbon sink based on species, DBH, age using IPCC standards. Quarterly updates, transparent and auditable.",
-          "details": [
-            "IPCC Carbon Formula",
-            "Quarterly Carbon Updates",
-            "Species Coefficient Database",
-            "Carbon Certificates"
-          ]
-        },
-        "trade": {
-          "title": "Carbon Coin Trading",
-          "desc": "Carbon sink automatically converts to Carbon Coins (CC) for shopping discounts, point redemption, or free market trading.",
-          "details": [
-            "Automatic Coin Minting",
-            "Shopping Discounts",
-            "Market Trading",
-            "Withdrawal & Transfer"
-          ]
-        }
-      },
       "steps": {
-        "submit": {
-          "title": "Submit",
-          "desc": "Upload tree info + ID verification + GPS location"
-        },
-        "review": {
-          "title": "Approved",
-          "desc": "Platform reviews and issues green certification label"
-        },
         "bind": {
-          "title": "Binding",
-          "desc": "Planter binds to tree, carbon measurement begins"
+          "desc": "Planter binds to tree, carbon measurement begins",
+          "title": "Binding"
         },
         "checkin": {
-          "title": "Check-in",
-          "desc": "Quarterly photo with plant + growth data upload"
+          "desc": "Quarterly photo with plant + growth data upload",
+          "title": "Check-in"
         },
         "issue": {
-          "title": "Coin Issued",
-          "desc": "Carbon coins auto-issued based on carbon sink"
+          "desc": "Carbon coins auto-issued based on carbon sink",
+          "title": "Coin Issued"
+        },
+        "review": {
+          "desc": "Platform reviews and issues green certification label",
+          "title": "Approved"
+        },
+        "submit": {
+          "desc": "Upload tree info + ID verification + GPS location",
+          "title": "Submit"
         },
         "use": {
-          "title": "Trade & Redeem",
-          "desc": "Use coins for shopping discounts or market trading"
+          "desc": "Use coins for shopping discounts or market trading",
+          "title": "Trade & Redeem"
         }
       },
-      "apply": "Apply for Green Certification →",
-      "flowTitle": "Certification Flow"
+      "subtitle": "Green Certification · Carbon Credit",
+      "title": "Tree Green Certification & Carbon Credits"
     },
-    "successStories": {
-      "subtitle": "Success Stories",
-      "title": "Garden & Landscape · Success Stories",
-      "desc": "From villa courtyards to balcony gardens, every project delivered with care",
-      "items": [
-        {
-          "title": "Beijing Villa Courtyard",
-          "desc": "25 white pines + 80 roses, 30 days from bare ground to garden",
-          "tag": "Villa Courtyard"
-        },
-        {
-          "title": "Tianjin Wedding Florals",
-          "desc": "2000 lilies + 500 roses, 48-hour delivery",
-          "tag": "Wedding Florals"
-        },
-        {
-          "title": "Langfang Community Greening",
-          "desc": "300 mixed trees & shrubs, quarterly maintenance included",
-          "tag": "Community Greening"
-        },
-        {
-          "title": "Shunyi Greenhouse Supply",
-          "desc": "2000 potted flowers delivered weekly",
-          "tag": "Commercial Supply"
-        },
-        {
-          "title": "Baoding Cemetery Landscape",
-          "desc": "Evergreen trees + seasonal flowers for year-round beauty",
-          "tag": "Landscape Design"
-        },
-        {
-          "title": "Fengtai Balcony Garden",
-          "desc": "2-meter space transformed into a mini garden",
-          "tag": "Balcony Garden"
-        }
-      ]
+    "greenCertSubtitle": "Green Certification · Carbon Credit",
+    "intelligentSupply": "Intelligent Supply Chain",
+    "noProducts": "No recommendations yet",
+    "quickEntry": {
+      "auction": {
+        "desc": "Wholesale tree & shrub bidding",
+        "title": "Tree Auction"
+      },
+      "map": {
+        "desc": "Buy flowers nearby with one click",
+        "title": "Map Shopping"
+      },
+      "reverse": {
+        "desc": "Lily flowers get cheaper over time",
+        "title": "Flower Reverse Auction"
+      },
+      "shop": {
+        "desc": "Curated picks & limited offers",
+        "title": "Flower Shop"
+      }
     },
+    "recommendTitle": "Recommended",
     "reviews": {
-      "subtitle": "Customer Reviews",
-      "title": "Customer Reviews",
       "desc": "Real voices from real buyers",
       "items": [
         {
-          "name": "Mr. Zhang",
           "loc": "Chaoyang, Beijing",
+          "name": "Mr. Zhang",
           "text": "95%+ survival rate for white pines! Still thriving after a year — way better than flower markets!"
         },
         {
-          "name": "Ms. Li",
           "loc": "Nankai, Tianjin",
+          "name": "Ms. Li",
           "text": "Cold chain for wedding flowers — lilies were so full, every guest asked where we ordered."
         },
         {
-          "name": "Manager Wang",
           "loc": "Langfang Dev Zone",
+          "name": "Manager Wang",
           "text": "One-click community greening with delivery and planting. Saved a fortune on property fees."
         },
         {
-          "name": "Boss Zhao",
           "loc": "Shunyi Flower Market",
+          "name": "Boss Zhao",
           "text": "Stable weekly supply of 2000 pots. Consistent quality, customers keep coming back."
         },
         {
-          "name": "Ms. Liu",
           "loc": "Baoding",
+          "name": "Ms. Liu",
           "text": "Professional year-round green plan for the cemetery. Families are very satisfied."
         },
         {
-          "name": "Mr. Chen",
           "loc": "Fengtai",
+          "name": "Mr. Chen",
           "text": "Turned my 2m balcony into a garden — wife says it's the best gift this year!"
         }
-      ]
+      ],
+      "subtitle": "Customer Reviews",
+      "title": "Customer Reviews"
     },
-    "footer": {
-      "name": "Smart Supply Chain",
-      "copyright": "Beijing-Tianjin-Hebei Flower Supply Chain Platform © 2026",
-      "phone": "Phone",
-      "email": "Email",
-      "address": "Address",
-      "addressValue": "Xingong, Fengtai, Beijing, China"
-    },
-    "intelligentSupply": "Intelligent Supply Chain",
-    "greenCertSubtitle": "Green Certification · Carbon Credit",
-    "step": "Step {n}",
-    "searchTitle": "Search products",
-    "searchSubtitle": "",
     "searchPlaceholder": "Search flowers, trees, categories, supplier keywords…",
-    "searching": "Searching…",
-    "clearSearch": "Clear search",
     "searchProductsTitle": "Search results",
-    "searchResultMeta": "Keyword “{keyword}” found {count} related products"
+    "searchResultMeta": "Keyword “{keyword}” found {count} related products",
+    "searchSubtitle": "",
+    "searchTitle": "Search products",
+    "searching": "Searching…",
+    "step": "Step {n}",
+    "subtitle": "New Experience",
+    "successStories": {
+      "desc": "From villa courtyards to balcony gardens, every project delivered with care",
+      "items": [
+        {
+          "desc": "25 white pines + 80 roses, 30 days from bare ground to garden",
+          "tag": "Villa Courtyard",
+          "title": "Beijing Villa Courtyard"
+        },
+        {
+          "desc": "2000 lilies + 500 roses, 48-hour delivery",
+          "tag": "Wedding Florals",
+          "title": "Tianjin Wedding Florals"
+        },
+        {
+          "desc": "300 mixed trees & shrubs, quarterly maintenance included",
+          "tag": "Community Greening",
+          "title": "Langfang Community Greening"
+        },
+        {
+          "desc": "2000 potted flowers delivered weekly",
+          "tag": "Commercial Supply",
+          "title": "Shunyi Greenhouse Supply"
+        },
+        {
+          "desc": "Evergreen trees + seasonal flowers for year-round beauty",
+          "tag": "Landscape Design",
+          "title": "Baoding Cemetery Landscape"
+        },
+        {
+          "desc": "2-meter space transformed into a mini garden",
+          "tag": "Balcony Garden",
+          "title": "Fengtai Balcony Garden"
+        }
+      ],
+      "subtitle": "Success Stories",
+      "title": "Garden & Landscape · Success Stories"
+    },
+    "title": "Flower Supply Chain",
+    "unnamed": "Unnamed",
+    "viewMore": "View More →"
   },
-  "auction": {
-    "title": "Tree Auction",
-    "subtitle": "Wholesale Tree & Shrub Auction",
-    "currentLot": "Current Lot",
-    "bidHistory": "Bid History",
-    "placeBid": "Place Bid",
-    "bidding": "Bidding...",
-    "bidSuccess": "Bid placed!",
-    "bidFailed": "Bid failed",
-    "startingPrice": "Starting Price",
-    "currentPrice": "Current Price",
-    "nextBid": "Next Bid",
-    "countdown": "Countdown",
-    "ended": "Ended",
-    "starting": "Starting Soon",
-    "noAuction": "No active auction",
-    "round": "Round",
-    "lot": "Lot",
-    "lotNumber": "Lot #",
-    "bidders": "Bidders",
-    "timeLeft": "Time Left",
-    "rules": "Auction Rules",
-    "rulesDesc": "Tree & shrub lots only; 10-min countdown, ¥5 minimum increment per bid",
-    "treeAuction": "🌳 Tree Auction",
-    "realtimeBid": "Certified tree distribution · Real-time bidding status",
-    "bidRecord": "Bid History",
-    "bidder": "Bidder",
-    "amount": "Amount",
-    "time": "Time",
-    "noBids": "No bids yet",
-    "bidNow": "Bid Now",
-    "minIncrement": "¥{amount} minimum increment",
-    "countdownEnd": "Ends in {sec}s"
+  "langSwitch": {
+    "ar": "العربية",
+    "de": "Deutsch",
+    "en": "English",
+    "fr": "Français",
+    "ja": "日本語",
+    "zh": "中文"
   },
-  "reverseAuction": {
-    "title": "Flower Reverse Auction",
-    "subtitle": "Lily flowers get cheaper over time",
-    "live": "Reverse LIVE",
-    "currentPrice": "Current Price",
-    "nextDrop": "Next Drop",
-    "nextDropIn": "Auto-drop in {min} min",
-    "timeLeft": "Time Left",
-    "round": "One Round",
-    "buyNow": "Buy Now",
-    "bought": "Purchased",
-    "priceHistory": "Price History",
-    "auctionRules": "Reverse Auction Rules",
-    "rulesDesc": "Price drops automatically every few minutes — the longer you wait, the cheaper! But someone else might buy it first, so act fast!",
-    "lilyAuction": "🌷 Flower Reverse Auction",
-    "countdown": "Countdown",
-    "freeClaim": "Free Claim",
-    "dropDiscount": "Price Drop",
-    "minAgo": "{min} min ago",
-    "followers": "followers",
-    "lowRisk": "Low Risk",
-    "lily": "Lily",
-    "cutFlower": "Cut Flower"
+  "login": {
+    "adminHint": "Admins login with phone + password",
+    "alreadyLoggedIn": "Already logged in, redirecting...",
+    "appSlogan": "Finding the perfect home for every flower",
+    "appTitle": "FlowerPal",
+    "codeHint": "Enter 123456 to login",
+    "codeLogin": "Code Login",
+    "enterCode": "Please enter verification code",
+    "enterPassword": "Please enter password",
+    "getCode": "Get Code",
+    "invalidPhone": "Please enter a valid phone number",
+    "loggingIn": "Logging in...",
+    "loginButton": "Login",
+    "loginFailed": "Login failed",
+    "loginSuccess": "Login successful",
+    "noAccount": "Don't have an account?",
+    "password": "Password",
+    "passwordPlaceholder": "Password",
+    "phoneLogin": "Password Login",
+    "phoneNumber": "Phone",
+    "phonePlaceholder": "Phone Number",
+    "register": "Register",
+    "title": "Login",
+    "verifyCode": "Verification Code"
   },
-  "shop": {
-    "title": "Flower Shop",
-    "subtitle": "Curated picks & limited offers",
-    "addToCart": "Add to Cart",
-    "added": "Added",
-    "cart": "Cart",
-    "items": "items",
-    "noProducts": "No products available",
-    "category": "Category",
-    "priceRange": "Price Range",
-    "sort": "Sort",
-    "default": "Default",
-    "priceAsc": "Price: Low to High",
-    "priceDesc": "Price: High to Low",
-    "newest": "Newest",
-    "flowerShop": "🛒 Flower Shop",
-    "searchPlaceholder": "Search flowers...",
-    "cartCount": "{count} items"
+  "map": {
+    "dealerMap": "🏪 Dealer Map",
+    "flowerMap": "🗺 Map Shopping",
+    "locateFailed": "Location failed",
+    "locationFailed": "Location failed",
+    "nearbyShops": "Nearby Shops",
+    "originProof": "Origin Traceability",
+    "relocate": "Relocate",
+    "shopShortVideo": "Origin footage · Shop videos",
+    "shopVideo": "Shop Videos",
+    "subtitle": "Buy flowers nearby with one click",
+    "supplierMap": "🗺 Supplier Map",
+    "title": "Map Shopping"
   },
-  "cart": {
-    "title": "Shopping Cart",
-    "empty": "Your cart is empty",
-    "goShopping": "Browse Shop",
-    "selectAll": "Select All",
-    "deleteSelected": "Delete Selected",
-    "subtotal": "Subtotal",
-    "totalItems": "items)",
-    "checkout": "Checkout",
-    "products": "Products (",
-    "flowerCart": "🛒 Cart",
-    "goShop": "Browse Shop",
-    "clear": "Clear"
+  "nav": {
+    "auction": "Auction",
+    "flowerShop": "Smart Supply Chain",
+    "garden": "Garden",
+    "home": "Home",
+    "map": "Map",
+    "profile": "Profile",
+    "reverseAuction": "Reverse Auction",
+    "shop": "Shop"
+  },
+  "order": {
+    "status": {
+      "cancelled": "Cancelled",
+      "completed": "Completed",
+      "paid": "Paid",
+      "pending": "Pending",
+      "shipped": "Shipped"
+    }
   },
   "payment": {
-    "title": "Confirm Payment",
-    "orderInfo": "Order Info",
-    "shippingAddress": "Shipping Address",
-    "paymentMethod": "Payment Method",
-    "wechatPay": "WeChat Pay",
-    "alipay": "Alipay",
-    "mockPay": "Mock Payment",
-    "payNow": "Pay Now",
-    "paying": "Processing...",
-    "paySuccess": "Payment successful!",
-    "payFailed": "Payment failed",
-    "orderTotal": "Order Total",
-    "createOrderFailed": "Failed to create order",
-    "orderAmount": "Order Amount",
-    "confirmPay": "Confirm Payment",
-    "orderCreated": "Payment created",
-    "mockPayDesc": "Mock payment (test environment)",
+    "addOrChangeAddress": "+ Add / Use another address",
+    "addressDeleted": "Address deleted",
+    "addressIncomplete": "Incomplete address, cannot proceed with payment",
+    "addressIncompleteHint": "Incomplete shipping address. Payment button is disabled.",
+    "addressRequired": "Please fill in recipient name, phone, province, city, district and detail address",
+    "addressSaved": "Address saved",
+    "addressTip": "Please fill in the complete address before payment, the order will be synchronized to order management",
     "aggregatePayment": "Aggregate Payment",
-    "internationalVersion": "International Version",
-    "orderSummary": "Order Summary",
-    "total": "Total",
+    "alipay": "Alipay",
+    "amountDue": "Amount Due",
+    "city": "City",
+    "cnVersion": "CN Version",
+    "configured": "Configured",
+    "confirmPay": "Confirm Payment",
+    "createOrderFailed": "Failed to create order",
+    "creating": "Creating…",
+    "defaultLabel": "Default",
+    "defaultSet": "Default set",
+    "deleteAddress": "Delete",
+    "detailAddress": "Detail address: street, building number",
+    "district": "District",
+    "fillAddressFirst": "Please fill in the complete shipping address before paying.",
+    "fillAddressToPay": "Please fill in shipping address",
+    "filled": "Filled",
+    "globalVersion": "International Version",
     "goodsCountTip": "{count} Item(s) · Stripe / PayPal",
     "goodsCountTipCN": "{count} Item(s) · Alipay / WeChat Pay",
     "goodsCountTipDev": "{count} Item(s) · Multiple payment methods",
-    "filled": "Filled",
+    "internationalVersion": "International Version",
+    "mockPay": "Mock Payment",
+    "mockPayDesc": "Mock payment (test environment)",
+    "notConfigured": "Not configured, using mock",
     "notFilled": "Not filled",
-    "addressTip": "Please fill in the complete address before payment, the order will be synchronized to order management",
-    "use": "Use",
-    "addOrChangeAddress": "+ Add / Use another address",
-    "selectPaymentMethod": "Select Payment Method",
-    "payWithStripe": "Pay with Stripe",
+    "orderAmount": "Order Amount",
+    "orderCreated": "Payment created",
+    "orderInfo": "Order Info",
+    "orderNumber": "Order No.",
+    "orderSummary": "Order Summary",
+    "orderTotal": "Order Total",
+    "payFailed": "Payment failed",
+    "payNow": "Pay Now",
+    "paySuccess": "Payment successful!",
     "payWith": "Pay with {method}",
+    "payWithStripe": "Pay with Stripe",
+    "paying": "Processing...",
+    "paymentMethod": "Payment Method",
+    "phone": "Phone",
+    "pleaseLogin": "Please log in",
+    "province": "Province",
+    "recipient": "Recipient",
+    "redirecting": "Redirecting…",
     "saveAndUse": "Save and use for this payment",
     "saving": "Saving…",
-    "addressSaved": "Address saved",
-    "addressRequired": "Please fill in recipient name, phone, province, city, district and detail address",
-    "addressIncomplete": "Incomplete address, cannot proceed with payment",
-    "addressIncompleteHint": "Incomplete shipping address. Payment button is disabled.",
-    "fillAddressFirst": "Please fill in the complete shipping address before paying.",
-    "fillAddressToPay": "Please fill in shipping address",
-    "creating": "Creating…",
-    "redirecting": "Redirecting…",
-    "orderNumber": "Order No.",
-    "amountDue": "Amount Due",
-    "viewOrder": "📋 View Order",
-    "wechatScanPay": "Scan the QR code with WeChat to complete payment",
-    "wechatInApp": "Please complete payment within WeChat",
-    "wechatScan": "📱 Scan to Pay",
-    "wechatH5": "🌐 H5 Pay",
-    "configured": "Configured",
-    "notConfigured": "Not configured, using mock",
-    "wechatTagline": "WeChat Scan / H5 / JSAPI",
-    "cnVersion": "CN Version",
-    "globalVersion": "International Version",
-    "pleaseLogin": "Please log in",
-    "recipient": "Recipient",
-    "phone": "Phone",
-    "province": "Province",
-    "city": "City",
-    "district": "District",
-    "detailAddress": "Detail address: street, building number",
-    "addressDeleted": "Address deleted",
-    "defaultSet": "Default set",
-    "defaultLabel": "Default",
+    "selectPaymentMethod": "Select Payment Method",
     "setDefault": "Set default",
-    "deleteAddress": "Delete"
+    "shippingAddress": "Shipping Address",
+    "title": "Confirm Payment",
+    "total": "Total",
+    "use": "Use",
+    "viewOrder": "📋 View Order",
+    "wechatH5": "🌐 H5 Pay",
+    "wechatInApp": "Please complete payment within WeChat",
+    "wechatPay": "WeChat Pay",
+    "wechatScan": "📱 Scan to Pay",
+    "wechatScanPay": "Scan the QR code with WeChat to complete payment",
+    "wechatTagline": "WeChat Scan / H5 / JSAPI"
   },
-  "login": {
-    "title": "Login",
-    "phoneLogin": "Password Login",
-    "phoneNumber": "Phone",
-    "password": "Password",
-    "loginButton": "Login",
-    "loggingIn": "Logging in...",
-    "loginSuccess": "Login successful",
-    "loginFailed": "Login failed",
-    "noAccount": "Don't have an account?",
-    "register": "Register",
-    "codeLogin": "Code Login",
-    "verifyCode": "Verification Code",
-    "getCode": "Get Code",
-    "phonePlaceholder": "Phone Number",
-    "passwordPlaceholder": "Password",
-    "codeHint": "Enter 123456 to login",
-    "adminHint": "Admins login with phone + password",
-    "alreadyLoggedIn": "Already logged in, redirecting...",
-    "invalidPhone": "Please enter a valid phone number",
-    "enterPassword": "Please enter password",
-    "enterCode": "Please enter verification code",
-    "appTitle": "FlowerPal",
-    "appSlogan": "Finding the perfect home for every flower"
-  },
-  "profile": {
-    "title": "Profile",
-    "myOrders": "My Orders",
-    "myGarden": "My Garden",
-    "settings": "Settings",
-    "flowerProfile": "👤 Profile",
-    "certifiedBuyer": "Certified Buyer",
-    "superAdmin": "Super Admin",
-    "flowerFriend": "Flower Friend",
-    "health": "Health",
-    "achievements": "Garden Achievements",
-    "flowerCompanion": "FlowerPal",
-    "adminCenter": "Admin Center",
-    "logout": "Log Out",
-    "score": "Rating",
-    "experience": "Experience",
-    "years": "years",
-    "address": "Shipping Address",
-    "contactService": "Contact Support",
-    "addNew": "+ Add",
-    "default": "Default",
-    "edit": "Edit",
-    "editAddress": "Edit Address",
-    "newAddress": "New Address",
-    "name": "Name",
-    "province": "Province",
-    "city": "City",
-    "district": "District",
-    "detailAddress": "Detail Address",
-    "setDefault": "Set as Default",
-    "addressSaved": "Address saved",
-    "fillRequired": "Please fill in name, phone and address",
-    "loginPrompt": "Log in to view profile",
-    "paymentConfig": "Payment config, system admin",
-    "planted": "Planted",
-    "matured": "Matured",
-    "gifted": "Gifted"
-  },
-  "map": {
-    "title": "Map Shopping",
-    "subtitle": "Buy flowers nearby with one click",
-    "relocate": "Relocate",
-    "locateFailed": "Location failed",
-    "supplierMap": "🗺 Supplier Map",
-    "dealerMap": "🏪 Dealer Map",
-    "nearbyShops": "Nearby Shops",
-    "originProof": "Origin Traceability",
-    "shopVideo": "Shop Videos",
-    "shopShortVideo": "Origin footage · Shop videos",
-    "flowerMap": "🗺 Map Shopping",
-    "locationFailed": "Location failed"
-  },
-  "garden": {
-    "title": "My Garden",
-    "subtitle": "Plantable Flowers",
-    "plant": "Plant",
-    "planting": "Planting...",
-    "plantSuccess": "Planted successfully!",
-    "plantFailed": "Planting failed",
-    "water": "Water",
-    "fertilize": "Fertilize",
-    "harvest": "Harvest",
-    "myGarden": "🌱 My Garden",
-    "plantable": "Plantable Flowers",
-    "achievements": "Garden Achievements",
-    "treeDNA": "🧬 Tree DNA",
-    "treePassport": "🌳 Tree Passport",
-    "height": "Height",
-    "dbh": "DBH",
-    "age": "Age",
-    "health": "Health Score",
-    "origin": "Origin",
-    "variety": "Variety",
-    "carbonValue": "Carbon Value",
-    "noPlants": "No plantable flowers available",
-    "planted": "Planted",
-    "growing": "Growing",
-    "mature": "Mature",
-    "withered": "Withered",
-    "cm": "cm",
-    "noPlots": "Your garden is empty, go plant something!"
-  },
-  "admin": {
-    "title": "Admin Panel",
-    "config": "Configuration",
-    "testConnection": "Test Connection",
-    "testing": "Testing...",
-    "testSuccess": "Connection successful",
-    "testFailed": "Connection failed",
-    "saveConfig": "Save Config",
-    "enableWechat": "Enable WeChat Pay",
-    "enableAlipay": "Enable Alipay",
-    "enabled": "Enabled",
-    "configured": "Configured",
-    "notConfigured": "Not configured",
-    "notEnabled": "Not enabled",
-    "configFirst": "Configure before enabling",
-    "keepEmpty": "Leave empty to keep current value",
-    "alreadySet": "Already set)",
-    "wechat": {
-      "merchantId": "Merchant ID",
-      "appId": "AppID",
-      "apiKeyV3": "API v3 Key",
-      "certSerial": "Certificate Serial",
-      "privateKey": "Merchant Private Key",
-      "callbackUrl": "Payment Callback URL"
+  "peonyRegister": {
+    "alliance": {
+      "branch": {
+        "emoji": "🌸",
+        "sub": "Heze / Luoyang / Beijing / Yunnan",
+        "title": "Branch"
+      },
+      "hq": {
+        "emoji": "🏛",
+        "sub": "Heze / Caozhou Peony Garden",
+        "title": "HQ"
+      },
+      "overseas": {
+        "emoji": "🌍",
+        "sub": "Global peony enthusiasts",
+        "title": "Overseas User"
+      },
+      "partner": {
+        "emoji": "🤝",
+        "sub": "International distribution",
+        "title": "Overseas Partner"
+      }
     },
-    "alipay": {
-      "appId": "App ID",
-      "privateKey": "App Private Key",
-      "publicKey": "Alipay Public Key",
-      "callbackUrl": "Payment Callback URL"
+    "back": "Back",
+    "badge": {
+      "bloom": "Full Bloom",
+      "budding": "Budding",
+      "rooted": "Rooted",
+      "seedling": "New Bud",
+      "sprout": "Sprout"
     },
-    "wechatConfig": "WeChat Pay Config",
-    "alipayConfig": "Alipay Config",
-    "systemStatus": "System Status",
-    "paymentConfig": "Payment Config"
-  },
-  "supplierVideos": {
-    "title": "Shop Videos",
-    "subtitle": "Origin footage · Shop videos",
-    "supplier": "Supplier"
-  },
-  "error": {
-    "title": "Something went wrong",
-    "retry": "Retry",
-    "pageError": "An error occurred while loading",
-    "unknown": "Unknown error",
-    "reload": "Reload"
+    "done": {
+      "enter": "Enter Alliance",
+      "sub": "Welcome to Peony Alliance. Your badge grows with your contribution.",
+      "title": "Registration Complete · New Bud"
+    },
+    "footer": "© Peony Alliance",
+    "identity": {
+      "admin": {
+        "emoji": "👑",
+        "sub": "Create org · invite members",
+        "title": "Admin"
+      },
+      "staff": {
+        "emoji": "🧑‍🌾",
+        "sub": "Join via invite code",
+        "title": "Member"
+      }
+    },
+    "next": "Next",
+    "position": {
+      "aftersales": {
+        "emoji": "💬",
+        "label": "After-sales"
+      },
+      "info": {
+        "emoji": "📋",
+        "label": "Info Officer"
+      },
+      "operation": {
+        "emoji": "🌱",
+        "label": "Operations"
+      },
+      "sales": {
+        "emoji": "💐",
+        "label": "Sales"
+      }
+    },
+    "pwSaveFailed": "Browser refused to save your password. Please allow autofill and try again.",
+    "pwSaveUnsupported": "Your browser cannot auto-save passwords. Please use latest Chrome / Edge / Safari for the best experience.",
+    "species": {
+      "cutflower": "Cut Flower",
+      "moutan": "Moutan",
+      "other": "Other",
+      "peony": "Peony",
+      "potted": "Potted",
+      "seedling": "Seedling"
+    },
+    "step1": {
+      "confirm": "Confirm Password",
+      "confirmPh": "Must match",
+      "mismatch": "Passwords do not match",
+      "password": "Password",
+      "passwordPh": "At least 6 chars",
+      "phone": "Phone / Username",
+      "phonePh": "Digits only",
+      "pwSaveAck": "I agree to let my browser save this password. Registration cannot proceed without saving — ensures smooth future logins.",
+      "sub": "Your phone is your username; browser will save the password",
+      "title": "Account & Key"
+    },
+    "step2": {
+      "sub": "Which branch do you belong to?",
+      "title": "Alliance Branch"
+    },
+    "step3": {
+      "sub": "Choose your role in this alliance",
+      "title": "My Identity"
+    },
+    "step4": {
+      "address": "Full Address",
+      "addressPh": "Street · No. · Park",
+      "capacity": "Cultivation (mu)",
+      "capacityPh": "Estimated area",
+      "city": "City",
+      "district": "District",
+      "entity": "Legal Name",
+      "entityPh": "Company / co-op / nursery name",
+      "inviteCode": "Invite Code",
+      "inviteCodePh": "6-char code",
+      "positions": "Roles (multi-select)",
+      "province": "Province",
+      "species": "Main Species",
+      "sub": "One step from bloom",
+      "title": "Final Details"
+    },
+    "submit": "Begin",
+    "submitFailed": "Registration failed",
+    "submitting": "Blooming…",
+    "subtitle": "China's National Flower · Global Alliance · Phone as ID",
+    "title": "Peony Alliance Registration"
   },
   "product": {
     "addToCart": "Add",
     "price": "¥{price}",
     "unit": "{count} trees"
   },
-  "order": {
-    "status": {
-      "pending": "Pending",
-      "paid": "Paid",
-      "shipped": "Shipped",
-      "completed": "Completed",
-      "cancelled": "Cancelled"
-    }
-  },
-  "langSwitch": {
-    "zh": "中文",
-    "en": "English",
-    "de": "Deutsch",
-    "ja": "日本語",
-    "fr": "Français",
-    "ar": "العربية"
+  "profile": {
+    "achievements": "Garden Achievements",
+    "addNew": "+ Add",
+    "address": "Shipping Address",
+    "addressSaved": "Address saved",
+    "adminCenter": "Admin Center",
+    "certifiedBuyer": "Certified Buyer",
+    "city": "City",
+    "contactService": "Contact Support",
+    "default": "Default",
+    "detailAddress": "Detail Address",
+    "district": "District",
+    "edit": "Edit",
+    "editAddress": "Edit Address",
+    "experience": "Experience",
+    "fillRequired": "Please fill in name, phone and address",
+    "flowerCompanion": "FlowerPal",
+    "flowerFriend": "Flower Friend",
+    "flowerProfile": "👤 Profile",
+    "gifted": "Gifted",
+    "health": "Health",
+    "loginPrompt": "Log in to view profile",
+    "logout": "Log Out",
+    "matured": "Matured",
+    "myGarden": "My Garden",
+    "myOrders": "My Orders",
+    "name": "Name",
+    "newAddress": "New Address",
+    "paymentConfig": "Payment config, system admin",
+    "planted": "Planted",
+    "province": "Province",
+    "score": "Rating",
+    "setDefault": "Set as Default",
+    "settings": "Settings",
+    "superAdmin": "Super Admin",
+    "title": "Profile",
+    "years": "years"
   },
   "regionSwitch": {
-    "title": "Language / Region",
-    "section": "Language & Region",
-    "useCurrent": "📍 Use current location",
+    "currentDetected": "Detected from current location: {region}",
     "locating": "Locating…",
-    "recommended": "Recommended",
-    "selected": "Selected",
-    "preciseUnavailable": "Precise browser location is unavailable",
-    "preciseFailed": "Precise location failed",
     "networkDetected": "Detected by network location: {region}",
+    "preciseFailed": "Precise location failed",
+    "preciseUnavailable": "Precise browser location is unavailable",
+    "recommended": "Recommended",
+    "section": "Language & Region",
+    "selected": "Selected",
     "timezoneDetected": "{reason}; detected by timezone: {region}",
-    "currentDetected": "Detected from current location: {region}"
+    "title": "Language / Region",
+    "useCurrent": "📍 Use current location"
   },
   "regions": {
     "cn": {
-      "name": "China",
-      "short": "China",
       "badge": "China · Chinese garden supply chain",
-      "title": "Plant Collector",
-      "subtitle": "A New Supply Chain Experience",
       "desc": "Built around Chinese gardens and northern horticulture markets, connecting origins, merchants, and courtyard scenarios. Tree auctions, flower reverse auctions, map shopping, and garden planting in one place.",
-      "plantLine": "Recommended: peony, podocarpus, lacebark pine, osmanthus, rose, Chinese bonsai"
-    },
-    "us": {
-      "name": "United States",
-      "short": "US",
-      "badge": "United States · American garden supply chain",
-      "title": "Plant Collector",
+      "name": "China",
+      "plantLine": "Recommended: peony, podocarpus, lacebark pine, osmanthus, rose, Chinese bonsai",
+      "short": "China",
       "subtitle": "A New Supply Chain Experience",
-      "desc": "For American yards, garden centers, and community landscaping, with origin-direct sourcing, map-based purchasing, and reliable fulfillment.",
-      "plantLine": "Recommended: hydrangea, lavender, rose, succulents, ornamental grasses, landscape trees"
+      "title": "Plant Collector"
     },
     "de": {
-      "name": "Germany",
-      "short": "Germany",
       "badge": "Germany · European forest garden supply chain",
-      "title": "Plant Collector",
-      "subtitle": "A New Supply Chain Experience",
       "desc": "For European gardens, forest-style landscapes, and sustainable horticulture procurement, emphasizing green certification, carbon value, origin tracking, and rigorous fulfillment.",
-      "plantLine": "Recommended: clematis, cornflower, herbs, bulbs, spruce, European beech"
-    },
-    "jp": {
-      "name": "Japan",
-      "short": "Japan",
-      "badge": "Japan · Japanese garden supply chain",
-      "title": "Plant Collector",
+      "name": "Germany",
+      "plantLine": "Recommended: clematis, cornflower, herbs, bulbs, spruce, European beech",
+      "short": "Germany",
       "subtitle": "A New Supply Chain Experience",
-      "desc": "For Japanese gardens, rooftop greening, and boutique horticulture, emphasizing curated origins, precise fulfillment, and seasonal flower supply.",
-      "plantLine": "Recommended: cherry blossom, maple, hydrangea, camellia, black pine, moss garden plants"
+      "title": "Plant Collector"
     },
     "fr": {
-      "name": "France",
-      "short": "France",
       "badge": "France · French garden supply chain",
-      "title": "Plant Collector",
-      "subtitle": "A New Supply Chain Experience",
       "desc": "For French gardens, estate landscapes, and urban floristry, highlighting romantic borders, terroir-driven sourcing, and premium horticulture fulfillment.",
-      "plantLine": "Recommended: lavender, iris, rose, plane tree, grapevine, French border plants"
+      "name": "France",
+      "plantLine": "Recommended: lavender, iris, rose, plane tree, grapevine, French border plants",
+      "short": "France",
+      "subtitle": "A New Supply Chain Experience",
+      "title": "Plant Collector"
+    },
+    "jp": {
+      "badge": "Japan · Japanese garden supply chain",
+      "desc": "For Japanese gardens, rooftop greening, and boutique horticulture, emphasizing curated origins, precise fulfillment, and seasonal flower supply.",
+      "name": "Japan",
+      "plantLine": "Recommended: cherry blossom, maple, hydrangea, camellia, black pine, moss garden plants",
+      "short": "Japan",
+      "subtitle": "A New Supply Chain Experience",
+      "title": "Plant Collector"
     },
     "sa": {
-      "name": "Saudi Arabia",
-      "short": "Saudi",
       "badge": "Saudi Arabia · Desert oasis supply chain",
-      "title": "Plant Collector",
-      "subtitle": "A New Supply Chain Experience",
       "desc": "For desert oases, drought-tolerant landscapes, and premium urban greening, focused on heat-tolerant plants, water efficiency, and reliable cross-region fulfillment.",
-      "plantLine": "Recommended: date palm, palm, bougainvillea, desert rose, olive, drought-tolerant herbs"
+      "name": "Saudi Arabia",
+      "plantLine": "Recommended: date palm, palm, bougainvillea, desert rose, olive, drought-tolerant herbs",
+      "short": "Saudi",
+      "subtitle": "A New Supply Chain Experience",
+      "title": "Plant Collector"
+    },
+    "us": {
+      "badge": "United States · American garden supply chain",
+      "desc": "For American yards, garden centers, and community landscaping, with origin-direct sourcing, map-based purchasing, and reliable fulfillment.",
+      "name": "United States",
+      "plantLine": "Recommended: hydrangea, lavender, rose, succulents, ornamental grasses, landscape trees",
+      "short": "US",
+      "subtitle": "A New Supply Chain Experience",
+      "title": "Plant Collector"
     }
+  },
+  "reverseAuction": {
+    "auctionRules": "Reverse Auction Rules",
+    "bought": "Purchased",
+    "buyNow": "Buy Now",
+    "countdown": "Countdown",
+    "currentPrice": "Current Price",
+    "cutFlower": "Cut Flower",
+    "dropDiscount": "Price Drop",
+    "followers": "followers",
+    "freeClaim": "Free Claim",
+    "lily": "Lily",
+    "lilyAuction": "🌷 Flower Reverse Auction",
+    "live": "Reverse LIVE",
+    "lowRisk": "Low Risk",
+    "minAgo": "{min} min ago",
+    "nextDrop": "Next Drop",
+    "nextDropIn": "Auto-drop in {min} min",
+    "priceHistory": "Price History",
+    "round": "One Round",
+    "rulesDesc": "Price drops automatically every few minutes — the longer you wait, the cheaper! But someone else might buy it first, so act fast!",
+    "subtitle": "Lily flowers get cheaper over time",
+    "timeLeft": "Time Left",
+    "title": "Flower Reverse Auction"
+  },
+  "shop": {
+    "addToCart": "Add to Cart",
+    "added": "Added",
+    "cart": "Cart",
+    "cartCount": "{count} items",
+    "category": "Category",
+    "default": "Default",
+    "flowerShop": "🛒 Flower Shop",
+    "items": "items",
+    "newest": "Newest",
+    "noProducts": "No products available",
+    "priceAsc": "Price: Low to High",
+    "priceDesc": "Price: High to Low",
+    "priceRange": "Price Range",
+    "searchPlaceholder": "Search flowers...",
+    "sort": "Sort",
+    "subtitle": "Curated picks & limited offers",
+    "title": "Flower Shop"
+  },
+  "supplierVideos": {
+    "subtitle": "Origin footage · Shop videos",
+    "supplier": "Supplier",
+    "title": "Shop Videos"
   },
   "tabbar": {
     "collector": "Collector",
     "map": "Map",
-    "seedlingAuction": "Seedling Auction",
+    "mine": "Mine",
     "reverseFlowerAuction": "Reverse Flower Auction",
-    "shop": "Shop",
-    "mine": "Mine"
-  },
-  "peonyRegister": {
-    "title": "Peony Alliance Registration",
-    "subtitle": "China's National Flower · Global Alliance · Phone as ID",
-    "back": "Back",
-    "next": "Next",
-    "submit": "Begin",
-    "submitting": "Blooming…",
-    "submitFailed": "Registration failed",
-    "pwSaveUnsupported": "Your browser cannot auto-save passwords. Please use latest Chrome / Edge / Safari for the best experience.",
-    "pwSaveFailed": "Browser refused to save your password. Please allow autofill and try again.",
-    "footer": "© Peony Alliance",
-    "step1": {
-      "title": "Account & Key",
-      "sub": "Your phone is your username; browser will save the password",
-      "phone": "Phone / Username",
-      "phonePh": "Digits only",
-      "password": "Password",
-      "passwordPh": "At least 6 chars",
-      "confirm": "Confirm Password",
-      "confirmPh": "Must match",
-      "mismatch": "Passwords do not match",
-      "pwSaveAck": "I agree to let my browser save this password. Registration cannot proceed without saving — ensures smooth future logins."
-    },
-    "step2": {
-      "title": "Alliance Branch",
-      "sub": "Which branch do you belong to?"
-    },
-    "step3": {
-      "title": "My Identity",
-      "sub": "Choose your role in this alliance"
-    },
-    "step4": {
-      "title": "Final Details",
-      "sub": "One step from bloom",
-      "positions": "Roles (multi-select)",
-      "entity": "Legal Name",
-      "entityPh": "Company / co-op / nursery name",
-      "province": "Province",
-      "city": "City",
-      "district": "District",
-      "address": "Full Address",
-      "addressPh": "Street · No. · Park",
-      "species": "Main Species",
-      "capacity": "Cultivation (mu)",
-      "capacityPh": "Estimated area",
-      "inviteCode": "Invite Code",
-      "inviteCodePh": "6-char code"
-    },
-    "alliance": {
-      "hq": {
-        "emoji": "🏛",
-        "title": "HQ",
-        "sub": "Heze / Caozhou Peony Garden"
-      },
-      "branch": {
-        "emoji": "🌸",
-        "title": "Branch",
-        "sub": "Heze / Luoyang / Beijing / Yunnan"
-      },
-      "overseas": {
-        "emoji": "🌍",
-        "title": "Overseas User",
-        "sub": "Global peony enthusiasts"
-      },
-      "partner": {
-        "emoji": "🤝",
-        "title": "Overseas Partner",
-        "sub": "International distribution"
-      }
-    },
-    "identity": {
-      "admin": {
-        "emoji": "👑",
-        "title": "Admin",
-        "sub": "Create org · invite members"
-      },
-      "staff": {
-        "emoji": "🧑‍🌾",
-        "title": "Member",
-        "sub": "Join via invite code"
-      }
-    },
-    "position": {
-      "sales": {
-        "emoji": "💐",
-        "label": "Sales"
-      },
-      "operation": {
-        "emoji": "🌱",
-        "label": "Operations"
-      },
-      "info": {
-        "emoji": "📋",
-        "label": "Info Officer"
-      },
-      "aftersales": {
-        "emoji": "💬",
-        "label": "After-sales"
-      }
-    },
-    "species": {
-      "peony": "Peony",
-      "moutan": "Moutan",
-      "cutflower": "Cut Flower",
-      "seedling": "Seedling",
-      "potted": "Potted",
-      "other": "Other"
-    },
-    "badge": {
-      "seedling": "New Bud",
-      "sprout": "Sprout",
-      "rooted": "Rooted",
-      "budding": "Budding",
-      "bloom": "Full Bloom"
-    },
-    "done": {
-      "title": "Registration Complete · New Bud",
-      "sub": "Welcome to Peony Alliance. Your badge grows with your contribution.",
-      "enter": "Enter Alliance"
-    }
-  },
-  "auth": {
-    "brandTitle": "Plant Collector · Since 2006",
-    "loginSubtitle": "Sign in to view orders, favorites and supply-chain",
-    "registerTitle": "Become a Plant Collector",
-    "registerSubtitle": "After signup you are auto-tagged into the Plant Collector tier",
-    "registerOk": "Signup successful! Please sign in.",
-    "tabPhone": "Phone",
-    "tabEmail": "Email",
-    "labelPhone": "Phone number",
-    "labelEmail": "Email",
-    "labelPassword": "Password",
-    "labelFirstName": "First name",
-    "labelLastName": "Last name",
-    "phonePlaceholder": "e.g. +1 415 555 0100",
-    "emailPlaceholder": "you@example.com",
-    "pwdHint": "At least 8 chars, mixing letters and numbers",
-    "optional": "optional",
-    "noAccount": "Don't have an account?",
-    "hasAccount": "Already have an account?",
-    "errInvalidCreds": "Invalid username or password",
-    "errMissing": "Please fill all required fields",
-    "errExists": "This account is already registered, please sign in",
-    "errWeakPwd": "Password too weak (min 8 chars, letters + numbers)",
-    "errInvalidPhone": "Invalid phone number format",
-    "errGeneric": "Operation failed",
-    "labelPwdConfirm": "Confirm password",
-    "errPwdMismatch": "Passwords do not match",
-    "submitting": "Submitting…",
-    "goLogin": "Go to login",
-    "loginSubmitting": "Signing in…",
-    "pwdOnlyRetry": "Wrong password. Please re-enter your password."
+    "seedlingAuction": "Seedling Auction",
+    "shop": "Shop"
   }
 }
