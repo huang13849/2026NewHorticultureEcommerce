@@ -1,569 +1,308 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { resolveMinioUrl } from '@/lib/imageUrl';
-import { api, Product } from '@/lib/api';
-import { useAuth } from '@/lib/auth-context';
-import { useI18n } from '@/lib/i18n/context';
-import { useRegion, type RegionCode } from '@/lib/region-context';
-import { formatPrice } from '@/lib/utils';
-import TabBar from './TabBar';
-import AuthMenuButton from './components/AuthMenuButton';
-import ZitadelAuthBar from './components/ZitadelAuthBar';
-import RegionSwitch from './components/RegionSwitch';
-import { IS_CN } from '@/lib/deploy';
+import Link from 'next/link';
+import { useMemo, useState } from 'react';
+import TopNav from './components/v1/TopNav';
+import Footer from './components/v1/Footer';
+import Sparkline from './components/v1/Sparkline';
+import {
+  MARKET_FLOWERS,
+  TODAY_DEAL_PRODUCTS,
+  TREND_ROSE_7D,
+  HOT_FLOWERS,
+  DELIVERY_AREAS,
+} from '@/lib/v1/data';
 
-const API = process.env.NEXT_PUBLIC_API_URL || "/api";
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://horiculture.space';
-const SUCCESS_STORIES_URL = IS_CN ? '/success-stories' : 'https://horiculture.space/success-stories';
+export default function V1HomePage() {
+  const [aiPrompt, setAiPrompt] = useState('给女朋友买生日花，预算300元');
+  const [recipient, setRecipient] = useState('女朋友');
+  const [deliveryWindow, setDeliveryWindow] = useState<'30分钟' | '60分钟' | '今天'>('30分钟');
 
-function getImg(p: any): string {
-  const raw = (p.images as string[])?.[0]
-    || (p.panorama_images as string[])?.[0]
-    || (p.detail_images as string[])?.[0]
-    || (p.package_images as string[])?.[0]
-    || (p.scene_images as string[])?.[0]
-    || (p.root_soil_images as string[])?.[0]
-    || '';
-  if (!raw) return '';
-  return resolveMinioUrl(raw);
-}
-function hasImg(p: any): boolean { return !!getImg(p); }
-
-function RegionalBackdrop({ code }: { code: RegionCode }) {
-  const base = "absolute pointer-events-none select-none opacity-[0.16] md:opacity-[0.22]";
-  if (code === 'cn') {
-    return (
-      <div className={`${base} right-[-20px] top-24 w-[360px] h-[280px] text-emerald-900`} aria-hidden>
-        <svg viewBox="0 0 360 280" className="w-full h-full">
-          <circle cx="180" cy="92" r="70" fill="none" stroke="currentColor" strokeWidth="10" />
-          <circle cx="180" cy="92" r="42" fill="none" stroke="currentColor" strokeWidth="5" />
-          <path d="M90 145H270L244 176H116Z" fill="currentColor" />
-          <path d="M110 184H250V212H110Z" fill="currentColor" />
-          <path d="M82 224H278V246H82Z" fill="currentColor" />
-          <path d="M126 176V224M162 176V224M198 176V224M234 176V224" stroke="white" strokeOpacity=".55" strokeWidth="7" />
-          <path d="M72 145C118 118 242 118 288 145" fill="none" stroke="currentColor" strokeWidth="9" strokeLinecap="round" />
-          <rect x="124" y="160" width="112" height="78" fill="none" stroke="currentColor" strokeWidth="8" />
-        </svg>
-      </div>
-    );
-  }
-  if (code === 'fr') {
-    return <div className={`${base} right-4 top-24 text-indigo-900 text-[210px] font-thin leading-none`} aria-hidden>△</div>;
-  }
-  if (code === 'sa') {
-    return <div className={`${base} right-0 top-24 text-amber-900 text-[190px] leading-none`} aria-hidden>☾</div>;
-  }
-  if (code === 'jp') {
-    return <div className={`${base} right-4 top-24 text-rose-900 text-[180px] leading-none`} aria-hidden>鳥居</div>;
-  }
-  if (code === 'de') {
-    return <div className={`${base} right-4 top-24 text-lime-950 text-[190px] leading-none`} aria-hidden>♜</div>;
-  }
-  return <div className={`${base} right-4 top-24 text-sky-900 text-[180px] leading-none`} aria-hidden>✶</div>;
-}
-
-export default function HomePage() {
-  const { user } = useAuth();
-  const { t, lang } = useI18n();
-  const { region } = useRegion();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchKeyword, setSearchKeyword] = useState('');
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
-  const [searchTotal, setSearchTotal] = useState(0);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
-  const [scenes, setScenes] = useState<{ title: string; desc: string; tag: string; imageUrl: string }[]>([]);
-  const [carouselIndex, setCarouselIndex] = useState(0);
-  const [touchStartX, setTouchStartX] = useState<number | null>(null);
-
-  useEffect(() => {
-    // 庭院园林·成功案例 场景图 (scene-service, 按区域过滤)
-    const loadScenes = async () => {
-      try {
-        const reg = IS_CN ? 'cn' : 'global';
-        const res = await fetch(`${API}/scenes/catalog?region=${reg}&limit=5`);
-        const data = await res.json();
-        const regionData = data.regions?.[reg] || {};
-        const allScenes = [...(regionData.productTags || []), ...(regionData.seoTrends || [])]
-          .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
-          .slice(0, 5);
-        if (allScenes.length) setScenes(allScenes);
-      } catch { /* empty */ }
-    };
-    loadScenes();
-  }, []);
-
-  useEffect(() => {
-    const load = async () => {
-      let all: Product[] = [];
-      try {
-        const data = await api.getHomeRecommendations(region.lat, region.lng);
-        const seen = new Set<string>();
-        all = (data.sections?.flatMap((s: { products?: Product[] }) => s.products || []) || []).filter((p: Product) => {
-          if (!p._id || seen.has(p._id)) return false;
-          seen.add(p._id);
-          return true;
-        });
-      } catch { /* empty */ }
-      if (all.filter(hasImg).length < 6) {
-        try {
-          const res = await fetch(`${API}/products?limit=80`);
-          const data = await res.json();
-          const directProducts: Product[] = data.products || [];
-          const existingIds = new Set(all.map(p => p._id));
-          const extras = directProducts.filter(p => !existingIds.has(p._id));
-          all = [...all, ...extras];
-        } catch { /* empty */ }
-      }
-      all.sort((a, b) => (hasImg(a) ? 0 : 1) - (hasImg(b) ? 0 : 1));
-      setProducts(all);
-      setLoading(false);
-    };
-    load();
-  }, [region.lat, region.lng]);
-
-  const featured = products[0];
-  const others = products.slice(1, 9);
-  const displayProducts = hasSearched ? searchResults : others;
-  const titleClassByRegion: Record<string, string> = {
-    cn: 'font-serif tracking-[0.16em] text-4xl md:text-5xl',
-    us: 'font-black tracking-tight text-4xl md:text-5xl uppercase',
-    de: 'font-serif tracking-[0.08em] text-4xl md:text-5xl',
-    jp: 'font-serif tracking-[0.22em] text-4xl md:text-5xl',
-    fr: 'font-serif italic tracking-[0.08em] text-4xl md:text-5xl',
-    sa: 'font-black tracking-[0.02em] text-4xl md:text-5xl',
-  };
-  const titleOrnamentByRegion: Record<string, string> = {
-    cn: '✦  ◯  方',
-    us: '✶  botanical trail  ✶',
-    de: '◆  wald garten  ◆',
-    jp: '❀  侘寂  ❀',
-    fr: '✧  jardin français  ✧',
-    sa: '☾  واحة  ☾',
-  };
-
-  const handleProductSearch = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    const keyword = searchKeyword.trim();
-    if (!keyword) {
-      setHasSearched(false);
-      setSearchResults([]);
-      setSearchTotal(0);
-      return;
-    }
-    setSearchLoading(true);
-    setHasSearched(true);
-    try {
-      // ES-backed search via seo-service (/seo/api/search on both sites)
-      const res = await fetch(`/seo/api/search?q=${encodeURIComponent(keyword)}&size=24`);
-      const data = await res.json();
-      const hits = data.hits || [];
-      setSearchResults(hits.map((h: any) => ({ ...h, _id: h.id })));
-      setSearchTotal(data.total || 0);
-    } catch {
-      setSearchResults([]);
-      setSearchTotal(0);
-    } finally {
-      setSearchLoading(false);
-    }
-  };
-
-  const quickEntries = [
-    { href: '/auction', emoji: '🌳', title: t('home.quickEntry.auction.title'), desc: t('home.quickEntry.auction.desc') },
-    { href: '/reverse-auction', emoji: '🌷', title: t('home.quickEntry.reverse.title'), desc: t('home.quickEntry.reverse.desc') },
-    { href: '/map', emoji: '🗺', title: t('home.quickEntry.map.title'), desc: t('home.quickEntry.map.desc') },
-    { href: '/shop', emoji: '🛒', title: t('home.quickEntry.shop.title'), desc: t('home.quickEntry.shop.desc') },
-  ];
-
-  const greenCertStats = [
-    { label: t('home.greenCert.stats.trees.label'), value: '12,847', unit: t('home.greenCert.stats.trees.unit'), icon: '🌳' },
-    { label: t('home.greenCert.stats.carbon.label'), value: '3,256', unit: t('home.greenCert.stats.carbon.unit'), icon: '🏭' },
-    { label: t('home.greenCert.stats.coins.label'), value: '162,800', unit: t('home.greenCert.stats.coins.unit'), icon: '🪙' },
-    { label: t('home.greenCert.stats.users.label'), value: '4,521', unit: t('home.greenCert.stats.users.unit'), icon: '👥' },
-  ];
-
-  const greenCertFeatures = [
-    { icon: '🔍', title: t('home.greenCert.features.trace.title'), desc: t('home.greenCert.features.trace.desc'), details: [0,1,2,3].map(i => t(`home.greenCert.features.trace.details.${i}`)) },
-    { icon: '👤', title: t('home.greenCert.features.bind.title'), desc: t('home.greenCert.features.bind.desc'), details: [0,1,2,3].map(i => t(`home.greenCert.features.bind.details.${i}`)) },
-    { icon: '📏', title: t('home.greenCert.features.measure.title'), desc: t('home.greenCert.features.measure.desc'), details: [0,1,2,3].map(i => t(`home.greenCert.features.measure.details.${i}`)) },
-    { icon: '🪙', title: t('home.greenCert.features.trade.title'), desc: t('home.greenCert.features.trade.desc'), details: [0,1,2,3].map(i => t(`home.greenCert.features.trade.details.${i}`)) },
-  ];
-
-  const greenCertSteps = [
-    { step: 1, title: t('home.greenCert.steps.submit.title'), desc: t('home.greenCert.steps.submit.desc'), icon: '📝' },
-    { step: 2, title: t('home.greenCert.steps.review.title'), desc: t('home.greenCert.steps.review.desc'), icon: '✅' },
-    { step: 3, title: t('home.greenCert.steps.bind.title'), desc: t('home.greenCert.steps.bind.desc'), icon: '🤝' },
-    { step: 4, title: t('home.greenCert.steps.checkin.title'), desc: t('home.greenCert.steps.checkin.desc'), icon: '📸' },
-    { step: 5, title: t('home.greenCert.steps.issue.title'), desc: t('home.greenCert.steps.issue.desc'), icon: '🪙' },
-    { step: 6, title: t('home.greenCert.steps.use.title'), desc: t('home.greenCert.steps.use.desc'), icon: '💰' },
-  ];
-
-  // 成功案例优先用 scene-service 的场景图; 首页只精选 5 个，完整列表进入 /success-stories
-  const successStories = (scenes.length
-    ? scenes.map(s => ({ img: s.imageUrl, title: s.title, desc: s.desc, tag: s.tag }))
-    : [0,1,2,3,4].map(i => ({
-        img: '',
-        title: t(`home.successStories.items.${i}.title`),
-        desc: t(`home.successStories.items.${i}.desc`),
-        tag: t(`home.successStories.items.${i}.tag`),
-      }))).slice(0, 5);
-  const visibleStoryCount = 3;
-  const maxStoryIndex = Math.max(successStories.length - visibleStoryCount, 0);
-  const goStory = (dir: number) => setCarouselIndex(prev => {
-    if (maxStoryIndex <= 0) return 0;
-    return (prev + dir + maxStoryIndex + 1) % (maxStoryIndex + 1);
-  });
-  const onTouchStart = (e: React.TouchEvent) => setTouchStartX(e.touches[0]?.clientX ?? null);
-  const onTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX == null) return;
-    const dx = (e.changedTouches[0]?.clientX ?? touchStartX) - touchStartX;
-    if (Math.abs(dx) > 40) goStory(dx > 0 ? -1 : 1);
-    setTouchStartX(null);
-  };
-
-  useEffect(() => {
-    const timer = window.setInterval(() => goStory(1), 5200);
-    return () => window.clearInterval(timer);
-  }, [maxStoryIndex]);
-
-  useEffect(() => {
-    if (carouselIndex > maxStoryIndex) setCarouselIndex(0);
-  }, [carouselIndex, maxStoryIndex]);
-
-  const reviews = [0,1,2,3,4,5].map(i => ({
-    name: t(`home.reviews.items.${i}.name`),
-    loc: t(`home.reviews.items.${i}.loc`),
-    text: t(`home.reviews.items.${i}.text`),
-    stars: 5,
-    avatar: ['👷','👰','👨\u200D💼','🧑\u200D🌾','👩\u200D💼','🧑'][i],
-  }));
-
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: 'Plant Collector',
-    url: SITE_URL,
-    description: 'Plant Collector — a smart horticulture supply chain experience for tree auctions, reverse flower auctions, map shopping, garden planting, and green certification.',
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: `${SITE_URL}/shop?keyword={search_term_string}`,
-      'query-input': 'required name=search_term_string',
-    },
-  };
+  const lowPriceList = useMemo(() => MARKET_FLOWERS.slice(0, 4), []);
 
   return (
-    <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <main className={`relative overflow-hidden min-h-screen text-stone-900 pb-16 ${region.pageClass} ${region.skylineClass || ''}`}>
-        <RegionalBackdrop code={region.code} />
-        {/* Nav */}
-        <nav className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b ${region.navClass}`}>
-          <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">🌿</span>
-              <span className="font-semibold tracking-tight text-sm text-stone-900">{t('nav.flowerShop')}</span>
-            </div>
-            <div className="hidden md:flex items-center gap-6 text-xs text-stone-500 font-medium">
-              <a href="/map" className="hover:text-emerald-700 transition-colors">{t('nav.map')}</a>
-            </div>
-            <div className="flex items-center gap-2">
-              <RegionSwitch />
-              <AuthMenuButton />
-            </div>
-          </div>
-        </nav>
+    <div className="min-h-screen bg-stone-50/40 text-stone-900">
+      <TopNav />
 
-        {/* Hero */}
-        <section className="relative z-10 pt-20 pb-16 px-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid md:grid-cols-2 gap-8 items-center min-h-[420px]">
-              <div className="rounded-[2rem] bg-white/45 backdrop-blur-sm border border-white/60 shadow-[0_24px_80px_rgba(15,23,42,0.08)] p-6 md:p-8">
-                <p className={`text-xs ${region.accentText} font-semibold tracking-widest uppercase mb-4`}>{t(`regions.${region.code}.badge`)}</p>
-                <div className="relative inline-block mb-6">
-                  <div className={`text-[10px] md:text-xs ${region.accentText} opacity-60 tracking-[0.42em] uppercase mb-2`}>{titleOrnamentByRegion[region.code] || '✦ Plant Collector ✦'}</div>
-                  <h1 className={`relative leading-tight ${titleClassByRegion[region.code] || 'text-4xl md:text-5xl font-bold'}`}>
-                    <span className="absolute -left-3 -top-2 w-2 h-2 rounded-full bg-current opacity-25" />
-                    <span className="absolute -right-4 top-1/2 w-8 h-px bg-current opacity-20" />
-                    <span className={region.accentText}>{t(`regions.${region.code}.title`)}</span><br/><span className="text-xl md:text-2xl not-italic tracking-normal font-semibold text-stone-800">{t(`regions.${region.code}.subtitle`)}</span>
-                  </h1>
-                  <div className={`mt-2 h-px w-24 ${region.accentBg} opacity-30`} />
-                </div>
-                <p className="text-stone-500 leading-relaxed max-w-md text-sm md:text-base mb-8">
-                  {t(`regions.${region.code}.desc`)}
-                </p>
-                {!IS_CN && (
-                <div className="flex flex-wrap gap-3">
-                  <a href="/auction" className={`${region.accentBg} text-white px-6 py-3 rounded-xl text-sm font-semibold ${region.accentBgHover} transition-colors`}>{t('home.enterAuction')}</a>
-                  <a href="/reverse-auction" className={`bg-white ${region.accentText} border ${region.accentBorder} px-6 py-3 rounded-xl text-sm font-semibold transition-colors`}>{t('home.flowerReverse')}</a>
-                </div>
-                )}
-                <div className={`mt-5 inline-flex items-center gap-2 text-xs ${region.accentText} ${region.accentSoft} border ${region.accentBorder} rounded-full px-3 py-1.5`}>
-                  <span>{region.heroEmoji}</span><span>{t(`regions.${region.code}.plantLine`)}</span>
-                </div>
+      {/* ============ Hero + AI 推荐 ============ */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute -top-24 -right-24 w-[420px] h-[420px] rounded-full bg-emerald-100/40 blur-3xl" />
+          <div className="absolute -bottom-32 -left-16 w-[320px] h-[320px] rounded-full bg-rose-100/30 blur-3xl" />
+        </div>
+        <div className="relative max-w-6xl mx-auto px-6 pt-10 pb-12 md:pt-16 md:pb-20">
+          <div className="grid md:grid-cols-[1.4fr_1fr] gap-10 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 text-xs font-medium text-emerald-800 bg-emerald-50 border border-emerald-100 rounded-full px-3 py-1 mb-5">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                北京本地区域 · 现已开通
               </div>
-              <div className="relative">
-                {featured && hasImg(featured) ? (
-                  <div className="relative rounded-2xl overflow-hidden border border-stone-200 shadow-lg aspect-[4/3] bg-white/40">
-                    <div className="absolute inset-0 opacity-30"><RegionalBackdrop code={region.code} /></div>
-                    <img src={getImg(featured)} alt={featured.title || featured.flowerName || ''} className="relative w-full h-full object-cover mix-blend-multiply" />
-                  </div>
-                ) : (
-                  <div className={`relative overflow-hidden rounded-2xl ${region.heroPanel} border border-stone-200 aspect-[4/3] flex items-center justify-center`}>
-                    <RegionalBackdrop code={region.code} />
-                    <span className="relative text-8xl opacity-40">{region.imageFallback}</span>
-                  </div>
-                )}
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-stone-900 leading-[1.1]">
+                北京鲜花
+                <br />
+                <span className="text-emerald-700">价格跟着花走</span>
+              </h1>
+              <p className="mt-5 text-base md:text-lg text-stone-500">
+                实时价格 · 当日鲜花 · 即时送达
+              </p>
+
+              <div className="mt-7 max-w-xl">
+                <div className="flex items-center gap-2 text-[11px] text-stone-400 mb-2">
+                  <span>预算输入触发 AI 推荐</span>
+                </div>
+                <form
+                  onSubmit={(e) => { e.preventDefault(); window.location.href = '/ai-select?q=' + encodeURIComponent(aiPrompt); }}
+                  className="flex items-center gap-2 bg-white rounded-2xl border border-stone-200 shadow-sm pl-4 pr-1.5 py-1.5"
+                >
+                  <span className="text-stone-400 text-sm">💬</span>
+                  <input
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    placeholder="给女朋友买生日花，预算300元"
+                    className="flex-1 bg-transparent outline-none text-sm py-2 placeholder:text-stone-400"
+                  />
+                  <button
+                    type="submit"
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-stone-900 text-white text-sm font-medium px-4 py-2 hover:bg-emerald-800 transition-colors"
+                  >
+                    AI 帮精选
+                    <span className="text-base leading-none">→</span>
+                  </button>
+                </form>
               </div>
             </div>
-          </div>
-        </section>
 
-        {/* Quick Entry (å½åçéè) */}
-        {!IS_CN && (
-        <section className="px-6 pb-16">
-          <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
-            {quickEntries.map(c => (
-              <a key={c.href} href={c.href} className={`group rounded-2xl border border-stone-200 bg-white p-5 ${region.cardHover} hover:shadow-md transition-all`}>
-                <span className="text-2xl mb-3 block">{c.emoji}</span>
-                <h3 className={`text-sm font-semibold text-stone-900 mb-1 ${region.accentText} transition-colors`}>{c.title}</h3>
-                <p className="text-[11px] text-stone-400">{c.desc}</p>
-              </a>
+            {/* 装饰花束图（无图片资源时用渐变 + 大号 emoji 兜底） */}
+            <div className="hidden md:flex justify-center">
+              <div className="relative w-[320px] h-[320px]">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-rose-100 via-emerald-50 to-amber-50" />
+                <div className="absolute inset-0 flex items-center justify-center text-[180px] leading-none opacity-90">
+                  💐
+                </div>
+                <div className="absolute -bottom-2 -right-2 inline-flex items-center gap-1.5 rounded-full bg-white border border-stone-200 px-3 py-1.5 text-xs font-medium shadow-sm">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  北京本地区域
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 三张快速入口 */}
+          <div className="mt-10 grid sm:grid-cols-3 gap-4">
+            <Link href="/shop?delivery=fast" className="group rounded-2xl bg-white border border-stone-200 p-5 hover:border-emerald-700 hover:shadow-md transition-all">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 text-lg">⚡</div>
+              <div className="mt-3 font-bold text-stone-900">现在就送</div>
+              <div className="mt-1 text-xs text-stone-500">最快 30 分钟送达</div>
+              <div className="mt-3 text-stone-300 group-hover:text-emerald-700 transition-colors text-sm">→</div>
+            </Link>
+            <Link href="/market" className="group rounded-2xl bg-white border border-stone-200 p-5 hover:border-emerald-700 hover:shadow-md transition-all">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-rose-700 text-lg">💰</div>
+              <div className="mt-3 font-bold text-stone-900">今日低价</div>
+              <div className="mt-1 text-xs text-stone-500">掌握北京花卉实时价格</div>
+              <div className="mt-3 text-stone-300 group-hover:text-emerald-700 transition-colors text-sm">→</div>
+            </Link>
+            <Link href="/market" className="group rounded-2xl bg-white border border-stone-200 p-5 hover:border-emerald-700 hover:shadow-md transition-all">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700 text-lg">📈</div>
+              <div className="mt-3 font-bold text-stone-900">查看花价</div>
+              <div className="mt-1 text-xs text-stone-500">实时行情 · 价格趋势</div>
+              <div className="mt-3 text-stone-300 group-hover:text-emerald-700 transition-colors text-sm">→</div>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ============ 今日北京花市行情概要 ============ */}
+      <section className="max-w-6xl mx-auto px-6 py-10">
+        <div className="flex items-end justify-between mb-4">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">今日北京花市</h2>
+            <p className="text-xs text-stone-400 mt-1 inline-flex items-center gap-1.5">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              14:32 更新 · 北京丰台花卉交易中心
+            </p>
+          </div>
+          <Link href="/market" className="text-sm text-stone-500 hover:text-stone-900">查看全部 →</Link>
+        </div>
+        <div className="grid lg:grid-cols-[1.6fr_1fr] gap-4">
+          {/* 行情表 */}
+          <div className="rounded-2xl bg-white border border-stone-200 overflow-hidden">
+            <div className="grid grid-cols-[1.5fr_1fr_1fr_auto_auto] gap-2 px-5 py-3 text-[11px] uppercase tracking-wider text-stone-400 border-b border-stone-100 bg-stone-50/50">
+              <span>花材</span>
+              <span className="text-right">当前市场价</span>
+              <span className="text-right">平台参考价</span>
+              <span className="text-right w-16">涨跌</span>
+              <span className="text-right w-16">时间</span>
+            </div>
+            {lowPriceList.map((f, i) => (
+              <div key={i} className="grid grid-cols-[1.5fr_1fr_1fr_auto_auto] gap-2 px-5 py-3 text-sm border-b border-stone-100 last:border-b-0 hover:bg-stone-50/50 transition-colors">
+                <span className="font-medium text-stone-900 inline-flex items-center gap-2">
+                  <span>{f.emoji}</span>{f.name}
+                </span>
+                <span className="text-right tabular-nums">¥{f.marketPrice.toFixed(2)}/枝</span>
+                <span className="text-right tabular-nums text-stone-500">¥{f.platformPrice.toFixed(2)}/枝</span>
+                <span className={`text-right tabular-nums w-16 ${f.change < 0 ? 'text-red-600' : f.change > 0 ? 'text-emerald-600' : 'text-stone-500'}`}>
+                  {f.change > 0 ? '↑' : f.change < 0 ? '↓' : '·'} {Math.abs(f.change)}%
+                </span>
+                <span className="text-right tabular-nums w-16 text-stone-400">{f.updatedAt}</span>
+              </div>
             ))}
           </div>
-        </section>
-        )}
-
-        {/* Product Search */}
-        <section className="relative z-10 px-6 pb-8">
-          <div className="max-w-6xl mx-auto rounded-3xl border border-white/70 bg-white/70 backdrop-blur-xl shadow-[0_18px_70px_rgba(15,23,42,0.08)] p-5 md:p-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-              <div>
-                <h2 className="text-lg md:text-xl font-bold text-stone-900">{t('home.searchTitle')}</h2>
-                <p className="text-xs text-stone-500 mt-1">{t('home.searchSubtitle')}</p>
-              </div>
-              {hasSearched && (
-                <button onClick={() => { setHasSearched(false); setSearchKeyword(''); setSearchResults([]); setSearchTotal(0); }} className="text-xs text-stone-500 hover:text-stone-900">{t('home.clearSearch')}</button>
-              )}
+          {/* 北京市场参考价卡 */}
+          <Link href="/market" className="rounded-2xl bg-stone-900 text-white p-6 flex flex-col justify-between hover:bg-stone-800 transition-colors">
+            <div>
+              <div className="text-[11px] uppercase tracking-wider text-stone-400">北京市场参考价</div>
+              <div className="mt-2 text-lg font-semibold">平台实时调整</div>
+              <p className="mt-3 text-sm text-stone-400">实时对接北京丰台花卉交易中心当日成交价，结合平台运营策略自动更新零售参考价。</p>
             </div>
-            <form onSubmit={handleProductSearch} className="flex flex-col md:flex-row gap-3">
-              <div className="relative flex-1">
-                <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" /></svg>
-                <input
-                  value={searchKeyword}
-                  onChange={e => setSearchKeyword(e.target.value)}
-                  placeholder={t('home.searchPlaceholder')}
-                  className="w-full pl-12 pr-4 py-4 rounded-2xl border-2 border-emerald-200 bg-white text-base shadow-[0_8px_30px_rgba(16,185,129,0.12)] focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 transition-all"
-                />
+            <div className="mt-4 inline-flex items-center gap-1 text-sm">
+              查看花价详情 <span>→</span>
+            </div>
+          </Link>
+        </div>
+      </section>
+
+      {/* ============ 今日低价推荐 ============ */}
+      <section className="max-w-6xl mx-auto px-6 py-10">
+        <div className="flex items-end justify-between mb-4">
+          <div>
+            <div className="text-xs text-stone-400 uppercase tracking-wider">北京花价行情 ↓</div>
+            <h2 className="mt-1 text-2xl font-bold tracking-tight">今日低价</h2>
+            <p className="mt-1 text-xs text-stone-400">实时挑出平台热门花材低价入手</p>
+          </div>
+          <Link href="/market" className="text-sm text-stone-500 hover:text-stone-900">更多 →</Link>
+        </div>
+        <div className="grid sm:grid-cols-3 gap-4">
+          {TODAY_DEAL_PRODUCTS.map((p) => (
+            <Link key={p.id} href="/product/19-champagne-rose" className="group rounded-2xl bg-white border border-stone-200 overflow-hidden hover:shadow-md transition-all">
+              <div className="aspect-[4/3] bg-gradient-to-br from-stone-50 to-emerald-50/50 flex items-center justify-center text-7xl">
+                {p.emoji}
               </div>
-              <button disabled={searchLoading} className={`${region.accentBg} text-white rounded-2xl px-8 py-4 text-base font-bold shadow-lg ${region.accentBgHover} disabled:opacity-60 transition-all hover:scale-[1.02] active:scale-95`}>
-                {searchLoading ? t('home.searching') : t('common.search')}
+              <div className="p-4">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-stone-900">{p.name}</span>
+                  <span className="text-[11px] text-stone-400">{p.tag}</span>
+                </div>
+                <div className="mt-2 flex items-baseline gap-2">
+                  <span className="text-xl font-black text-stone-900 tabular-nums">¥{p.price}</span>
+                  <span className="text-xs text-stone-400 line-through tabular-nums">¥{p.marketPrice}</span>
+                  <span className={`ml-auto text-xs font-medium tabular-nums ${p.change < 0 ? 'text-red-600' : 'text-emerald-600'}`}>↓ {Math.abs(p.change)}%</span>
+                </div>
+                <button className="mt-3 w-full rounded-full bg-stone-900 text-white text-sm py-2 hover:bg-emerald-800 transition-colors">立即购买</button>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* ============ 现在想收到? (即时配送入口) ============ */}
+      <section className="max-w-6xl mx-auto px-6 py-10 grid lg:grid-cols-2 gap-4">
+        <div className="rounded-2xl bg-white border border-stone-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold tracking-tight">现在想收到?</h3>
+              <p className="text-xs text-stone-400 mt-1">附近花店发货，最快即将送达</p>
+            </div>
+            <span className="text-[11px] text-stone-400">📍 北京 朝阳店</span>
+          </div>
+          <div className="mt-4 inline-flex items-center rounded-full bg-stone-100 p-1 text-sm">
+            {(['30分钟', '60分钟', '今天'] as const).map((w) => (
+              <button
+                key={w}
+                onClick={() => setDeliveryWindow(w)}
+                className={`px-3 py-1 rounded-full transition-colors ${deliveryWindow === w ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500'}`}
+              >
+                {w}
               </button>
-            </form>
-            {hasSearched && <p className="text-xs text-stone-500 mt-3">{t('home.searchResultMeta', { keyword: searchKeyword.trim(), count: searchTotal })}</p>}
+            ))}
           </div>
-        </section>
-
-        {/* Recommended Products */}
-        <section className="relative z-10 px-6 pb-16">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold text-stone-900">{hasSearched ? t('home.searchProductsTitle') : t('home.recommendTitle')}</h2>
-              {!IS_CN && <a href="/shop" className={`text-xs ${region.accentText} font-medium transition-colors`}>{t('home.viewMore')}</a>}
+          <div className="mt-4 rounded-xl border border-stone-200 p-4 flex items-center gap-4">
+            <div className="w-16 h-16 rounded-xl bg-rose-50 flex items-center justify-center text-4xl">🌹</div>
+            <div className="flex-1">
+              <div className="font-semibold text-stone-900">红玫瑰花束</div>
+              <div className="text-xs text-stone-400 mt-0.5">预计 {deliveryWindow === '30分钟' ? '45' : deliveryWindow === '60分钟' ? '60' : '今天'} 分钟送达</div>
+              <div className="mt-1 text-lg font-bold tabular-nums">¥168</div>
             </div>
-            {(hasSearched ? searchLoading : loading) ? (
-              <div className="flex items-center justify-center py-16"><div className="text-3xl animate-pulse">⏳</div></div>
-            ) : displayProducts.length === 0 ? (
-              <div className="text-center py-16 text-stone-400">{t('home.noProducts')}</div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {displayProducts.map(p => {
-                  const img = getImg(p);
-                  const price = p.sellPrice || p.price || p.settlementPrice || 0;
-                  return (
-                    <a key={p._id} href={IS_CN ? undefined : `/shop`} className="group rounded-2xl border border-stone-200 bg-white overflow-hidden hover:border-emerald-300 hover:shadow-md transition-all">
-                      <div className="aspect-square bg-stone-100 flex items-center justify-center overflow-hidden">
-                        {img ? <img src={img} alt={p.title || p.flowerName || ''} className="w-full h-full object-cover group-hover:scale-105 transition-transform" /> : <span className="text-4xl opacity-20">🌿</span>}
-                      </div>
-                      <div className="p-3">
-                        <h4 className="text-xs font-medium text-stone-900 truncate">{IS_CN ? (p.title || p.flowerName || t('home.unnamed')) : (p.englishTitle || p.title || p.flowerName || t('home.unnamed'))}</h4>
-                        <div className="flex items-center justify-between mt-1.5">
-                          {IS_CN
-                            ? <span className="text-sm font-bold text-emerald-700">{p.englishTitle || '—'}</span>
-                            : <span className="text-sm font-bold text-emerald-700">{formatPrice(price, region.code)}</span>
-                          }
-                          {p.category && <span className="text-[10px] text-stone-400 bg-stone-50 px-1.5 py-0.5 rounded">{p.category}</span>}
-                        </div>
-                      </div>
-                    </a>
-                  );
-                })}
-              </div>
-            )}
+            <button className="rounded-full bg-stone-900 text-white text-sm px-4 py-2 hover:bg-emerald-800 transition-colors">立即送花</button>
           </div>
-        </section>
+        </div>
 
-        {/* Green Certification */}
-        <section className="px-6 pb-16">
-          <div className="max-w-6xl mx-auto">
-            <div className={`rounded-2xl bg-gradient-to-br ${region.certGradient} p-8 md:p-12 text-white`}>
-              <div className="text-center mb-10">
-                <p className="text-xs text-emerald-200 font-semibold tracking-widest uppercase mb-2">{t('home.greenCertSubtitle')}</p>
-                <h2 className="text-2xl md:text-4xl font-bold mb-3">{t('home.greenCert.title')}</h2>
-                <p className="text-emerald-100/80 text-sm max-w-2xl mx-auto">{t('home.greenCert.desc')}</p>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-                {greenCertStats.map((s, i) => (
-                  <div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center border border-white/10">
-                    <span className="text-2xl mb-2 block">{s.icon}</span>
-                    <div className="text-xl md:text-2xl font-bold">{s.value}</div>
-                    <div className="text-[10px] text-emerald-200">{s.unit} · {s.label}</div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-10">
-                {greenCertFeatures.map((f, i) => (
-                  <div key={i} className="bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/10">
-                    <div className="flex items-start gap-4">
-                      <span className="text-3xl">{f.icon}</span>
-                      <div className="flex-1">
-                        <h3 className="font-bold text-sm mb-2">{f.title}</h3>
-                        <p className="text-emerald-100/70 text-xs leading-relaxed mb-3">{f.desc}</p>
-                        <div className="flex flex-wrap gap-2">
-                          {f.details.map((d, j) => (
-                            <span key={j} className="bg-emerald-600/30 text-emerald-100 text-[10px] px-2 py-0.5 rounded-full border border-emerald-400/20">{d}</span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                <h3 className="font-bold text-sm mb-5 text-center">{t('home.greenCert.flowTitle')}</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                  {greenCertSteps.map((s, i) => (
-                    <div key={i} className="text-center">
-                      <div className="w-10 h-10 rounded-full bg-emerald-400/20 border border-emerald-300/30 flex items-center justify-center mx-auto mb-2">
-                        <span className="text-lg">{s.icon}</span>
-                      </div>
-                      <div className="text-[10px] text-emerald-300 font-bold mb-0.5">{t('home.step', { n: s.step })}</div>
-                      <div className="text-xs font-semibold mb-0.5">{s.title}</div>
-                      <div className="text-[10px] text-emerald-100/60 leading-tight">{s.desc}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="text-center mt-8">
-                <a href="/garden" className="inline-block bg-white text-emerald-800 px-8 py-3 rounded-xl text-sm font-bold hover:bg-emerald-50 transition-colors">
-                  {t('home.greenCert.apply')}
-                </a>
-              </div>
+        <div className="rounded-2xl bg-white border border-stone-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold tracking-tight inline-flex items-center gap-2">
+                <span>🤖</span> AI 帮你选花
+              </h3>
+              <p className="text-xs text-stone-400 mt-1">告诉我们你的需求，AI 为你推荐最合适的花</p>
             </div>
           </div>
-        </section>
-
-        {/* Success Stories */}
-        <section className="px-6 pb-16">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-              <div>
-                <p className="text-xs text-emerald-700 font-semibold tracking-widest uppercase mb-2">{t('home.successStories.subtitle')}</p>
-                <h2 className="text-2xl md:text-3xl font-bold text-stone-900">{t('home.successStories.title')}</h2>
-                <p className="text-sm text-stone-400 mt-2">{t('home.successStories.desc')}</p>
-              </div>
-              <a href={SUCCESS_STORIES_URL} className="inline-flex shrink-0 items-center justify-center rounded-full bg-emerald-700 px-5 py-2.5 text-sm font-bold text-white hover:bg-emerald-800 transition-colors shadow-sm">查看更多 →</a>
-            </div>
-            <div className="relative">
-              <button type="button" aria-label="上一个成功案例" onClick={() => goStory(-1)} className="hidden md:flex absolute -left-4 top-1/2 z-10 h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-700 shadow-md hover:bg-stone-50">←</button>
-              <div className="overflow-hidden rounded-[2rem]" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-                <div className="flex transition-transform duration-700 ease-out" style={{ transform: `translateX(-${carouselIndex * (100 / visibleStoryCount)}%)` }}>
-                  {successStories.slice(0, 5).map((s, i) => (
-                    <div key={i} className="min-w-full px-1 md:min-w-[33.333333%] md:px-2">
-                      <article className="group h-full overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-lg shadow-emerald-950/5 hover:shadow-xl transition-shadow">
-                        <div className="relative h-52 w-full overflow-hidden bg-gradient-to-br from-emerald-50 to-stone-100">
-                          {s.img ? <img src={s.img} alt={s.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
-                            : <div className="flex h-full w-full items-center justify-center"><span className="text-6xl opacity-30">🌿</span></div>}
-                        </div>
-                        <div className="p-5">
-                          <div className="mb-2 text-[11px] font-black uppercase tracking-[0.22em] text-emerald-700">Featured {i + 1}/5</div>
-                          <h3 className="line-clamp-2 min-h-[3.5rem] text-lg font-black leading-tight text-stone-900">{s.title}</h3>
-                          <p className="mt-3 line-clamp-3 min-h-[4rem] text-sm leading-relaxed text-stone-500">{s.desc}</p>
-                        </div>
-                      </article>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <button type="button" aria-label="下一个成功案例" onClick={() => goStory(1)} className="hidden md:flex absolute -right-4 top-1/2 z-10 h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-700 shadow-md hover:bg-stone-50">→</button>
-            </div>
-            <div className="mt-5 flex justify-center gap-1.5">
-              {Array.from({ length: maxStoryIndex + 1 }).map((_, i) => <button key={i} type="button" aria-label={`切换到第${i + 1}屏成功案例`} onClick={() => setCarouselIndex(i)} className={`h-2 rounded-full transition-all ${i === carouselIndex ? 'w-7 bg-emerald-700' : 'w-2 bg-stone-300'}`} />)}
-            </div>
-          </div>
-        </section>
-
-        {/* Reviews */}
-        <section className="px-6 pb-16">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-10">
-              <p className="text-xs text-amber-600 font-semibold tracking-widest uppercase mb-2">{t('home.reviews.subtitle')}</p>
-              <h2 className="text-2xl md:text-3xl font-bold text-stone-900">{t('home.reviews.title')}</h2>
-              <p className="text-sm text-stone-400 mt-2">{t('home.reviews.desc')}</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {reviews.map((r, i) => (
-                <div key={i} className="rounded-2xl border border-stone-200 bg-white p-5 hover:shadow-md transition-shadow">
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="text-2xl">{r.avatar}</span>
-                    <div>
-                      <p className="text-sm font-semibold text-stone-900">{r.name}</p>
-                      <p className="text-[10px] text-stone-400">{r.loc}</p>
-                    </div>
-                    <div className="ml-auto flex gap-0.5">
-                      {Array.from({ length: r.stars }).map((_, j) => (
-                        <span key={j} className="text-amber-400 text-xs">★</span>
-                      ))}
-                    </div>
-                  </div>
-                  <p className="text-xs text-stone-500 leading-relaxed">&ldquo;{r.text}&rdquo;</p>
-                </div>
+          <div className="mt-4">
+            <div className="text-xs text-stone-400 mb-2">送给谁</div>
+            <div className="flex flex-wrap gap-2">
+              {['女朋友', '妈妈', '姐姐', '朋友', '客户', '生日', '表白'].map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setRecipient(r)}
+                  className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${recipient === r ? 'bg-stone-900 text-white border-stone-900' : 'bg-white text-stone-600 border-stone-200 hover:border-stone-400'}`}
+                >
+                  {r}
+                </button>
               ))}
             </div>
           </div>
-        </section>
+          <Link href={`/ai-select?recipient=${encodeURIComponent(recipient)}`} className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-emerald-700 text-white text-sm font-medium px-5 py-2.5 hover:bg-emerald-800 transition-colors">
+            开始选花 <span>→</span>
+          </Link>
+        </div>
+      </section>
 
-        <footer className="py-10 px-6 border-t border-stone-200/60 bg-white/45 backdrop-blur-sm">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid md:grid-cols-[1.2fr_2fr] gap-6 items-start">
-              <div>
-                <div className={`font-semibold tracking-tight text-base ${region.accentText} mb-1`}>{t('home.footer.name')}</div>
-                <div className="text-[11px] text-stone-400">{t('home.footer.copyright')}</div>
-              </div>
-              <div className="grid sm:grid-cols-3 gap-3 text-xs">
-                <a href="tel:+8618511987921" className="rounded-2xl border border-stone-200 bg-white/75 p-4 hover:shadow-sm transition-shadow">
-                  <div className="text-stone-400 mb-1">{t('home.footer.phone')}</div>
-                  <div className="font-semibold text-stone-800">(+86) 18511987921</div>
-                </a>
-                <a href="mailto:huang13849@hotmail.com" className="rounded-2xl border border-stone-200 bg-white/75 p-4 hover:shadow-sm transition-shadow">
-                  <div className="text-stone-400 mb-1">{t('home.footer.email')}</div>
-                  <div className="font-semibold text-stone-800 break-all">huang13849@hotmail.com</div>
-                </a>
-                <div className="rounded-2xl border border-stone-200 bg-white/75 p-4">
-                  <div className="text-stone-400 mb-1">{t('home.footer.address')}</div>
-                  <div className="font-semibold text-stone-800">{t('home.footer.addressValue')}</div>
-                </div>
-              </div>
+      {/* ============ 北京配送网络 ============ */}
+      <section className="max-w-6xl mx-auto px-6 py-10">
+        <div className="rounded-2xl bg-white border border-stone-200 p-6">
+          <div className="flex items-center gap-3">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-700 text-lg">🚚</span>
+            <div>
+              <h3 className="text-xl font-bold tracking-tight">北京配送网络</h3>
+              <p className="text-xs text-stone-400 mt-0.5">覆盖北京主要区域，本地配送快速稳定</p>
             </div>
           </div>
-        </footer>
-      </main>
-      <TabBar />
-    </>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {DELIVERY_AREAS.map((a) => (
+              <span key={a} className="px-3 py-1.5 rounded-full text-sm bg-stone-50 text-stone-700 border border-stone-200">{a}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============ 价格趋势 + 热门花材 ============ */}
+      <section className="max-w-6xl mx-auto px-6 py-10 grid lg:grid-cols-[1.6fr_1fr] gap-4">
+        <div className="rounded-2xl bg-white border border-stone-200 p-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-bold tracking-tight">北京花价趋势 (近 7 天)</h3>
+            <Link href="/market" className="text-xs text-stone-500 hover:text-stone-900">查看详情 →</Link>
+          </div>
+          <Sparkline data={TREND_ROSE_7D} height={140} />
+          <div className="mt-2 text-[11px] text-stone-400">玫瑰 · 元/枝</div>
+        </div>
+        <div className="rounded-2xl bg-white border border-stone-200 p-6">
+          <h3 className="font-bold tracking-tight">热门花材</h3>
+          <p className="text-xs text-stone-400 mt-0.5">今日实时涨跌</p>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            {HOT_FLOWERS.map((f) => (
+              <Link key={f.name} href="/market" className="rounded-xl border border-stone-200 p-3 hover:border-stone-400 transition-colors">
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl">{f.emoji}</span>
+                  <span className={`text-xs font-medium tabular-nums ${f.change < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                    {f.change > 0 ? '↑' : '↓'} {Math.abs(f.change)}%
+                  </span>
+                </div>
+                <div className="mt-2 text-sm font-medium text-stone-900">{f.name}</div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+    </div>
   );
 }
