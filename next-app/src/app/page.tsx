@@ -171,8 +171,6 @@ export default function HomePage() {
   };
 
   const quickEntries = [
-    { href: '/auction', emoji: '🌳', title: t('home.quickEntry.auction.title'), desc: t('home.quickEntry.auction.desc') },
-    { href: '/reverse-auction', emoji: '🌷', title: t('home.quickEntry.reverse.title'), desc: t('home.quickEntry.reverse.desc') },
     { href: '/map', emoji: '🗺', title: t('home.quickEntry.map.title'), desc: t('home.quickEntry.map.desc') },
     { href: '/shop', emoji: '🛒', title: t('home.quickEntry.shop.title'), desc: t('home.quickEntry.shop.desc') },
   ];
@@ -289,16 +287,23 @@ export default function HomePage() {
                     <span className={region.accentText}>{t(`regions.${region.code}.title`)}</span><br/><span className="text-xl md:text-2xl not-italic tracking-normal font-semibold text-stone-800">{t(`regions.${region.code}.subtitle`)}</span>
                   </h1>
                   <div className={`mt-2 h-px w-24 ${region.accentBg} opacity-30`} />
+                  {IS_CN && (
+                    <div className="mt-3 text-[11px] text-stone-400">
+                      <a
+                        href={t('home.footer.beian_url') || '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`hover:${region.accentText} transition-colors`}
+                      >
+                        {t('home.footer.icp')}
+                      </a>
+                    </div>
+                  )}
                 </div>
                 <p className="text-stone-500 leading-relaxed max-w-md text-sm md:text-base mb-8">
                   {t(`regions.${region.code}.desc`)}
                 </p>
-                {!IS_CN && (
-                <div className="flex flex-wrap gap-3">
-                  <a href="/auction" className={`${region.accentBg} text-white px-6 py-3 rounded-xl text-sm font-semibold ${region.accentBgHover} transition-colors`}>{t('home.enterAuction')}</a>
-                  <a href="/reverse-auction" className={`bg-white ${region.accentText} border ${region.accentBorder} px-6 py-3 rounded-xl text-sm font-semibold transition-colors`}>{t('home.flowerReverse')}</a>
-                </div>
-                )}
+
                 <div className={`mt-5 inline-flex items-center gap-2 text-xs ${region.accentText} ${region.accentSoft} border ${region.accentBorder} rounded-full px-3 py-1.5`}>
                   <span>{region.heroEmoji}</span><span>{t(`regions.${region.code}.plantLine`)}</span>
                 </div>
