@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+
+export const dynamic = 'force-dynamic';
 import { headers } from 'next/headers';
 import './globals.css';
 import { Providers } from './providers';
