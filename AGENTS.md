@@ -97,6 +97,80 @@ export PATH=$HOME/.docker/bin:/usr/local/bin:$PATH
 ### 7. LA VPS 内存只有 965MB
 不要在 LA 上跑重型 workload. 目前只有 nginx-proxy (图床) + minio + prometheus exporters + k3s-agent (备用).
 
+### 8. k3s `flower-next` service 跟 `flower-next-la` 共用 selector
+⚠️ **2026-09-16 大坑**: k3s master 上有个老 service `flower-next` (NodePort 31000), selector 是 `app=flower-next-la`。
+我部署的国际版 `flower-next-la` pod 也带这个 label。结果是:
+- 任何走 k3s 31000 的请求 (包括 suzhou nginx-proxy 上游) 都会最终落到 LA VPS-209 上的 `flower-next-la` pod
+- 想按域名分流 (`.club` 走国内 / `.space` 走国际) 必须在 nginx 上游分, 不能指望 service 分
+
+**修复**: suzhou nginx-proxy 改 upstream:
+```
+upstream k3s_flower_next  { server 127.0.0.1:3000; keepalive 32; }   # ← 本地 flower-next (国内版)
+upstream k3s_flower_api   { server 127.0.0.1:3010; keepalive 32; }
+```
+**.club 走本地 docker**, **.space 走 VPS-209 hostPort 32000**, 各自独立.
+
+### 9. Suzhou `nginx-proxy` 容器文件系统 read-only + mmap locked
+想 `docker cp` / `cat > file` / `mv` 替换 `/etc/nginx/nginx.conf` 全失败 (musl/alpine + nginx mmap)。
+只能 `docker rm` + 用 `-v /path/on/host:/etc/nginx/nginx.conf:ro` 重建容器。
+
+完整复现命令见坑 #11 的 setup。
+
+### 10. Suzhou `nginx-proxy` 容器 cert 不在 `/etc/nginx/certs/`
+真 cert 在 suzhou 宿主机 `/root/docker-nginx/certs/`, **目录是空的** (历史上挂过但源没了)。
+重建容器前必须先 `cp /root/docker-nginx/certs/*.{crt,key} /etc/nginx/certs/`。
+缺失任何 cert 都会触发 `cannot load certificate ... No such file or directory` emerg → 容器 restart loop。
+
+### 11. Suzhou Dockerfile.suzhou 改完 rebuild 标准流程
+```bash
+# 1. 在 Mac Mini 上改 ~/suzhou-cn/new-ecommerce/next-app/Dockerfile.suzhou
+# 2. SCP 到 suzhou (用 paramiko SFTP, 不要用 ssh echo + base64 — 命令行长):
+python3 -c "
+import paramiko
+suz = paramiko.SSHClient()
+suz.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+suz.connect('100.127.108.33', 22, 'root', 'Hy@11111111', look_for_keys=False)
+sftp = suz.open_sftp()
+sftp.put('/Users/huangframacmini/suzhou-cn/new-ecommerce/next-app/Dockerfile.suzhou', '/root/new-ecommerce/next-app/Dockerfile.suzhou')
+suz.close()
+"
+# 3. 在 suzhou build + restart
+ssh root@106.12.91.182
+cd /root/new-ecommerce
+PATH=/usr/bin:$PATH docker compose -f docker-compose.suzhou.yml build flower-next
+PATH=/usr/bin:$PATH docker compose -f docker-compose.suzhou.yml up -d flower-next
+```
+**注意**: Suzhou 没有 `docker-compose` (v1), 只有 docker v2 → `docker compose` 空格语法.
+Docker CLI 路径 `/usr/bin/docker`, 不是 `/usr/local/bin/docker`.
+**Dockerfile.suzhou 不在 suzhou working tree** (git 历史里有但 working tree 只有改过的 `Dockerfile`), 改前一定要从 Mac Mini 传过去。
+
+### 12. ICP 备案号注入 (zh.json + page.tsx)
+国内合规必须有 ICP 备案号显示在 footer。改 3 个文件:
+
+```bash
+# 1. zh.json 加键 (中文版才显示):
+"footer": {
+  ...
+  "icp": "京ICP备2026007606号-2",
+  "beian_url": "https://beian.miit.gov.cn/"
+}
+
+# 2. en.json 加空值 (英文版不显示):
+"footer": {
+  ...
+  "icp": "",
+  "beian_url": ""
+}
+
+# 3. page.tsx footer 后插入 ICP 行 (在 </footer> 后面):
+<div className="max-w-6xl mx-auto mt-6 pt-4 border-t border-stone-200/60 text-center text-[11px] text-stone-400">
+  <a href={t('home.footer.beian_url') || '#'} target="_blank" rel="noopener noreferrer" className="hover:text-stone-600 transition-colors">
+    {t('home.footer.icp')}
+  </a>
+</div>
+```
+改完 scp 3 文件到 suzhou 正确路径 (`/root/new-ecommerce/next-app/src/lib/i18n/{zh,en}.json` + `/app/page.tsx`), 然后 build + restart. 公网 `.club` HTML 就能看到带 `beian.miit.gov.cn` 链接的 ICP 号。
+
 ---
 
 ## 🛠 常用工具
