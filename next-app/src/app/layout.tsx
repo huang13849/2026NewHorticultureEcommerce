@@ -8,7 +8,6 @@ import SeoTracker from './components/SeoTracker';
 //   horiculture.club / 106.12.91.182 (国内苏州) → zh/cn
 //   其它 (horiculture.space / 209.141.34.146 / LA)          → en/us
 // SSR 时读 headers(),CF Pages 静态导出回退到 build-time env NEXT_PUBLIC_REGION。
-export const dynamic = 'force-dynamic';
 
 async function pickInitialDefaults(): Promise<{ lang: 'zh' | 'en'; region: 'cn' | 'us' }> {
   try {
