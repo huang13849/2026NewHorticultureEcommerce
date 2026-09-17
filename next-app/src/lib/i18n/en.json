@@ -766,13 +766,13 @@
       "title": "Plant Collector"
     },
     "us": {
-      "badge": "Global · Direct from China flower markets",
-      "desc": "From Beijing flower markets nationwide — fresh flowers, potted plants, and nursery auctions, fastest 24h delivery.",
-      "name": "United States",
-      "plantLine": "Today's deals: 19 champagne roses ¥79 / sun lilies ¥39 / pink carnations ¥29",
-      "short": "US",
-      "subtitle": "AI helps you choose + live market prices + cross-product comparison",
-      "title": "Beijing Live Flower Trading"
+      "badge": "全球站 · 中国花乡直连",
+      "desc": "从北京花乡到全国，鲜切花 · 盆花 · 苗木拍卖，最快 24h 到家。",
+      "name": "美国",
+      "plantLine": "今日特价：19 枝香槟玫瑰 ¥79 / 阳光百合 ¥39 / 粉色康乃馨 ¥29",
+      "short": "美",
+      "subtitle": "AI 帮你选花 + 实时行情 + 同款比价",
+      "title": "北京鲜花·价格跟着走"
     }
   },
   "reverseAuction": {
