@@ -23,7 +23,6 @@ const COL_ALIASES = {
   flower_name:       'flowerName',
   category:          'category',
   sell_price:        'sellPrice',
-  price:             'sellPrice',          // Mongo 时代别名
   settlement_price:  'settlementPrice',
   cost_price:        'costPrice',
   shipping_fee:      'shippingFee',
@@ -53,13 +52,17 @@ const LIST_FIELDS = [
   'location','images','panorama_images','detail_images','createdAt','updatedAt',
 ];
 
+const SPECIAL_ALIASES = {
+  price: 'COALESCE(sell_price, settlement_price, 0)',
+};
+
 function buildSelect(fields) {
   const list = fields && fields.length ? fields : LIST_FIELDS;
   // camelCase -> snake 找到原列名
   const camelToSnake = Object.fromEntries(Object.entries(COL_ALIASES).map(([k,v]) => [v, k]));
   const cols = list.map(c => {
+    if (SPECIAL_ALIASES[c]) return `${SPECIAL_ALIASES[c]} AS "${c}"`;
     const snake = camelToSnake[c] || c;
-    // 已经是 AS 别名 (snake 里有下划线的不一定,统一包一下)
     if (snake === c) return `"${snake}"`;
     return `"${snake}" AS "${c}"`;
   });
