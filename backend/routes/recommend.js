@@ -1,11 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const jwt = require('jsonwebtoken');
-const db = require('../lib/db');
+const pg = require('../lib/pg');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'flower-shop-secret-2024';
-
-// ===== Haversine 距离计算 =====
+// Haversine 距离
 function haversine(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -15,76 +12,108 @@ function haversine(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// ===== 智能推荐（基于位置+用户） =====
-router.get('/', async (req, res) => {
-  try {
-    const { lng, lat, sessionId, limit = 10 } = req.query;
-    const auth = req.headers.authorization;
+const LIST_FIELDS = '_id,title,flowerName,englishTitle,category,sellPrice AS price,settlementPrice,costPrice,shippingFee,shipping_description,stock,sales_volume AS "salesCount",sales_volume AS "salesVolume",origin,supplier_id AS "supplierId",supplier_id AS "supplier_id",seller_name AS "sellerName",location,images,panorama_images,detail_images,created_at AS "createdAt",updated_at AS "updatedAt"';
 
-    let userId = null;
-    let user = null;
+function listSelect() {
+  // 列表选择 — 与 products.js 一致 (snake->camel 别名)
+  return [
+    'id AS "_id"',
+    'title',
+    'english_title AS "englishTitle"',
+    'flower_name AS "flowerName"',
+    'category',
+    'sell_price AS "sellPrice"',
+    'COALESCE(sell_price, settlement_price, 0) AS "price"',
+    'settlement_price AS "settlementPrice"',
+    'cost_price AS "costPrice"',
+    'shipping_fee AS "shippingFee"',
+    'shipping_description',
+    'stock',
+    'sales_volume AS "salesCount"',
+    'sales_volume AS "salesVolume"',
+    'origin',
+    'supplier_id AS "supplierId"',
+    'supplier_id AS "supplier_id"',
+    'seller_name AS "sellerName"',
+    'location',
+    'images',
+    'panorama_images',
+    'detail_images',
+    'created_at AS "createdAt"',
+    'updated_at AS "updatedAt"',
+  ].join(', ');
+}
 
-    if (auth) {
-      try {
-        const decoded = jwt.verify(auth.replace('Bearer ', ''), JWT_SECRET);
-        userId = decoded.userId;
-        user = await db.findById('users', userId);
-      } catch (e) { /* 未登录，游客模式 */ }
-    }
+const REWRITE_FROM = process.env.MINIO_REWRITE_FROM || '';
+const REWRITE_TO   = process.env.MINIO_REWRITE_TO   || '';
+const REWRITE_ENABLED = REWRITE_FROM && REWRITE_TO;
+function rewriteImg(v) {
+  if (!REWRITE_ENABLED || v == null) return v;
+  if (typeof v === 'string') return v.includes(REWRITE_FROM) ? v.split(REWRITE_FROM).join(REWRITE_TO) : v;
+  if (Array.isArray(v)) { for (let i=0;i<v.length;i++) v[i] = rewriteImg(v[i]); return v; }
+  if (typeof v === 'object') { for (const k of Object.keys(v)) v[k] = rewriteImg(v[k]); return v; }
+  return v;
+}
 
-    const recommendations = await generateRecommendations({
-      user,
-      location: lng && lat ? { lng: parseFloat(lng), lat: parseFloat(lat) } : null,
-      sessionId,
-      limit: parseInt(limit),
+// 附近热门 - 直接 CNPG 查询
+async function getNearbyHot(location, limit) {
+  const rows = await pg.findMany(
+    `SELECT ${listSelect()} FROM products WHERE stock > 0 ORDER BY sales_volume DESC, created_at DESC LIMIT $1`,
+    [limit * 3]
+  );
+  const products = rows.map(rewriteImg);
+  if (location) {
+    products.forEach(p => {
+      const c = p.location && p.location.coordinates;
+      if (Array.isArray(c) && c.length >= 2) {
+        p.distance = haversine(location.lat, location.lng, c[1], c[0]);
+      }
     });
-
-    res.json({ recommendations });
-  } catch (err) {
-    console.error('Recommend error:', err);
-    res.status(500).json({ error: '推荐失败' });
+    products.sort((a, b) => (a.distance || 9999) - (b.distance || 9999));
   }
-});
+  return products.slice(0, limit);
+}
 
-// ===== 首页推荐（多维度混合） =====
+// 首页推荐 - 三个分组
 router.get('/home', async (req, res) => {
   try {
     const { lng, lat } = req.query;
     const location = lng && lat ? { lng: parseFloat(lng), lat: parseFloat(lat) } : null;
-
     const seenIds = new Set();
-    const takeUnique = (products, limit = 6) => {
-      const result = [];
-      for (const product of products || []) {
-        const id = String(product._id || product.id || '');
+    const takeUnique = (arr, limit = 6) => {
+      const out = [];
+      for (const p of arr || []) {
+        const id = String(p._id);
         if (!id || seenIds.has(id)) continue;
-        seenIds.add(id);
-        result.push(product);
-        if (result.length >= limit) break;
+        seenIds.add(id); out.push(p);
+        if (out.length >= limit) break;
       }
-      return result;
+      return out;
     };
 
-    // 1. 附近热门
-    const nearbyHot = takeUnique(await getNearbyHot(location, 18), 6);
-    // 2. 新品推荐（排除已在附近热门出现的商品）
-    const newProducts = takeUnique(await db.find('products', {
-      filter: { status: { $ne: 'deleted' }, stock: { $gt: 0 } },
-      sort: { createdAt: -1 },
-      limit: 18,
-    }), 6);
-    // 3. 特价推荐（排除前两个分组已出现的商品）
-    const onSale = takeUnique(await db.find('products', {
-      filter: { status: { $ne: 'deleted' }, stock: { $gt: 0 }, discountPrice: { $exists: true, $gt: 0 } },
-      sort: { discountPrice: 1 },
-      limit: 18,
-    }), 6);
+    const nearbyHot   = takeUnique(await getNearbyHot(location, 18), 6);
+    const newProducts = takeUnique((await pg.findMany(
+      `SELECT ${listSelect()} FROM products WHERE stock > 0 ORDER BY created_at DESC LIMIT $1`, [18]
+    )).map(rewriteImg), 6);
+
+    // 特价: 有 discountPrice 列就查,没有就跳过该分组
+    let onSale = [];
+    try {
+      const cols = await pg.findMany(
+        `SELECT column_name FROM information_schema.columns WHERE table_name='products' AND column_name='discount_price'`
+      );
+      if (cols.length) {
+        onSale = takeUnique((await pg.findMany(
+          `SELECT ${listSelect()} FROM products WHERE stock > 0 AND discount_price IS NOT NULL AND discount_price > 0 ORDER BY discount_price ASC LIMIT $1`, [18]
+        )).map(rewriteImg), 6);
+      }
+    } catch (e) { /* 表无该列时跳过 */ }
 
     res.json({
       sections: [
         { title: '🌿 附近热门', type: 'nearby', products: nearbyHot },
-        { title: '🆕 新品上架', type: 'new', products: newProducts },
-        { title: '💰 特价花材', type: 'sale', products: onSale },
+        { title: '🆕 新品上架', type: 'new',     products: newProducts },
+        ...(onSale.length ? [{ title: '💰 特价花材', type: 'sale', products: onSale }] : []),
       ],
     });
   } catch (err) {
@@ -93,122 +122,17 @@ router.get('/home', async (req, res) => {
   }
 });
 
-async function getNearbyHot(location, limit) {
-  const query = { status: { $ne: 'deleted' }, stock: { $gt: 0 } };
-  const products = await db.find('products', {
-    filter: query,
-    sort: { salesCount: -1, createdAt: -1 },
-    limit: limit * 3,
-  });
-
-  if (location) {
-    products.forEach(p => {
-      if (p.location?.coordinates) {
-        p.distance = haversine(location.lat, location.lng, p.location.coordinates[1], p.location.coordinates[0]);
-      }
-    });
-    products.sort((a, b) => (a.distance || 9999) - (b.distance || 9999));
-    return products.slice(0, limit);
+// 智能推荐 (无用户历史版 - 跳过需要 users 的部分, 走位置+热度)
+router.get('/', async (req, res) => {
+  try {
+    const { lng, lat, limit = 10 } = req.query;
+    const location = lng && lat ? { lng: parseFloat(lng), lat: parseFloat(lat) } : null;
+    const products = await getNearbyHot(location, parseInt(limit));
+    res.json({ recommendations: products });
+  } catch (err) {
+    console.error('Recommend error:', err);
+    res.status(500).json({ error: '推荐失败' });
   }
-  return products.slice(0, limit);
-}
-
-// ===== 推荐引擎实现 =====
-async function generateRecommendations({ user, location, sessionId, limit = 10 }) {
-  const scores = new Map(); // productId -> { score, product, reason }
-
-  // 1. 基于位置的推荐
-  if (location) {
-    const nearbyProducts = await getNearbyProducts(location, limit * 3);
-    nearbyProducts.forEach((p, idx) => {
-      const distScore = Math.max(0, 100 - (p.distance || 0) * 2);
-      addScore(scores, p._id.toString(), distScore, p);
-    });
-  }
-
-  // 2. 基于用户历史偏好
-  if (user?.preferences?.categories?.length) {
-    const preferredProducts = await db.find('products', {
-      filter: { status: { $ne: 'deleted' }, stock: { $gt: 0 }, category: { $in: user.preferences.categories } },
-      limit: limit * 2,
-    });
-    preferredProducts.forEach(p => {
-      addScore(scores, p._id.toString(), 30, p);
-    });
-  }
-
-  // 3. 基于热门度
-  const hotProducts = await db.find('products', {
-    filter: { status: { $ne: 'deleted' }, stock: { $gt: 0 } },
-    sort: { salesCount: -1 },
-    limit: limit * 2,
-  });
-  hotProducts.forEach((p, idx) => {
-    const hotScore = Math.max(0, 20 - idx);
-    addScore(scores, p._id.toString(), hotScore, p);
-  });
-
-  // 4. 新品加分
-  const newProducts = await db.find('products', {
-    filter: { status: { $ne: 'deleted' }, stock: { $gt: 0 } },
-    sort: { createdAt: -1 },
-    limit: limit,
-  });
-  newProducts.forEach((p, idx) => {
-    addScore(scores, p._id.toString(), Math.max(0, 15 - idx), p);
-  });
-
-  // 排序并返回
-  const sorted = [...scores.entries()]
-    .sort((a, b) => b[1].score - a[1].score)
-    .slice(0, limit)
-    .map(([id, data]) => ({
-      ...data.product,
-      recommendScore: Math.round(data.score),
-      recommendReason: data.reason,
-    }));
-
-  // 如果推荐不足，补充热门商品
-  if (sorted.length < limit) {
-    const existingIds = new Set(sorted.map(p => p._id?.toString()));
-    const fillers = hotProducts.filter(p => !existingIds.has(p._id.toString()));
-    sorted.push(...fillers.slice(0, limit - sorted.length));
-  }
-
-  return sorted;
-}
-
-function addScore(scores, productId, score, product, reason = '智能推荐') {
-  if (scores.has(productId)) {
-    const existing = scores.get(productId);
-    existing.score += score;
-    if (score > 10) existing.reason = reason;
-  } else {
-    scores.set(productId, { score, product, reason });
-  }
-}
-
-async function getNearbyProducts(location, limit) {
-  const products = await db.find('products', {
-    filter: {
-      status: { $ne: 'deleted' },
-      stock: { $gt: 0 },
-      'location.coordinates': { $exists: true },
-    },
-    limit: limit * 5,
-  });
-
-  products.forEach(p => {
-    if (p.location?.coordinates) {
-      p.distance = haversine(
-        location.lat, location.lng,
-        p.location.coordinates[1], p.location.coordinates[0]
-      );
-    }
-  });
-
-  products.sort((a, b) => (a.distance || 9999) - (b.distance || 9999));
-  return products.slice(0, limit);
-}
+});
 
 module.exports = router;
