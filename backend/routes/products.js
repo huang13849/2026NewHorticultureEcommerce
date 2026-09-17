@@ -47,7 +47,7 @@ const COL_ALIASES = {
 const LIST_FIELDS = [
   '_id','title','flowerName','englishTitle','category','price','sellPrice',
   'settlementPrice','costPrice','shippingFee','shipping_description','stock',
-  'salesCount','salesVolume','origin','supplierId','supplier_id','sellerName',
+  'salesCount','origin','supplierId','supplier_id','sellerName',
   'location','images','panorama_images','detail_images','createdAt','updatedAt',
 ];
 
