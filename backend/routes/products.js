@@ -29,7 +29,6 @@ const COL_ALIASES = {
   shipping_description: 'shipping_description',
   stock:             'stock',
   sales_volume:      'salesCount',         // Mongo 时代 salesCount -> sales_volume
-  sales_count:       'salesCount',
   origin:            'origin',
   supplier_id:       'supplierId',
   supplier_name:     'supplierName',
