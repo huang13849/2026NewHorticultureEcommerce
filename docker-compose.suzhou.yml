@@ -18,6 +18,12 @@ services:
       # 临时用 nginx 公网子路径，后续切到 https://img.horiculture.club 只改 TO 即可
       - MINIO_REWRITE_FROM=http://100.96.54.109:9000
       - MINIO_REWRITE_TO=http://106.12.91.182/minio
+      # CNPG (PostgreSQL on k3s) via pgbouncer on ubuntu-master (replaces dead 3007 gateway)
+      - PG_HOST=100.96.54.109
+      - PG_PORT=5433
+      - PG_USER=postgres
+      - PG_PASSWORD=REDACTED-PGPASSWORD-2026
+      - PG_DATABASE=supply_chain
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
