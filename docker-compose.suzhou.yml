@@ -24,6 +24,8 @@ services:
       - PG_USER=postgres
       - PG_PASSWORD=REDACTED-PGPASSWORD-2026
       - PG_DATABASE=supply_chain
+      # 占位: lib/db.js 顶层 require 校验,即使新代码不用也得设
+      - API_KEY=REDACTED-APIKEY
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
