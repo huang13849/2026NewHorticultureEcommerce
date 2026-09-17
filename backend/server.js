@@ -31,12 +31,21 @@ app.use('/api/currency', require('./routes/currency'));
 // ===== 健康检查 =====
 app.get('/api/health', async (req, res) => {
   try {
-    const { default: axios } = require('axios');
-    const gw = process.env.API_GATEWAY_URL || 'http://100.96.54.109:3007';
-    const gwRes = await axios.get(`${gw}/api/health`, {
-      headers: { 'X-API-Key': '***REMOVED_API_KEY***' },
-      timeout: 5000,
+    const pg = require('./lib/pg');
+    const pgInfo = await pg.ping();
+    res.json({
+      status: 'ok',
+      database: pgInfo,
+      time: new Date().toISOString(),
     });
+  } catch (e) {
+    res.json({
+      status: 'degraded',
+      error: e.message,
+      time: new Date().toISOString(),
+    });
+  }
+});
     res.json({
       status: 'ok',
       gateway: gwRes.data,
