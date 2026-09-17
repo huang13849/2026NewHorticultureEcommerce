@@ -35,7 +35,6 @@ function listSelect() {
     'supplier_id AS "supplierId"',
     'supplier_id AS "supplier_id"',
     'seller_name AS "sellerName"',
-    'location',
     'images',
     'panorama_images',
     'detail_images',
@@ -62,15 +61,7 @@ async function getNearbyHot(location, limit) {
     [limit * 3]
   );
   const products = rows.map(rewriteImg);
-  if (location) {
-    products.forEach(p => {
-      const c = p.location && p.location.coordinates;
-      if (Array.isArray(c) && c.length >= 2) {
-        p.distance = haversine(location.lat, location.lng, c[1], c[0]);
-      }
-    });
-    products.sort((a, b) => (a.distance || 9999) - (b.distance || 9999));
-  }
+  // products 表无 location 列; 跳过距离过滤 (后续可 join suppliers 取坐标)
   return products.slice(0, limit);
 }
 

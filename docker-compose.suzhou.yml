@@ -14,17 +14,13 @@ services:
       - API_GATEWAY_URL=http://100.96.54.109:3007
       - SCENE_SERVICE_URL=http://100.96.54.109:3012
       - SEO_SERVICE_URL=http://seo-service:3011
-      # 苏州专用：把数据库里写死的内网 MinIO 地址重写成苏州本地可访问的对象存储入口
-      # 临时用 nginx 公网子路径，后续切到 https://img.horiculture.club 只改 TO 即可
       - MINIO_REWRITE_FROM=http://100.96.54.109:9000
       - MINIO_REWRITE_TO=http://106.12.91.182/minio
-      # CNPG (PostgreSQL on k3s) via pgbouncer on ubuntu-master (replaces dead 3007 gateway)
       - PG_HOST=100.96.54.109
       - PG_PORT=5433
       - PG_USER=postgres
       - PG_PASSWORD=REDACTED-PGPASSWORD-2026
       - PG_DATABASE=supply_chain
-      # 占位: lib/db.js 顶层 require 校验,即使新代码不用也得设
       - API_KEY=REDACTED-APIKEY
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -39,6 +35,13 @@ services:
       - "127.0.0.1:3000:3000"
     depends_on:
       - flower-api
+    environment:
+      # 用 docker compose 服务名,避免走 k3s DNS (next.config.ts 默认 fallback 是 new-ecommerce.svc.cluster.local)
+      - FLOWER_API_URL=http://flower-api:3010
+      - SEO_SERVICE_URL=http://seo-service:3011
+      - API_GATEWAY_URL=http://flower-api:3010
+      - SUPPLIER_MAP_URL=
+      - DEALER_MAP_URL=
     extra_hosts:
       - "host.docker.internal:host-gateway"
 

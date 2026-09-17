@@ -48,7 +48,7 @@ const LIST_FIELDS = [
   '_id','title','flowerName','englishTitle','category','price','sellPrice',
   'settlementPrice','costPrice','shippingFee','shipping_description','stock',
   'salesCount','origin','supplierId','supplier_id','sellerName',
-  'location','images','panorama_images','detail_images','createdAt','updatedAt',
+  'images','panorama_images','detail_images','createdAt','updatedAt',
 ];
 
 const SPECIAL_ALIASES = {
@@ -298,7 +298,7 @@ router.get('/map/markers', async (req, res) => {
       conds.push(`(location->'coordinates'->>1)::float BETWEEN $${params.length-1} AND $${params.length}`);
     }
     const rows = await pg.findMany(
-      `SELECT id AS "id", title AS "name", sell_price AS "price", images, location, category, supplier_id AS "supplierId" FROM products WHERE ${conds.join(' AND ')} LIMIT 500`,
+      `SELECT id AS "id", title AS "name", sell_price AS "price", images, category, supplier_id AS "supplierId" FROM products WHERE ${conds.join(' AND ')} LIMIT 500`,
       params
     );
     const grouped = {};
