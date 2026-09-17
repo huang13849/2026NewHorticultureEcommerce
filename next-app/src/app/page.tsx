@@ -287,18 +287,6 @@ export default function HomePage() {
                     <span className={region.accentText}>{t(`regions.${region.code}.title`)}</span><br/><span className="text-xl md:text-2xl not-italic tracking-normal font-semibold text-stone-800">{t(`regions.${region.code}.subtitle`)}</span>
                   </h1>
                   <div className={`mt-2 h-px w-24 ${region.accentBg} opacity-30`} />
-                  {IS_CN && (
-                    <div className="mt-3 text-[11px] text-stone-400">
-                      <a
-                        href={t('home.footer.beian_url') || '#'}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`hover:${region.accentText} transition-colors`}
-                      >
-                        {t('home.footer.icp')}
-                      </a>
-                    </div>
-                  )}
                 </div>
                 <p className="text-stone-500 leading-relaxed max-w-md text-sm md:text-base mb-8">
                   {t(`regions.${region.code}.desc`)}
